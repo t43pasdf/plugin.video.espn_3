@@ -39,6 +39,8 @@ pluginhandle = int(sys.argv[1])
 #    USERFILEORG = os.path.join(ADDONDATAORG,'userdata.xml')
 #else:
 ADDONDATA = xbmc.translatePath('special://profile/addon_data/plugin.video.espn3/')
+if not os.path.exists(ADDONDATA):
+    os.makedirs(ADDONDATA)
 USERFILE = os.path.join(ADDONDATA,'userdata.xml')
 
 
@@ -372,7 +374,11 @@ def get_params():
 
 def SaveFile(filename, data, dir):
     path = os.path.join(dir, filename)
-    file = open(path,'w')
+    xbmc.log('blah'+str(path))
+    try:
+        file = open(path,'w')
+    except:
+	file = open(path,'w+')
     file.write(data)
     file.close()
 
