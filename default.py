@@ -14,31 +14,17 @@ import xml.etree.ElementTree as ET
 
 ## Get the settings
 
-selfAddon = xbmcaddon.Addon(id='plugin.video.espn3')
-cbrowser=selfAddon.getSetting('browser')
-if cbrowser is '' or cbrowser is None:
-    # Default to Firefox
-    cbrowser = "Firefox"
-usexbmc = selfAddon.getSetting('watchinxbmc')
-defaultimage = 'special://home/addons/plugin.video.espn3/icon.png'
-defaultfanart = 'special://home/addons/plugin.video.espn3/fanart.jpg'
-defaultlive = 'special://home/addons/plugin.video.espn3/live.png'
-defaultreplay = 'special://home/addons/plugin.video.espn3/replay.png'
-defaultupcoming = 'special://home/addons/plugin.video.espn3/upcoming.png'
-
-if usexbmc is '' or usexbmc is None:
-    usexbmc = True
+selfAddon = xbmcaddon.Addon(id='plugin.video.espn_3')
+defaultimage = 'special://home/addons/plugin.video.espn_3/icon.png'
+defaultfanart = 'special://home/addons/plugin.video.espn_3/fanart.jpg'
+defaultlive = 'special://home/addons/plugin.video.espn_3/live.png'
+defaultreplay = 'special://home/addons/plugin.video.espn_3/replay.png'
+defaultupcoming = 'special://home/addons/plugin.video.espn_3/upcoming.png'
 
 pluginpath = selfAddon.getAddonInfo('path')
 pluginhandle = int(sys.argv[1])
 
-#if selfAddon.getSetting('enablecustom') == 'true':
-#    ADDONDATA = xbmc.translatePath('special://profile/addon_data/plugin.video.espn3/custom/')
-#    ADDONDATAORG = xbmc.translatePath('special://profile/addon_data/plugin.video.espn3/')
-#    COOKIEFILEORG = os.path.join(ADDONDATAORG,'cookies.lwp')
-#    USERFILEORG = os.path.join(ADDONDATAORG,'userdata.xml')
-#else:
-ADDONDATA = xbmc.translatePath('special://profile/addon_data/plugin.video.espn3/')
+ADDONDATA = xbmc.translatePath('special://profile/addon_data/plugin.video.espn_3/')
 if not os.path.exists(ADDONDATA):
     os.makedirs(ADDONDATA)
 USERFILE = os.path.join(ADDONDATA,'userdata.xml')
@@ -165,11 +151,6 @@ def INDEX(url,name,bysport=False):
                           'aired':start,
                           'premiered':start,
                           'duration':length}
-            if usexbmc == False or usexbmc == "false":
-                authurl = "http://espn.go.com/espn3/player?id=%s" % eventid
-                if league is not None:
-                    authurl += "&league=%s" % urllib.quote(league)
-
             if 'action=upcoming' in url:
                 mode = 5
             elif networkid == 'n360':
@@ -188,23 +169,8 @@ def INDEX(url,name,bysport=False):
     xbmcplugin.setContent(pluginhandle, 'episodes')
     xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
-def PLAYESPN1(url):
-    PLAY(url,'n501')
-
-def PLAYESPN2(url):
-    PLAY(url,'n502')
-
 def PLAYESPN3(url):
     PLAY(url,'n360')
-    
-def PLAYESPNU(url):
-    PLAY(url,'n599')
-
-def PLAYESPNGL(url):
-    PLAY(url,'ngl')
-
-def PLAYESPNBB(url):
-    PLAY(url,'nbb')
     
 def PLAY(url,videonetwork):
     data = ReadFile('userdata.xml', ADDONDATA)
@@ -300,29 +266,7 @@ def PLAY(url,videonetwork):
             item = xbmcgui.ListItem(path=finalurl)
             return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, item)
 
-def PLAYBROWSER(url):
-    print "Play URL:%s" % url
-    psystem = platform.system()
-    if cbrowser == "Chrome":
-        if psystem == "Darwin":
-            cmd = 'open -a /Applications/Chrome.app %s' % url
-        elif psystem == "Linux":
-            cmd = "/usr/bin/google-chrome  %s" % url
-        elif psystem == "Windows":
-            cmd = "chrome.exe %s" % url
-        else:
-            print "Aint no browser here"
-    else:
-        if psystem == "Darwin":
-            cmd = 'open -a /Applications/Firefox.app %s' % url
-        elif psystem == "Linux":
-            cmd = "/usr/bin/firefox %s" % url
-        elif psystem == "Windows":
-            cmd = '"C:\Program Files\Mozilla Firefox\firefox.exe" %s' % url
-        else:
-            print "Aint no browser here"
 
-    os.system(cmd)
 
 #	subprocess.call(['open -a /Applications/Firefox.app'])
 def saveUserdata():
@@ -333,15 +277,6 @@ def saveUserdata():
     print soup.prettify()
     checkrights = 'http://broadband.espn.go.com/espn3/auth/espnnetworks/user'
     print get_html(checkrights)
-
-def checkcustom():
-    if not os.path.exists(ADDONDATA):
-        os.makedirs(ADDONDATA)
-        import shutil
-        if os.path.exists(USERFILEORG):
-            shutil.copyfile(COOKIEFILEORG, COOKIEFILE)
-        if os.path.exists(USERFILEORG):
-            shutil.copyfile(USERFILEORG, USERFILE)
 
 def get_html( url ):
     try:
@@ -374,7 +309,6 @@ def get_params():
 
 def SaveFile(filename, data, dir):
     path = os.path.join(dir, filename)
-    xbmc.log('blah'+str(path))
     try:
         file = open(path,'w')
     except:
@@ -458,22 +392,8 @@ elif mode == 3:
     print "Index by sport"
     INDEXBYSPORT(url,name)
 elif mode == 4:
-    print "Play Video"
-    if usexbmc == True or usexbmc == "true":
-        PLAYESPN3(url)
-    else:
-        PLAYBROWSER(url)
+    PLAYESPN3(url)
 elif mode == 5:
     print "Upcoming"
     dialog = xbmcgui.Dialog()
     dialog.ok("Upcoming Event", "Event has not started.")
-elif mode == 6:
-    PLAYESPN1(url)
-elif mode == 7:
-    PLAYESPN2(url)
-elif mode == 8:
-    PLAYESPNU(url)
-elif mode == 9:
-    PLAYESPNGL(url)
-elif mode == 10:
-    PLAYESPNBB(url)
