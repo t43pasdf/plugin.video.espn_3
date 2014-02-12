@@ -18,6 +18,7 @@
         <license>GNU GENERAL PUBLIC LICENSE. Version 3, 29 June 2007</license>
         <summary lang="en">ESPN</summary>
         <description lang="en">Watch full live streaming sporting events and replays on ESPN 3, including football, baseball, cricket, soccer, and basketball events.</description>
+	<forum>http://forum.xbmc.org/showthread.php?tid=186028</forum>
 	<source>https://github.com/asojka09/plugin.video.espn_3.git</source>
 	<email>austinsojka@hotmail.com</email>
     </extension>

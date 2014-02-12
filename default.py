@@ -175,7 +175,6 @@ def PLAYESPN3(url):
 def PLAY(url,videonetwork):
     data = ReadFile('userdata.xml', ADDONDATA)
     soup = BeautifulStoneSoup(data, convertEntities=BeautifulStoneSoup.HTML_ENTITIES)
-    #print soup.prettify()
     affiliateid = soup('name')[0].string
     swid = soup('personalization')[0]['swid']
     identityPointId = affiliateid+':'+swid
@@ -202,7 +201,7 @@ def PLAY(url,videonetwork):
             authurl += '&playerId='+playedId
             html = get_html(authurl)
             tree = BeautifulStoneSoup(html, convertEntities=BeautifulStoneSoup.HTML_ENTITIES)
-            print tree.prettify()
+            xbmc.log(tree.prettify())
             authstatus = tree.find('auth-status')
             blackoutstatus = tree.find('blackout-status')
             if not authstatus.find('successstatus'):
@@ -234,7 +233,7 @@ def PLAY(url,videonetwork):
             #Grab smil url to get rtmp url and playpath
             html = get_html(smilurl)
             soup = BeautifulStoneSoup(html, convertEntities=BeautifulStoneSoup.HTML_ENTITIES)
-            print soup.prettify()
+            xbmc.log(soup.prettify())
             rtmp = soup.findAll('meta')[0]['base']
             # Live Qualities
             #     0,     1,     2,      3,      4
@@ -274,13 +273,13 @@ def saveUserdata():
     data1 = get_html(userdata1)
     SaveFile('userdata.xml', data1, ADDONDATA)
     soup = BeautifulStoneSoup(data1, convertEntities=BeautifulStoneSoup.HTML_ENTITIES)
-    print soup.prettify()
+    xbmc.log(soup.prettify())
     checkrights = 'http://broadband.espn.go.com/espn3/auth/espnnetworks/user'
-    print get_html(checkrights)
+    xbmc.log(get_html(checkrights))
 
 def get_html( url ):
     try:
-        print 'ESPN3:  get_html: '+url
+        xbmc.log('ESPN3:  get_html: '+url)
         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
         opener.addheaders = [('User-Agent', 'Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.2.17) Gecko/20110422 Ubuntu/10.10 (maverick) Firefox/3.6.17')]
         usock = opener.open(url)
@@ -375,25 +374,25 @@ try:
 except:
     pass
 
-print "Mode: " + str(mode)
-print "URL: " + str(url)
-print "Name: " + str(name)
+xbmc.log("Mode: " + str(mode))
+xbmc.log("URL: " + str(url))
+xbmc.log("Name: " + str(name))
 
 if mode == None or url == None or len(url) < 1:
-    print "Generate Main Menu"
+    xbmc.log("Generate Main Menu")
     CATEGORIES()
 elif mode == 1:
-    print "Indexing Videos"
+    xbmc.log("Indexing Videos")
     INDEX(url,name)
 elif mode == 2:
-    print "List sports"
+    xbmc.log("List sports")
     LISTSPORTS(url,name)
 elif mode == 3:
-    print "Index by sport"
+    xbmc.log("Index by sport")
     INDEXBYSPORT(url,name)
 elif mode == 4:
     PLAYESPN3(url)
 elif mode == 5:
-    print "Upcoming"
+    xbmc.log("Upcoming")
     dialog = xbmcgui.Dialog()
     dialog.ok("Upcoming Event", "Event has not started.")
