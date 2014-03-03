@@ -4,7 +4,7 @@
 # Written by Ksosez, BlueCop
 # Released under GPL(v2)
 
-import urllib, urllib2, xbmcplugin, xbmcaddon, xbmcgui, string, htmllib, os, platform, random, calendar, re
+import urllib, urllib2, xbmcplugin, xbmcaddon, xbmcgui, os, random, re
 import cookielib
 import time
 from datetime import datetime, timedelta
@@ -15,11 +15,12 @@ import xml.etree.ElementTree as ET
 ## Get the settings
 
 selfAddon = xbmcaddon.Addon(id='plugin.video.espn_3')
+translation = selfAddon.getLocalizedString
 defaultimage = 'special://home/addons/plugin.video.espn_3/icon.png'
 defaultfanart = 'special://home/addons/plugin.video.espn_3/fanart.jpg'
-defaultlive = 'special://home/addons/plugin.video.espn_3/live.png'
-defaultreplay = 'special://home/addons/plugin.video.espn_3/replay.png'
-defaultupcoming = 'special://home/addons/plugin.video.espn_3/upcoming.png'
+defaultlive = 'special://home/addons/plugin.video.espn_3/resources/media/live.png'
+defaultreplay = 'special://home/addons/plugin.video.espn_3/resources/media/replay.png'
+defaultupcoming = 'special://home/addons/plugin.video.espn_3/resources/media/upcoming.png'
 
 pluginpath = selfAddon.getAddonInfo('path')
 pluginhandle = int(sys.argv[1])
@@ -40,8 +41,8 @@ def CATEGORIES():
     curdate = datetime.utcnow()
     upcoming = int(selfAddon.getSetting('upcoming'))+1
     days = (curdate+timedelta(days=upcoming)).strftime("%Y%m%d")
-    addDir('Live', 'http://espn.go.com/watchespn/feeds/startup?action=live'+channels, 1, defaultlive)
-    addDir('Upcoming', 'http://espn.go.com/watchespn/feeds/startup?action=upcoming'+channels+'&endDate='+days+'&startDate='+curdate.strftime("%Y%m%d"), 2,defaultupcoming)
+    addDir(translation(30029), 'http://espn.go.com/watchespn/feeds/startup?action=live'+channels, 1, defaultlive)
+    addDir(translation(30030), 'http://espn.go.com/watchespn/feeds/startup?action=upcoming'+channels+'&endDate='+days+'&startDate='+curdate.strftime("%Y%m%d"), 2,defaultupcoming)
     enddate = '&endDate='+ curdate.strftime("%Y%m%d")
     replays1 = [5,10,15,20,25]
     replays1 = replays1[int(selfAddon.getSetting('replays1'))]
@@ -55,11 +56,11 @@ def CATEGORIES():
     replays4 = [60,90,120,240]
     replays4 = replays4[int(selfAddon.getSetting('replays4'))]
     start4 = (curdate-timedelta(days=replays4)).strftime("%Y%m%d")
-    addDir('Replay '+str(replays1)+' Days', 'http://espn.go.com/watchespn/feeds/startup?action=replay'+channels+enddate+'&startDate='+start1, 2, defaultreplay)
-    addDir('Replay '+str(replays2)+' Days', 'http://espn.go.com/watchespn/feeds/startup?action=replay'+channels+enddate+'&startDate='+start2, 2, defaultreplay)
-    addDir('Replay '+str(replays3)+' Days', 'http://espn.go.com/watchespn/feeds/startup?action=replay'+channels+enddate+'&startDate='+start3, 2, defaultreplay)
-    addDir('Replay '+str(replays3)+'-'+str(replays4)+' Days', 'http://espn.go.com/watchespn/feeds/startup?action=replay'+channels+'&endDate='+start3+'&startDate='+start4, 2, defaultreplay)
-    addDir('Replay All', 'http://espn.go.com/watchespn/feeds/startup?action=replay'+channels, 2, defaultreplay)
+    addDir(translation(30031)+str(replays1)+' Days', 'http://espn.go.com/watchespn/feeds/startup?action=replay'+channels+enddate+'&startDate='+start1, 2, defaultreplay)
+    addDir(translation(30031)+str(replays2)+' Days', 'http://espn.go.com/watchespn/feeds/startup?action=replay'+channels+enddate+'&startDate='+start2, 2, defaultreplay)
+    addDir(translation(30031)+str(replays3)+' Days', 'http://espn.go.com/watchespn/feeds/startup?action=replay'+channels+enddate+'&startDate='+start3, 2, defaultreplay)
+    addDir(translation(30031)+str(replays3)+'-'+str(replays4)+' Days', 'http://espn.go.com/watchespn/feeds/startup?action=replay'+channels+'&endDate='+start3+'&startDate='+start4, 2, defaultreplay)
+    addDir(translation(30032), 'http://espn.go.com/watchespn/feeds/startup?action=replay'+channels, 2, defaultreplay)
     xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
 def LISTNETWORKS(url,name):
@@ -75,7 +76,7 @@ def LISTSPORTS(url,name):
         image = defaultupcoming
     else:
         image = defaultimage
-    addDir('(All)', url, 1, image)
+    addDir(translation(30034), url, 1, image)
     sports = []
     for event in ET.XML(data).findall('event'):
         sport = event.findtext('sportDisplayValue').title().encode('utf-8')
@@ -119,8 +120,8 @@ def INDEX(url,name,bysport=False):
             starttime = int(event.findtext('startTimeGmtMs'))/1000
             endtime = int(event.findtext('endTimeGmtMs'))/1000
             start = time.strftime("%m/%d/%Y %I:%M %p",time.localtime(starttime))
-	    date = time.strftime("%m/%d/%Y",time.localtime(starttime))
-	    ename += ' - '+date
+            date = time.strftime("%m/%d/%Y",time.localtime(starttime))
+            ename += ' - '+date
             if 'action=live' in url:
                 length = str(int(round((endtime - time.time())/60)))
             else:
@@ -140,10 +141,10 @@ def INDEX(url,name,bysport=False):
                 plot += 'League: '+league+'\n'
             if location <> '' and location <> ' ':
                 plot += 'Location: '+location+'\n'
-	    if start <> '' and start <> ' ':
-		plot += 'Air Date: '+start+'\n'
-	    if length <> '' and length <> ' ':
-		plot += 'Length: '+length+' minutes'+'\n'
+            if start <> '' and start <> ' ':
+                plot += 'Air Date: '+start+'\n'
+            if length <> '' and length <> ' ':
+                plot += 'Length: '+length+' minutes'+'\n'
             plot += end
             infoLabels = {'title':ename,
                           'tvshowtitle':sport,
@@ -201,7 +202,6 @@ def PLAY(url,videonetwork):
             authurl += '&playerId='+playedId
             html = get_html(authurl)
             tree = BeautifulStoneSoup(html, convertEntities=BeautifulStoneSoup.HTML_ENTITIES)
-            xbmc.log(tree.prettify())
             authstatus = tree.find('auth-status')
             blackoutstatus = tree.find('blackout-status')
             if not authstatus.find('successstatus'):
@@ -212,20 +212,20 @@ def PLAY(url,videonetwork):
                         errormessage = authstatus.find('errormessage').string
                         try:
                             errormessage = textwrap.fill(errormessage, width=50).split('\n')
-                            dialog.ok("Error", errormessage[0],errormessage[1],errormessage[2])
+                            dialog.ok(translation(30037), errormessage[0],errormessage[1],errormessage[2])
                         except:
-                            dialog.ok("Error", errormessage[0])
+                            dialog.ok(translation(30037), errormessage[0])
                         return
                 else:
                     if not blackoutstatus.find('successstatus'):
                         if blackoutstatus.find('blackout').string:
                             dialog = xbmcgui.Dialog()
-                            dialog.ok("Blacked Out", blackoutstatus.find('blackout').string)
+                            dialog.ok(translation(30040), blackoutstatus.find('blackout').string)
                             return
             smilurl = tree.find('url').string
             if smilurl == ' ' or smilurl == '':
                 dialog = xbmcgui.Dialog()
-                dialog.ok("Error", 'SMIL url blank','Unable to playback video')
+                dialog.ok(translation(30037), translation(30038),translation(30039))
                 return
             auth = smilurl.split('?')[1]
             smilurl += '&rand='+("%.16f" % random.random())
@@ -233,7 +233,6 @@ def PLAY(url,videonetwork):
             #Grab smil url to get rtmp url and playpath
             html = get_html(smilurl)
             soup = BeautifulStoneSoup(html, convertEntities=BeautifulStoneSoup.HTML_ENTITIES)
-            xbmc.log(soup.prettify())
             rtmp = soup.findAll('meta')[0]['base']
             # Live Qualities
             #     0,     1,     2,      3,      4
@@ -244,7 +243,7 @@ def PLAY(url,videonetwork):
             playpath=False
             if selfAddon.getSetting("askquality") == 'true':
                 streams = soup.findAll('video')
-                quality=xbmcgui.Dialog().select('Select a quality level:', [str(int(stream['system-bitrate'])/1000)+'kbps' for stream in streams])
+                quality=xbmcgui.Dialog().select(translation(30033), [str(int(stream['system-bitrate'])/1000)+'kbps' for stream in streams])
                 if quality!=-1:
                     playpath = streams[quality]['src']
                 else:
@@ -266,16 +265,12 @@ def PLAY(url,videonetwork):
             return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, item)
 
 
-
-#	subprocess.call(['open -a /Applications/Firefox.app'])
 def saveUserdata():
     userdata1 = 'http://broadband.espn.go.com/espn3/auth/userData?format=xml'
     data1 = get_html(userdata1)
     SaveFile('userdata.xml', data1, ADDONDATA)
     soup = BeautifulStoneSoup(data1, convertEntities=BeautifulStoneSoup.HTML_ENTITIES)
-    xbmc.log(soup.prettify())
     checkrights = 'http://broadband.espn.go.com/espn3/auth/espnnetworks/user'
-    xbmc.log(get_html(checkrights))
 
 def get_html( url ):
     try:
@@ -311,18 +306,18 @@ def SaveFile(filename, data, dir):
     try:
         file = open(path,'w')
     except:
-	file = open(path,'w+')
+        file = open(path,'w+')
     file.write(data)
     file.close()
 
 def ReadFile(filename, dir):
     path = os.path.join(dir, filename)
     if filename == 'userdata.xml':
-    	try:
-	    file = open(path,'r')
-	except:
-	    saveUserdata()
-	    file = open(path,'r')
+        try:
+            file = open(path,'r')
+        except:
+            saveUserdata()
+            file = open(path,'r')
     else:
         file = open(path,'r')
     return file.read()
@@ -395,4 +390,4 @@ elif mode == 4:
 elif mode == 5:
     xbmc.log("Upcoming")
     dialog = xbmcgui.Dialog()
-    dialog.ok("Upcoming Event", "Event has not started.")
+    dialog.ok(translation(30035), translation(30036))
