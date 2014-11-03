@@ -119,14 +119,27 @@ def INDEX(url,name,bysport=False):
                 network = networkmap[networkid]
             thumb = event.find('thumbnail').findtext('large')
             starttime = int(event.findtext('startTimeGmtMs'))/1000
+	        eventedt = int(event.findtext('startTime'))
+            etime = time.strftime("%I:%M %p",time.localtime(starttime))
             endtime = int(event.findtext('endTimeGmtMs'))/1000
             start = time.strftime("%m/%d/%Y %I:%M %p",time.localtime(starttime))
             date = time.strftime("%m/%d/%Y",time.localtime(starttime))
-            ename += ' - '+date
-            if 'action=live' in url:
+            udate = time.strftime("%m/%d",time.localtime(starttime))
+            now = datetime.now().strftime('%H%M')
+            etime24 = time.strftime("%H%M",time.localtime(starttime))
+
+            if 'action=live' in url and now > etime24:
                 length = str(int(round((endtime - time.time())/60)))
+                ename = '[COLOR=fff5f5f5]'+" - ".join((etime, ename))+'[/COLOR]'
+            elif 'action=live' in url:
+                length = str(int(round((endtime - starttime)/60)))
+                ename = " - ".join((etime, ename))
+            elif 'action=replay' in url:
+                length = str(int(round((endtime - time.time())/60)))
+                ename = " - ".join((udate, ename))
             else:
                 length = str(int(round((endtime - starttime)/60)))
+                ename = " - ".join((udate, etime, ename))
             
             
             end = event.findtext('summary')
