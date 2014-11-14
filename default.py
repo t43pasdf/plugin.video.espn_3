@@ -56,11 +56,12 @@ def CATEGORIES():
     replays4 = [60,90,120,240]
     replays4 = replays4[int(selfAddon.getSetting('replays4'))]
     start4 = (curdate-timedelta(days=replays4)).strftime("%Y%m%d")
+    startAll = (curdate-timedelta(days=365)).strftime("%Y%m%d")
     addDir(translation(30031)+str(replays1)+' Days', 'http://espn.go.com/watchespn/feeds/startup?action=replay'+channels+enddate+'&startDate='+start1, 2, defaultreplay)
     addDir(translation(30031)+str(replays2)+' Days', 'http://espn.go.com/watchespn/feeds/startup?action=replay'+channels+enddate+'&startDate='+start2, 2, defaultreplay)
     addDir(translation(30031)+str(replays3)+' Days', 'http://espn.go.com/watchespn/feeds/startup?action=replay'+channels+enddate+'&startDate='+start3, 2, defaultreplay)
     addDir(translation(30031)+str(replays3)+'-'+str(replays4)+' Days', 'http://espn.go.com/watchespn/feeds/startup?action=replay'+channels+'&endDate='+start3+'&startDate='+start4, 2, defaultreplay)
-    #addDir(translation(30032), 'http://espn.go.com/watchespn/feeds/startup?action=replay'+channels, 2, defaultreplay)
+    addDir(translation(30032), 'http://espn.go.com/watchespn/feeds/startup?action=replay'+channels+enddate+'&startDate='+startAll, 2, defaultreplay)
     xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
 def LISTNETWORKS(url,name):
@@ -129,7 +130,8 @@ def INDEX(url,name,bysport=False):
 
             if 'action=live' in url and now > etime24:
                 length = str(int(round((endtime - time.time())/60)))
-                ename = '[COLOR=ff0073cf]'+" - ".join((etime, ename))+'[/COLOR]'
+                ename = '[COLOR='+str(selfAddon.getSetting('color'))+']'+" - ".join((etime, ename))+'[/COLOR]'
+		print ename
             elif 'action=live' in url:
                 length = str(int(round((endtime - starttime)/60)))
                 ename = " - ".join((etime, ename))
