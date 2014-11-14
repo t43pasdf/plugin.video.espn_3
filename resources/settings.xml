@@ -18,7 +18,7 @@
 	</category>
         <category label="Live Events Color">
 	         <setting type="sep" />
-	<setting id="color" type="text" label="30050" default="ffa682a6"/> 
+	<setting id="color" type="text" label="30050" default="fff5f5f5"/> 
 	         <setting type="sep" />	
 	</category>
 </settings>

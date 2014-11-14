@@ -131,7 +131,6 @@ def INDEX(url,name,bysport=False):
             if 'action=live' in url and now > etime24:
                 length = str(int(round((endtime - time.time())/60)))
                 ename = '[COLOR='+str(selfAddon.getSetting('color'))+']'+" - ".join((etime, ename))+'[/COLOR]'
-		print ename
             elif 'action=live' in url:
                 length = str(int(round((endtime - starttime)/60)))
                 ename = " - ".join((etime, ename))
