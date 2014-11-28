@@ -155,9 +155,9 @@ def INDEX(url,name,bysport=False):
             if start <> '' and start <> ' ':
                 plot += 'Air Date: '+start+'\n'
             if length <> '' and length <> ' ' and 'action=live' in url:
-                plot += 'Length: Approximately '+length+' minutes remaining'+'\n'
+                plot += 'Duration: Approximately '+length+' minutes remaining'+'\n'
 	    elif length <> '' and length <> ' ' and ('action=replay' in url or 'action=upcoming' in url):
-		plot += 'Length: '+length+' minutes'+'\n'
+		plot += 'Duration: '+length+' minutes'+'\n'
             plot += end
             infoLabels = {'title':ename,
                           'tvshowtitle':sport,
