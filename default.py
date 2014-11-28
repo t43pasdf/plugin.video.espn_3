@@ -126,17 +126,14 @@ def INDEX(url,name,bysport=False):
             date = time.strftime("%m/%d/%Y",time.localtime(starttime))
             udate = time.strftime("%m/%d",time.localtime(starttime))
             now = datetime.now().strftime('%H%M')
-            etime24 = time.strftime("%H%M",time.localtime(starttime))
+            etime24 = time.strftime("%H%M",time.localtime(starttime)) 
 
             if 'action=live' in url and now > etime24:
                 length = str(int(round((endtime - time.time())/60)))
                 ename = '[COLOR='+str(selfAddon.getSetting('color'))+']'+" - ".join((etime, ename))+'[/COLOR]'
             elif 'action=live' in url:
-                length = str(int(round((endtime - starttime)/60)))
-                ename = " - ".join((etime, ename))
-            elif 'action=replay' in url:
                 length = str(int(round((endtime - time.time())/60)))
-                ename = " - ".join((udate, ename))
+                ename = " - ".join((etime, ename))
             else:
                 length = str(int(round((endtime - starttime)/60)))
                 ename = " - ".join((udate, etime, ename))
@@ -147,7 +144,7 @@ def INDEX(url,name,bysport=False):
                 end = event.findtext('caption')
 
             plot = ''
-            if network and ('action=live' in url or 'action=upcoming' in url):
+            if network <> '' and network <> ' ':
                 plot += 'Network: '+network+' - '
             if sport <> '' and sport <> ' ':
                 plot += 'Sport: '+sport+'\n'
@@ -157,8 +154,10 @@ def INDEX(url,name,bysport=False):
                 plot += 'Location: '+location+'\n'
             if start <> '' and start <> ' ':
                 plot += 'Air Date: '+start+'\n'
-            if length <> '' and length <> ' ':
-                plot += 'Length: '+length+' minutes'+'\n'
+            if length <> '' and length <> ' ' and 'action=live' in url:
+                plot += 'Length: Approximately '+length+' minutes remaining'+'\n'
+	    elif length <> '' and length <> ' ' and ('action=replay' in url or 'action=upcoming' in url):
+		plot += 'Length: '+length+' minutes'+'\n'
             plot += end
             infoLabels = {'title':ename,
                           'tvshowtitle':sport,
