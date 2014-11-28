@@ -144,8 +144,6 @@ def INDEX(url,name,bysport=False):
                 end = event.findtext('caption')
 
             plot = ''
-            if network <> '' and network <> ' ':
-                plot += 'Network: '+network+' - '
             if sport <> '' and sport <> ' ':
                 plot += 'Sport: '+sport+'\n'
             if league <> '' and league <> ' ':
