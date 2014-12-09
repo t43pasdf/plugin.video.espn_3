@@ -118,11 +118,13 @@ def INDEX(url,name,bysport=False):
             if networkid is not None:
                 network = networkmap[networkid]
             thumb = event.find('thumbnail').findtext('large')
+            mpaa = event.findtext('parentalRating')
             starttime = int(event.findtext('startTimeGmtMs'))/1000
 	    eventedt = int(event.findtext('startTime'))
             etime = time.strftime("%I:%M %p",time.localtime(starttime))
             endtime = int(event.findtext('endTimeGmtMs'))/1000
             start = time.strftime("%m/%d/%Y %I:%M %p",time.localtime(starttime))
+            aired = time.strftime("%Y-%m-%d",time.localtime(starttime))
             date = time.strftime("%m/%d/%Y",time.localtime(starttime))
             udate = time.strftime("%m/%d",time.localtime(starttime))
             now = datetime.now().strftime('%H%M')
@@ -158,11 +160,13 @@ def INDEX(url,name,bysport=False):
 		plot += 'Duration: '+length+' minutes'+'\n'
             plot += end
             infoLabels = {'title':ename,
-                          'tvshowtitle':sport,
+                          'genre':sport,
                           'plot':plot,
-                          'aired':start,
-                          'premiered':start,
-                          'duration':length}
+                          'aired':aired,
+                          'premiered':aired,
+                          'duration':length,
+                          'studio':'ESPN 3',
+                          'mpaa':mpaa}
             if 'action=upcoming' in url:
                 mode = 5
             elif networkid == 'n360':
