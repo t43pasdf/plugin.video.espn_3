@@ -4,7 +4,7 @@
 # Written by Ksosez, BlueCop
 # Released under GPL(v2)
 
-import urllib, urllib2, xbmcplugin, xbmcaddon, xbmcgui, os, random, re
+import urllib, urllib2, xbmcplugin, xbmcaddon, xbmcgui, os, random, string, re
 import cookielib
 import time
 from datetime import datetime, timedelta
@@ -41,8 +41,8 @@ def CATEGORIES():
     curdate = datetime.utcnow()
     upcoming = int(selfAddon.getSetting('upcoming'))+1
     days = (curdate+timedelta(days=upcoming)).strftime("%Y%m%d")
-    addDir(translation(30029), 'http://espn.go.com/watchespn/feeds/startup?action=live'+channels, 1, defaultlive)
-    addDir(translation(30030), 'http://espn.go.com/watchespn/feeds/startup?action=upcoming'+channels+'&endDate='+days+'&startDate='+curdate.strftime("%Y%m%d"), 2,defaultupcoming)
+    addDir(translation(30029), 'http://sports-ak.espn.go.com/watchespn/feeds/startup?action=live'+channels, 1, defaultlive)
+    addDir(translation(30030), 'http://sports-ak.espn.go.com/watchespn/feeds/startup?action=upcoming'+channels+'&endDate='+days+'&startDate='+curdate.strftime("%Y%m%d"), 2,defaultupcoming)
     enddate = '&endDate='+ (curdate+timedelta(days=1)).strftime("%Y%m%d")
     replays1 = [5,10,15,20,25]
     replays1 = replays1[int(selfAddon.getSetting('replays1'))]
@@ -57,11 +57,11 @@ def CATEGORIES():
     replays4 = replays4[int(selfAddon.getSetting('replays4'))]
     start4 = (curdate-timedelta(days=replays4)).strftime("%Y%m%d")
     startAll = (curdate-timedelta(days=365)).strftime("%Y%m%d")
-    addDir(translation(30031)+str(replays1)+' Days', 'http://espn.go.com/watchespn/feeds/startup?action=replay'+channels+enddate+'&startDate='+start1, 2, defaultreplay)
-    addDir(translation(30031)+str(replays2)+' Days', 'http://espn.go.com/watchespn/feeds/startup?action=replay'+channels+enddate+'&startDate='+start2, 2, defaultreplay)
-    addDir(translation(30031)+str(replays3)+' Days', 'http://espn.go.com/watchespn/feeds/startup?action=replay'+channels+enddate+'&startDate='+start3, 2, defaultreplay)
-    addDir(translation(30031)+str(replays3)+'-'+str(replays4)+' Days', 'http://espn.go.com/watchespn/feeds/startup?action=replay'+channels+'&endDate='+start3+'&startDate='+start4, 2, defaultreplay)
-    addDir(translation(30032), 'http://espn.go.com/watchespn/feeds/startup?action=replay'+channels+enddate+'&startDate='+startAll, 2, defaultreplay)
+    addDir(translation(30031)+str(replays1)+' Days', 'http://sports-ak.espn.go.com/watchespn/feeds/startup?action=replay'+channels+enddate+'&startDate='+start1, 2, defaultreplay)
+    addDir(translation(30031)+str(replays2)+' Days', 'http://sports-ak.espn.go.com/watchespn/feeds/startup?action=replay'+channels+enddate+'&startDate='+start2, 2, defaultreplay)
+    addDir(translation(30031)+str(replays3)+' Days', 'http://sports-ak.espn.go.com/watchespn/feeds/startup?action=replay'+channels+enddate+'&startDate='+start3, 2, defaultreplay)
+    addDir(translation(30031)+str(replays3)+'-'+str(replays4)+' Days', 'http://sports-ak.espn.go.com/watchespn/feeds/startup?action=replay'+channels+'&endDate='+start3+'&startDate='+start4, 2, defaultreplay)
+    addDir(translation(30032), 'http://sports-ak.espn.go.com/watchespn/feeds/startup?action=replay'+channels+enddate+'&startDate='+startAll, 2, defaultreplay)
     xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
 def LISTNETWORKS(url,name):
@@ -104,11 +104,9 @@ def INDEX(url,name,bysport=False):
         else:
             ename = event.findtext('name').encode('utf-8')
             eventid = event.get('id')
-            bamContentId = event.get('bamContentId')
-            bamEventId = event.get('bamEventId')
+            simulcastAiringId = event.findtext('simulcastAiringId')
             authurl = '&partnerContentId='+eventid
-            authurl += '&eventId='+bamEventId
-            authurl += '&contentId='+bamContentId
+            authurl += '&simulcastAiringId='+simulcastAiringId
             sport2 = event.findtext('sport').title().encode('utf-8')
             if sport <> sport2:
                 sport += ' ('+sport2+')'
@@ -194,6 +192,8 @@ def PLAY(url,videonetwork):
     affiliateid = soup('name')[0].string
     swid = soup('personalization')[0]['swid']
     identityPointId = affiliateid+':'+swid
+    pk = ''.join([random.choice(string.ascii_letters + string.digits) for n in xrange(51)])
+    pkan = pk + ('%3D')
     config = 'http://espn.go.com/watchespn/player/config'
     data = get_html(config)
     networks = BeautifulStoneSoup(data, convertEntities=BeautifulStoneSoup.HTML_ENTITIES).find('networks').findAll('network')
@@ -202,18 +202,21 @@ def PLAY(url,videonetwork):
             playedId = network['playerid']
             cdnName = network['defaultcdn']
             channel = network['name']
-            networkurl = 'https://espn-ws.bamnetworks.com/pubajaxws/bamrest/MediaService2_0/op-findUserVerifiedEvent/v-2.1'
+            networkurl = 'http://broadband.espn.go.com/espn3/auth/watchespn/startSession?v=1.5'
+            #networkurl = 'https://espn-ws.bamnetworks.com/pubajaxws/bamrest/MediaService2_0/op-findUserVerifiedEvent/v-2.1'
             authurl = authurl = networkurl
             if '?' in authurl:
                 authurl +='&'
             else:
                 authurl +='?'
-            authurl += 'playbackScenario=FMS_CLOUD'
-            authurl += '&channel='+channel
-            authurl += url
-            authurl += '&rand='+("%.16f" % random.random())
+            authurl += 'affiliate='+affiliateid
             authurl += '&cdnName='+cdnName
-            authurl += '&identityPointId='+identityPointId
+            authurl += '&channel='+channel
+            authurl += '&playbackScenario=FMS_CLOUD'
+            authurl += '&pkan='+pkan
+            authurl += '&pkanType=SWID'
+            authurl += url
+            authurl += '&rand='+str(random.randint(100000,999999))
             authurl += '&playerId='+playedId
             html = get_html(authurl)
             tree = BeautifulStoneSoup(html, convertEntities=BeautifulStoneSoup.HTML_ENTITIES)
@@ -237,51 +240,75 @@ def PLAY(url,videonetwork):
                             dialog = xbmcgui.Dialog()
                             dialog.ok(translation(30040), blackoutstatus.find('blackout').string)
                             return
+            streamType = tree.find('streamtype').string
             smilurl = tree.find('url').string
+            xbmc.log('ESPN3:  smilurl: '+smilurl)
+            xbmc.log('ESPN3:  streamType: '+streamType)
             if smilurl == ' ' or smilurl == '':
                 dialog = xbmcgui.Dialog()
                 dialog.ok(translation(30037), translation(30038),translation(30039))
                 return
-            auth = smilurl.split('?')[1]
-            smilurl += '&rand='+("%.16f" % random.random())
-        
-            #Grab smil url to get rtmp url and playpath
-            html = get_html(smilurl)
-            soup = BeautifulStoneSoup(html, convertEntities=BeautifulStoneSoup.HTML_ENTITIES)
-            rtmp = soup.findAll('meta')[0]['base']
-            # Live Qualities
-            #     0,     1,     2,      3,      4
-            # Replay Qualities
-            #            0,     1,      2,      3
-            # Lowest, Low,  Medium, High,  Highest
-            # 200000,400000,800000,1200000,1800000
-            playpath=False
-            if selfAddon.getSetting("askquality") == 'true':
-                streams = soup.findAll('video')
-                quality=xbmcgui.Dialog().select(translation(30033), [str(int(stream['system-bitrate'])/1000)+'kbps' for stream in streams])
-                if quality!=-1:
-                    playpath = streams[quality]['src']
-                else:
-                    return
-            if 'ondemand' in rtmp:
-                if not playpath:
-                    playpath = soup.findAll('video')[int(selfAddon.getSetting('replayquality'))]['src']
-                finalurl = rtmp+'/?'+auth+' playpath='+playpath
-            elif 'live' in rtmp:
-                if not playpath:
-                    select = int(selfAddon.getSetting('livequality'))
-                    videos = soup.findAll('video')
-                    videosLen = len(videos)-1
-                    if select > videosLen:
-                        select = videosLen
-                    playpath = videos[select]['src']
-                finalurl = rtmp+' live=1 playlist=1 subscribe='+playpath+' playpath='+playpath+'?'+auth
-            item = xbmcgui.ListItem(path=finalurl)
-            return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, item)
+
+            if streamType == 'HLS':
+                 finalurl = smilurl
+                 item = xbmcgui.ListItem(path=finalurl)
+                 return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, item)
+                 
+            elif streamType == 'HDS':
+                 m3u8_url = smilurl
+                 xbmc.log('ESPN3:  get_cookies: '+m3u8_url)
+                 opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+                 opener.addheaders = [('User-Agent', 'Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:38.0) Gecko/20100101 Firefox/38.0')]
+                 usock = opener.open(m3u8_url)
+                 response = usock.read()
+                 for cookie in cj:
+                      print '%s: %s' % (cookie.name, cookie.value)
+                 usock.close()
+                 #finalurl = 
+                 #item = xbmcgui.ListItem(path=finalurl)
+                 #return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, item)
+
+            elif streamType == 'RTMP':  
+		       auth = smilurl.split('?')[1]
+		       smilurl += '&rand='+str(random.randint(100000,999999))
+		   
+		       #Grab smil url to get rtmp url and playpath
+		       html = get_html(smilurl)
+		       soup = BeautifulStoneSoup(html, convertEntities=BeautifulStoneSoup.HTML_ENTITIES)
+		       rtmp = soup.findAll('meta')[0]['base']
+		       # Live Qualities
+		       #     0,     1,     2,      3,      4
+		       # Replay Qualities
+		       #            0,     1,      2,      3
+		       # Lowest, Low,  Medium, High,  Highest
+		       # 200000,400000,800000,1200000,1800000
+		       playpath=False
+		       if selfAddon.getSetting("askquality") == 'true':
+		           streams = soup.findAll('video')
+		           quality=xbmcgui.Dialog().select(translation(30033), [str(int(stream['system-bitrate'])/1000)+'kbps' for stream in streams])
+		           if quality!=-1:
+		               playpath = streams[quality]['src']
+		           else:
+		               return
+		       if 'ondemand' in rtmp:
+		           if not playpath:
+		               playpath = soup.findAll('video')[int(selfAddon.getSetting('replayquality'))]['src']
+		           finalurl = rtmp+'/?'+auth+' playpath='+playpath
+		       elif 'live' in rtmp:
+		           if not playpath:
+		               select = int(selfAddon.getSetting('livequality'))
+		               videos = soup.findAll('video')
+		               videosLen = len(videos)-1
+		               if select > videosLen:
+		                   select = videosLen
+		               playpath = videos[select]['src']
+		           finalurl = rtmp+' live=1 playlist=1 subscribe='+playpath+' playpath='+playpath+'?'+auth
+		       item = xbmcgui.ListItem(path=finalurl)
+		       return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, item)
 
 
 def saveUserdata():
-    userdata1 = 'http://broadband.espn.go.com/espn3/auth/userData?format=xml'
+    userdata1 = 'http://broadband.espn.go.com/espn3/auth/watchespn/userData?format=xml'
     data1 = get_html(userdata1)
     SaveFile('userdata.xml', data1, ADDONDATA)
     soup = BeautifulStoneSoup(data1, convertEntities=BeautifulStoneSoup.HTML_ENTITIES)
@@ -291,9 +318,11 @@ def get_html( url ):
     try:
         xbmc.log('ESPN3:  get_html: '+url)
         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
-        opener.addheaders = [('User-Agent', 'Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.2.17) Gecko/20110422 Ubuntu/10.10 (maverick) Firefox/3.6.17')]
+        opener.addheaders = [('User-Agent', 'Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:38.0) Gecko/20100101 Firefox/38.0'),('Referer', 'http://assets.espn.go.com/espn360/builds/web/4.0/210/WatchEspnPreloader.swf?')]
         usock = opener.open(url)
         response = usock.read()
+        for cookie in cj:
+             print '%s: %s' % (cookie.name, cookie.value)
         usock.close()
         return response
     except: return False
