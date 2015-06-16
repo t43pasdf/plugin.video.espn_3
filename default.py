@@ -105,8 +105,14 @@ def INDEX(url,name,bysport=False):
             ename = event.findtext('name').encode('utf-8')
             eventid = event.get('id')
             simulcastAiringId = event.findtext('simulcastAiringId')
-            authurl = '&partnerContentId='+eventid
-            authurl += '&simulcastAiringId='+simulcastAiringId
+            desktopStreamSource = event.findtext('desktopStreamSource')
+            bamContentId = event.get('bamContentId')
+            bamEventId = event.get('bamEventId')
+            authurl = eventid
+            authurl += ','+bamContentId
+            authurl += ','+bamEventId
+            authurl += ','+simulcastAiringId
+            authurl += ','+desktopStreamSource
             sport2 = event.findtext('sport').title().encode('utf-8')
             if sport <> sport2:
                 sport += ' ('+sport2+')'
@@ -192,6 +198,16 @@ def PLAY(url,videonetwork):
     affiliateid = soup('name')[0].string
     swid = soup('personalization')[0]['swid']
     identityPointId = affiliateid+':'+swid
+    
+    # Split up the url so they can be used as needed
+    url_split = url
+    url_split = url.split(',')
+    eventid = str(url_split[0])    
+    contentId = str(url_split[1])
+    eventId = str(url_split[2]) 
+    simulcastAiringId = str(url_split[3]) 
+    streamType = str(url_split[4]) 
+    
     pk = ''.join([random.choice(string.ascii_letters + string.digits) for n in xrange(51)])
     pkan = pk + ('%3D')
     config = 'http://espn.go.com/watchespn/player/config'
@@ -202,22 +218,38 @@ def PLAY(url,videonetwork):
             playedId = network['playerid']
             cdnName = network['defaultcdn']
             channel = network['name']
-            networkurl = 'http://broadband.espn.go.com/espn3/auth/watchespn/startSession?v=1.5'
-            #networkurl = 'https://espn-ws.bamnetworks.com/pubajaxws/bamrest/MediaService2_0/op-findUserVerifiedEvent/v-2.1'
+            if streamType == 'HLS':
+                 networkurl = 'http://broadband.espn.go.com/espn3/auth/watchespn/startSession?v=1.5'
+            elif streamType == 'HDS' or streamType == 'RTMP':
+                 networkurl = 'https://espn-ws.bamnetworks.com/pubajaxws/bamrest/MediaService2_0/op-findUserVerifiedEvent/v-2.1'
             authurl = authurl = networkurl
             if '?' in authurl:
                 authurl +='&'
             else:
                 authurl +='?'
-            authurl += 'affiliate='+affiliateid
-            authurl += '&cdnName='+cdnName
-            authurl += '&channel='+channel
-            authurl += '&playbackScenario=FMS_CLOUD'
-            authurl += '&pkan='+pkan
-            authurl += '&pkanType=SWID'
-            authurl += url
-            authurl += '&rand='+str(random.randint(100000,999999))
-            authurl += '&playerId='+playedId
+            
+            if streamType == 'HLS':
+		       authurl += 'affiliate='+affiliateid
+		       authurl += '&cdnName='+cdnName
+		       authurl += '&channel='+channel
+		       authurl += '&playbackScenario=FMS_CLOUD'
+		       authurl += '&pkan='+pkan
+		       authurl += '&pkanType=SWID'
+		       authurl += '&eventid='+eventid
+		       authurl += '&simulcastAiringId='+simulcastAiringId
+		       authurl += '&rand='+str(random.randint(100000,999999))
+		       authurl += '&playerId='+playedId
+            elif streamType == 'HDS' or streamType == 'RTMP':
+		       authurl += 'identityPointId='+affiliateid
+		       authurl += '&cdnName='+cdnName
+		       authurl += '&channel='+channel
+		       authurl += '&playbackScenario=FMS_CLOUD'
+		       authurl += '&partnerContentId='+eventid
+		       authurl += '&eventId='+eventId
+		       authurl += '&contentId='+contentId
+		       authurl += '&rand='+str(random.randint(100000,999999))
+		       authurl += '&playerId='+playedId     
+            authurl = str(authurl)
             html = get_html(authurl)
             tree = BeautifulStoneSoup(html, convertEntities=BeautifulStoneSoup.HTML_ENTITIES)
             authstatus = tree.find('auth-status')
@@ -240,10 +272,10 @@ def PLAY(url,videonetwork):
                             dialog = xbmcgui.Dialog()
                             dialog.ok(translation(30040), blackoutstatus.find('blackout').string)
                             return
-            streamType = tree.find('streamtype').string
+            #streamType = tree.find('streamtype').string
             smilurl = tree.find('url').string
-            xbmc.log('ESPN3:  smilurl: '+smilurl)
-            xbmc.log('ESPN3:  streamType: '+streamType)
+            #xbmc.log('ESPN3:  smilurl: '+smilurl)
+            #xbmc.log('ESPN3:  streamType: '+streamType)
             if smilurl == ' ' or smilurl == '':
                 dialog = xbmcgui.Dialog()
                 dialog.ok(translation(30037), translation(30038),translation(30039))
@@ -253,22 +285,8 @@ def PLAY(url,videonetwork):
                  finalurl = smilurl
                  item = xbmcgui.ListItem(path=finalurl)
                  return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, item)
-                 
-            elif streamType == 'HDS':
-                 m3u8_url = smilurl
-                 xbmc.log('ESPN3:  get_cookies: '+m3u8_url)
-                 opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
-                 opener.addheaders = [('User-Agent', 'Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:38.0) Gecko/20100101 Firefox/38.0')]
-                 usock = opener.open(m3u8_url)
-                 response = usock.read()
-                 for cookie in cj:
-                      print '%s: %s' % (cookie.name, cookie.value)
-                 usock.close()
-                 #finalurl = 
-                 #item = xbmcgui.ListItem(path=finalurl)
-                 #return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, item)
 
-            elif streamType == 'RTMP':  
+            elif streamType == 'HDS' or streamType == 'RTMP':  
 		       auth = smilurl.split('?')[1]
 		       smilurl += '&rand='+str(random.randint(100000,999999))
 		   
@@ -314,15 +332,14 @@ def saveUserdata():
     soup = BeautifulStoneSoup(data1, convertEntities=BeautifulStoneSoup.HTML_ENTITIES)
     checkrights = 'http://broadband.espn.go.com/espn3/auth/espnnetworks/user'
 
-def get_html( url ):
+def get_html(url):
     try:
         xbmc.log('ESPN3:  get_html: '+url)
         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
-        opener.addheaders = [('User-Agent', 'Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:38.0) Gecko/20100101 Firefox/38.0'),('Referer', 'http://assets.espn.go.com/espn360/builds/web/4.0/210/WatchEspnPreloader.swf?')]
+        opener.addheaders = [('User-Agent', 'Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:38.0) Gecko/20100101 Firefox/38.0')]
         usock = opener.open(url)
         response = usock.read()
-        for cookie in cj:
-             print '%s: %s' % (cookie.name, cookie.value)
+        #xbmc.log('ESPN3:  get_response: '+response)
         usock.close()
         return response
     except: return False
@@ -435,3 +452,4 @@ elif mode == 5:
     xbmc.log("Upcoming")
     dialog = xbmcgui.Dialog()
     dialog.ok(translation(30035), translation(30036))
+
