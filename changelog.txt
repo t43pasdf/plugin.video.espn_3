@@ -1,4 +1,10 @@
 --------------------------------
+version 1.1.1 (June 16 2015
+--------------------------------
+- fixed Live streaming issues.
+- still not sure if HDS content is working. please leave comments in github if you are having issues, or PM me through Kodi Forums
+
+--------------------------------
 version 1.1.0 (June 5 2015)
 --------------------------------
 - added exeptions for RTMP and HLS streams
