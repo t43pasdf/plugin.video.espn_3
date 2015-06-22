@@ -338,7 +338,7 @@ def get_html(url):
         opener.addheaders = [('User-Agent', 'Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:38.0) Gecko/20100101 Firefox/38.0')]
         usock = opener.open(url)
         response = usock.read()
-        xbmc.log('ESPN3:  get_response: '+response)
+        #xbmc.log('ESPN3:  get_response: '+response)
         usock.close()
         return response
     except: 
