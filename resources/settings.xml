@@ -16,9 +16,9 @@
 		<setting id="replays4" type="enum" label="30025" values="60|90|120|240" default="2"/>
 		<setting type="sep" />
 	</category>
-        <category label="Live Events Color">
+        <category label="Set Live Events Color">
 	         <setting type="sep" />
-	<setting id="color" type="text" label="30050" default="FFf5f5f5"/> 
+	<setting id="color" type="text" label="30050" default="f5f5f5"/> 
 	         <setting type="sep" />	
 	</category>
 </settings>
