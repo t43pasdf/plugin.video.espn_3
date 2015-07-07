@@ -1,4 +1,8 @@
 --------------------------------
+version 1.2.1 (July 7 2015)
+- Added some code to solve issues with timestamp on ESPN 3 website.
+
+--------------------------------
 version 1.2 (June 19 2015)
 --------------------------------
 - Switching filename default.py to addon.py to keep up with Kodi
