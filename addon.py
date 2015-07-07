@@ -1,7 +1,7 @@
 #!/usr/bin/python
 #
 #
-# Written by Ksosez, BlueCop
+# Written by Ksosez, BlueCop, Romans I XVI, locomot1f, MetalChris
 # Released under GPL(v2)
 
 import urllib, urllib2, xbmcplugin, xbmcaddon, xbmcgui, os, random, string, re
