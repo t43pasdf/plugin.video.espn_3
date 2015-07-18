@@ -79,6 +79,7 @@ def LISTSPORTS(url,name):
         image = defaultimage
     addDir(translation(30034), url, 1, image)
     sports = []
+    data = sanitize(data)
     for event in ET.XML(data).findall('event'):
         sport = event.findtext('sportDisplayValue').title().encode('utf-8')
         if sport not in sports:
@@ -97,6 +98,7 @@ def INDEX(url,name,bysport=False):
         data = '<?xml version="1.0" encoding="CP1252"?>'+data
     else:
         data = ReadFile('videocache.xml', ADDONDATA)
+        data = sanitize(data)
     for event in ET.XML(data).findall('event'):
         sport = event.findtext('sportDisplayValue').title().encode('utf-8')
         if name <> sport and bysport == True:
@@ -344,6 +346,14 @@ def get_html(url):
     except: 
         xbmc.log('ESPN3:  get_response: Could not open URL: '+url)
         return False
+        
+def sanitize(data):
+    output = ''
+    for i in data:
+        for current in i:
+            if ((current >= '\x20') and (current <= '\xD7FF')) or ((current >= '\xE000') and (current <= '\xFFFD')) or ((current >= '\x10000') and (current <= '\x10FFFF')):
+               output = output + current
+    return output
 
 def get_params():
     param = []
