@@ -24,6 +24,12 @@ def get_networks():
 def get_live_event_url():
     return get_config_soup().find('feed', {'id' : 'liveEvent'}).text
 
+def get_replay_event_url():
+    return get_config_soup().find('feed', {'id' : 'replayEvent'}).text
+
+def get_upcoming_event_url():
+    return get_config_soup().find('feed', {'id' : 'upcomingEvent'}).text
+
 def get_start_session_url():
     return get_config_soup().find('feed', {'id' : 'startSession'}).text
 

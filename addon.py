@@ -26,16 +26,16 @@ LIVE_EVENTS_MODE = 1
 PLAY_MODE = 6
 
 cj = cookielib.LWPCookieJar()
-networkmap = {'n360':'ESPN3',
-              'n501':'ESPN'}
 channels = ''
 
 def CATEGORIES():
+    include_premium = selfAddon.getSetting('ShowPremiumChannels') == 'true'
+    channel_list = events.get_channel_list(include_premium)
     curdate = datetime.utcnow()
     upcoming = int(selfAddon.getSetting('upcoming'))+1
     days = (curdate+timedelta(days=upcoming)).strftime("%Y%m%d")
-    addDir(translation(30029), events.get_live_events_url(events.get_channel_list()), LIVE_EVENTS_MODE, defaultlive)
-    addDir(translation(30030), 'http://sports-ak.espn.go.com/watchespn/feeds/startup?action=upcoming'+channels+'&endDate='+days+'&startDate='+curdate.strftime("%Y%m%d"), 2,defaultupcoming)
+    addDir(translation(30029), events.get_live_events_url(channel_list), LIVE_EVENTS_MODE, defaultlive)
+    addDir(translation(30030), events.get_upcoming_events_url(channel_list) + '&endDate='+days+'&startDate='+curdate.strftime("%Y%m%d"), 2,defaultupcoming)
     enddate = '&endDate='+ (curdate+timedelta(days=1)).strftime("%Y%m%d")
     replays1 = [5,10,15,20,25]
     replays1 = replays1[int(selfAddon.getSetting('replays1'))]
@@ -50,11 +50,11 @@ def CATEGORIES():
     replays4 = replays4[int(selfAddon.getSetting('replays4'))]
     start4 = (curdate-timedelta(days=replays4)).strftime("%Y%m%d")
     startAll = (curdate-timedelta(days=365)).strftime("%Y%m%d")
-    addDir(translation(30031)+str(replays1)+' Days', 'http://sports-ak.espn.go.com/watchespn/feeds/startup?action=replay'+channels+enddate+'&startDate='+start1, 2, defaultreplay)
-    addDir(translation(30031)+str(replays2)+' Days', 'http://sports-ak.espn.go.com/watchespn/feeds/startup?action=replay'+channels+enddate+'&startDate='+start2, 2, defaultreplay)
-    addDir(translation(30031)+str(replays3)+' Days', 'http://sports-ak.espn.go.com/watchespn/feeds/startup?action=replay'+channels+enddate+'&startDate='+start3, 2, defaultreplay)
-    addDir(translation(30031)+str(replays3)+'-'+str(replays4)+' Days', 'http://sports-ak.espn.go.com/watchespn/feeds/startup?action=replay'+channels+'&endDate='+start3+'&startDate='+start4, 2, defaultreplay)
-    addDir(translation(30032), 'http://sports-ak.espn.go.com/watchespn/feeds/startup?action=replay'+channels+enddate+'&startDate='+startAll, 2, defaultreplay)
+    addDir(translation(30031)+str(replays1)+' Days', events.get_replay_events_url(channel_list) +enddate+'&startDate='+start1, 2, defaultreplay)
+    addDir(translation(30031)+str(replays2)+' Days', events.get_replay_events_url(channel_list) +enddate+'&startDate='+start2, 2, defaultreplay)
+    addDir(translation(30031)+str(replays3)+' Days', events.get_replay_events_url(channel_list) +enddate+'&startDate='+start3, 2, defaultreplay)
+    addDir(translation(30031)+str(replays3)+'-'+str(replays4)+' Days', events.get_replay_events_url(channel_list) +'&endDate='+start3+'&startDate='+start4, 2, defaultreplay)
+    addDir(translation(30032), events.get_replay_events_url(channel_list) +enddate+'&startDate='+startAll, 2, defaultreplay)
     xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
 def LISTNETWORKS(url,name):
@@ -101,7 +101,7 @@ def INDEX(url,name,bysport=False):
         elif desktopStreamSource == 'HLS' and StreamType == 'true':
         	pass
         else:
-            ename = event.find('name').string.encode('utf-8')
+            ename = event.find('name').string
             eventid = event.get('id')
             simulcastAiringId = event.find('simulcastairingid').string
             desktopStreamSource = event.find('desktopstreamsource').string
@@ -136,18 +136,21 @@ def INDEX(url,name,bysport=False):
             now = datetime.now().strftime('%H%M')
             etime24 = time.strftime("%H%M",time.localtime(starttime))
             aspect_ratio = event.find('aspectratio').string
-
+            length = str(int(round((endtime - time.time()))))
+            title_time = etime
             if 'action=live' in url and now > etime24:
-                length = str(int(round((endtime - time.time()))))
-                ename = '[COLOR=FF'+str(selfAddon.getSetting('color'))+']'+" - ".join((etime, ename))+'[/COLOR]'
+                color = str(selfAddon.getSetting('color'))
             elif 'action=live' in url:
-                length = str(int(round((endtime - time.time()))))
-                ename = " - ".join((etime, ename))
+                color = '999999'
             else:
+                color = 'E0E0E0'
                 length = str(int(round((endtime - starttime))))
-                ename = " - ".join((udate, etime, ename))
+                title_time = ' - '.join((udate, etime))
 
-            print 'length = %s' % length
+            channel_color = 'CC0000'
+
+            ename = '[COLOR=FF%s]%s[/COLOR] [COLOR=FFB700EB]%s[/COLOR] [COLOR=FF%s]%s[/COLOR]' % (channel_color, network, title_time, color, ename)
+
             length_minutes = int(length) / 60
 
             end = event.find('summary').string
@@ -172,7 +175,7 @@ def INDEX(url,name,bysport=False):
             elif length <> None and length <> ' ' and ('action=replay' in url or 'action=upcoming' in url):
 		        plot += 'Duration: '+ str(length_minutes) +' minutes'+'\n'
             plot += end
-            infoLabels = {'title':ename,
+            infoLabels = {'title': ename,
                           'genre':sport,
                           'plot':plot,
                           'aired':aired,
@@ -496,9 +499,10 @@ def ReadFile(filename, dir):
     return file.read()
 
 def addLink(name, url, mode, iconimage, fanart=False, infoLabels=False):
-    u = sys.argv[0] + "?url=" + urllib.quote_plus(url) + "&mode=" + str(mode) + "&name=" + urllib.quote_plus(name)
+    u = sys.argv[0] + "?url=" + urllib.quote_plus(url) + "&mode=" + str(mode) + "&name=" + urllib.quote_plus(name.encode('utf-8'))
     ok = True
     liz = xbmcgui.ListItem(name, iconImage="DefaultVideo.png", thumbnailImage=iconimage)
+
     if not infoLabels:
         infoLabels={"Title": name}
     liz.setInfo(type="Video", infoLabels=infoLabels)
@@ -512,7 +516,7 @@ def addLink(name, url, mode, iconimage, fanart=False, infoLabels=False):
 
 
 def addDir(name, url, mode, iconimage, fanart=False, infoLabels=False):
-    u = sys.argv[0] + "?url=" + urllib.quote_plus(url) + "&mode=" + str(mode) + "&name=" + urllib.quote_plus(name)
+    u = sys.argv[0] + "?url=" + urllib.quote_plus(url) + "&mode=" + str(mode) + "&name=" + urllib.quote_plus(name.encode('utf-8'))
     ok = True
     liz = xbmcgui.ListItem(name, iconImage="DefaultFolder.png", thumbnailImage=iconimage)
     if not infoLabels:
