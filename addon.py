@@ -99,7 +99,7 @@ def INDEX(url,name,bysport=False):
         if name <> sport and bysport == True:
             continue
         elif desktopStreamSource == 'HLS' and StreamType == 'true':
-        	pass
+            pass
         else:
             ename = event.find('name').string
             eventid = event.get('id')
@@ -173,7 +173,7 @@ def INDEX(url,name,bysport=False):
             if length <> None and length <> ' ' and 'action=live' in url:
                 plot += 'Duration: Approximately '+ str(length_minutes)+' minutes remaining'+'\n'
             elif length <> None and length <> ' ' and ('action=replay' in url or 'action=upcoming' in url):
-		        plot += 'Duration: '+ str(length_minutes) +' minutes'+'\n'
+                plot += 'Duration: '+ str(length_minutes) +' minutes'+'\n'
             plot += end
             infoLabels = {'title': ename,
                           'genre':sport,
