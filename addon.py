@@ -7,39 +7,33 @@
 import urllib, urllib2, xbmcplugin, xbmcaddon, xbmcgui, os, random, string, re
 import cookielib
 import time
+import mechanize
+from adobe import ADOBE
+from globals import *
 from datetime import datetime, timedelta
 from bs4 import BeautifulSoup, SoupStrainer
+import base64
 
-## Get the settings
+import player_config
+import events
+import util
+from espn import ESPN
+from mso_provider import get_mso_provider
+from user_details import UserDetails
 
-selfAddon = xbmcaddon.Addon(id='plugin.video.espn_3')
-translation = selfAddon.getLocalizedString
-defaultimage = 'special://home/addons/plugin.video.espn_3/icon.png'
-defaultfanart = 'special://home/addons/plugin.video.espn_3/fanart.jpg'
-defaultlive = 'special://home/addons/plugin.video.espn_3/resources/media/new_live.png'
-defaultreplay = 'special://home/addons/plugin.video.espn_3/resources/media/new_replay.png'
-defaultupcoming = 'special://home/addons/plugin.video.espn_3/resources/media/new_upcoming.png'
-StreamType = selfAddon.getSetting('StreamType')
-pluginpath = selfAddon.getAddonInfo('path')
-pluginhandle = int(sys.argv[1])
-
-ADDONDATA = xbmc.translatePath('special://profile/addon_data/plugin.video.espn_3/')
-if not os.path.exists(ADDONDATA):
-    os.makedirs(ADDONDATA)
-USERFILE = os.path.join(ADDONDATA,'userdata.xml')
-
+LIVE_EVENTS_MODE = 1
+PLAY_MODE = 6
 
 cj = cookielib.LWPCookieJar()
-networkmap = {'n360':'ESPN3'}
-
-channels = '&channel='
-channels += 'espn3'
+networkmap = {'n360':'ESPN3',
+              'n501':'ESPN'}
+channels = ''
 
 def CATEGORIES():
     curdate = datetime.utcnow()
     upcoming = int(selfAddon.getSetting('upcoming'))+1
     days = (curdate+timedelta(days=upcoming)).strftime("%Y%m%d")
-    addDir(translation(30029), 'http://sports-ak.espn.go.com/watchespn/feeds/startup?action=live'+channels, 1, defaultlive)
+    addDir(translation(30029), events.get_live_events_url(events.get_channel_list()), LIVE_EVENTS_MODE, defaultlive)
     addDir(translation(30030), 'http://sports-ak.espn.go.com/watchespn/feeds/startup?action=upcoming'+channels+'&endDate='+days+'&startDate='+curdate.strftime("%Y%m%d"), 2,defaultupcoming)
     enddate = '&endDate='+ (curdate+timedelta(days=1)).strftime("%Y%m%d")
     replays1 = [5,10,15,20,25]
@@ -89,21 +83,22 @@ def LISTSPORTS(url,name):
 
 def INDEXBYSPORT(url,name):
     INDEX(url,name,bysport=True)
-    
+
 def INDEX(url,name,bysport=False):
     if 'action=live' in url:
-        data = get_html(url)
+        data = events.get_events(url)
         #data = '<?xml version="1.0" encoding="CP1252"?>'+data
     else:
         data = ReadFile('videocache.xml', ADDONDATA)
-    events = BeautifulSoup(data, 'html.parser', parse_only = SoupStrainer('event'))
-    for event in events.find_all('event'):
-        sport = event.find('sportdisplayvalue').string.title().encode('utf-8')
+        data_soup = BeautifulSoup(data, 'html.parser')
+        data = data_soup.findAll('event')
+    for event in data:
+        sport = event.find('sportdisplayvalue').string.encode('utf-8')
         desktopStreamSource = event.find('desktopstreamsource').string
         if name <> sport and bysport == True:
             continue
         elif desktopStreamSource == 'HLS' and StreamType == 'true':
-        	  pass
+        	pass
         else:
             ename = event.find('name').string.encode('utf-8')
             eventid = event.get('id')
@@ -111,25 +106,26 @@ def INDEX(url,name,bysport=False):
             desktopStreamSource = event.find('desktopstreamsource').string
             bamContentId = event.get('bamcontentid')
             bamEventId = event.get('bameventid')
+            networkid = event.find('networkid').string
+            if networkid is not None:
+                network = player_config.get_network(networkid)
             authurl = eventid
             authurl += ','+bamContentId
             authurl += ','+bamEventId
             authurl += ','+simulcastAiringId
             authurl += ','+desktopStreamSource
+            authurl += ','+networkid
             sport2 = event.find('sport').string.title()
             if sport <> sport2:
                 sport += ' ('+sport2+')'
             league = event.find('league').string
             location = event.find('site').string
-            networkid = event.find('networkid').string
-            if networkid is not None:
-                network = networkmap[networkid]
             fanart = event.find('large').string
             fanart = fanart.split('&')[0]
             thumb = event.find('large').string
             mpaa = event.find('parentalrating').string
             starttime = int(event.find('starttimegmtms').string)/1000
-	    eventedt = int(event.find('starttime').string)
+            eventedt = int(event.find('starttime').string)
             etime = time.strftime("%I:%M %p",time.localtime(float(starttime)))
             endtime = int(event.find('endtimegmtms').string)/1000
             start = time.strftime("%m/%d/%Y %I:%M %p",time.localtime(starttime))
@@ -137,23 +133,29 @@ def INDEX(url,name,bysport=False):
             date = time.strftime("%m/%d/%Y",time.localtime(starttime))
             udate = time.strftime("%m/%d",time.localtime(starttime))
             now = datetime.now().strftime('%H%M')
-            etime24 = time.strftime("%H%M",time.localtime(starttime)) 
+            etime24 = time.strftime("%H%M",time.localtime(starttime))
+            aspect_ratio = event.find('aspectratio').string
 
             if 'action=live' in url and now > etime24:
-                length = str(int(round((endtime - time.time())/60)))
+                length = str(int(round((endtime - time.time()))))
                 ename = '[COLOR=FF'+str(selfAddon.getSetting('color'))+']'+" - ".join((etime, ename))+'[/COLOR]'
             elif 'action=live' in url:
-                length = str(int(round((endtime - time.time())/60)))
+                length = str(int(round((endtime - time.time()))))
                 ename = " - ".join((etime, ename))
             else:
-                length = str(int(round((endtime - starttime)/60)))
+                length = str(int(round((endtime - starttime))))
                 ename = " - ".join((udate, etime, ename))
-            
-            
+
+            print 'length = %s' % length
+            length_minutes = int(length) / 60
+
             end = event.find('summary').string
-            if end == '':
+            if end is None or len(end) == 0:
                 end = event.find('caption').string
-            else: end = 'No Summary/ Caption Provided'
+
+            if end is None:
+                end = ''
+            end += '\nNetwork: ' + network
 
             plot = ''
             if sport <> None and sport <> ' ':
@@ -165,9 +167,9 @@ def INDEX(url,name,bysport=False):
             if start <> None and start <> ' ':
                 plot += 'Air Date: '+start+'\n'
             if length <> None and length <> ' ' and 'action=live' in url:
-                plot += 'Duration: Approximately '+length+' minutes remaining'+'\n'
-	    elif length <> None and length <> ' ' and ('action=replay' in url or 'action=upcoming' in url):
-		plot += 'Duration: '+length+' minutes'+'\n'
+                plot += 'Duration: Approximately '+ str(length_minutes)+' minutes remaining'+'\n'
+            elif length <> None and length <> ' ' and ('action=replay' in url or 'action=upcoming' in url):
+		        plot += 'Duration: '+ str(length_minutes) +' minutes'+'\n'
             plot += end
             infoLabels = {'title':ename,
                           'genre':sport,
@@ -175,52 +177,124 @@ def INDEX(url,name,bysport=False):
                           'aired':aired,
                           'premiered':aired,
                           'duration':length,
-                          'studio':'ESPN 3',
-                          'mpaa':mpaa}
+                          'studio':network,
+                          'mpaa':mpaa,
+                          'videoaspect' : aspect_ratio}
             if 'action=upcoming' in url:
                 mode = 5
-            elif networkid == 'n360':
-                mode = 4
-            elif networkid == 'n501':
-                mode = 6
-            elif networkid == 'n502':
-                mode = 7   
-            elif networkid == 'n599':
-                mode = 8
-            elif networkid == 'ngl':
-                mode = 9
-            elif networkid == 'nbb':
-                mode = 10  
+            else:
+                mode = PLAY_MODE
             addLink(ename, authurl, mode, fanart, fanart, infoLabels=infoLabels)
     xbmcplugin.setContent(pluginhandle, 'episodes')
     xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
 def PLAYESPN3(url):
     PLAY(url,'n360')
-    
-def PLAY(url,videonetwork):
+
+def PLAY_PROTECTED_CONTENT(url):
+
+    if not check_user_settings():
+        return
+
     data = ReadFile('userdata.xml', ADDONDATA)
     soup = BeautifulSoup(data, 'html.parser')
     affiliateid = soup('name')[0].string
     swid = soup('personalization')[0]['swid']
     identityPointId = affiliateid+':'+swid
-    
+
     # Split up the url so they can be used as needed
     url_split = url
     url_split = url.split(',')
-    eventid = str(url_split[0])    
+    eventid = str(url_split[0])
     contentId = str(url_split[1])
-    eventId = str(url_split[2]) 
-    simulcastAiringId = str(url_split[3]) 
-    streamType = str(url_split[4]) 
-    
+    eventId = str(url_split[2])
+    simulcastAiringId = str(url_split[3])
+    streamType = str(url_split[4])
+    networkid = str(url_split[5])
+
+    requestor = ESPN()
+    mso_provider = get_mso_provider(selfAddon.getSetting('provider'))
+    user_details = UserDetails(selfAddon.getSetting('username'), selfAddon.getSetting('password'))
+
+
+    adobe = ADOBE(requestor, mso_provider, user_details)
+    media_token = adobe.GET_MEDIA_TOKEN()
+    resource_id = requestor.get_resource_id()
+
+    start_session_url = player_config.get_start_session_url()
+    start_session_url += 'affiliate='+affiliateid
+    start_session_url += '&channel='+player_config.get_network(networkid)
+    start_session_url += '&partner=watchespn'
+    start_session_url += '&playbackScenario=HTTP_CLOUD_MOBILE'
+    start_session_url += '&v=2.0.0'
+    start_session_url += '&platform=android_tablet'
+    start_session_url += '&sdkVersion=1.1.0'
+    start_session_url += '&token='+urllib.quote(base64.b64encode(media_token))
+    start_session_url += '&resource=' + urllib.quote(base64.b64encode(resource_id))
+    start_session_url += '&simulcastAiringId='+simulcastAiringId
+    start_session_url += '&tokenType=ADOBEPASS'
+
+    xbmc.log('ESPN3: start_session_url: ' + start_session_url)
+    tree = util.get_url_as_xml_soup(start_session_url)
+    authstatus = tree.find('auth-status')
+    blackoutstatus = tree.find('blackout-status')
+    if not authstatus.find('successstatus'):
+        if not authstatus.find('notauthorizedstatus'):
+            if authstatus.find('errormessage').string:
+                dialog = xbmcgui.Dialog()
+                import textwrap
+                errormessage = authstatus.find('errormessage').string
+                try:
+                    errormessage = textwrap.fill(errormessage, width=50).split('\n')
+                    dialog.ok(translation(30037), errormessage[0],errormessage[1],errormessage[2])
+                except:
+                    dialog.ok(translation(30037), errormessage[0])
+                return
+    if not blackoutstatus.find('successstatus'):
+        if blackoutstatus.find('errormessage').string:
+            dialog = xbmcgui.Dialog()
+            dialog.ok(translation(30040), blackoutstatus.find('errormessage').string)
+            return
+    pkan = tree.find('pkanjar').string
+    # FFMPEG does not support hds so use hls
+    smilurl = tree.find('hls-backup-url').string
+    xbmc.log('ESPN3:  smilurl: '+smilurl)
+    xbmc.log('ESPN3:  streamType: '+streamType)
+    if smilurl == ' ' or smilurl == '':
+        dialog = xbmcgui.Dialog()
+        dialog.ok(translation(30037), translation(30038),translation(30039))
+        return
+
+    finalurl = smilurl
+    ua = urllib.quote('VisualOn OSMP+ Player(Linux;Android;WatchESPN/1.0_Handset)')
+    finalurl = finalurl + '|User-Agent=' + ua + '&Cookie=_mediaAuth=' + urllib.quote(base64.b64encode(pkan))
+    print finalurl
+    item = xbmcgui.ListItem(path=finalurl)
+    return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, item)
+
+def PLAY_FREE_CONTENT(url):
+    data = ReadFile('userdata.xml', ADDONDATA)
+    soup = BeautifulSoup(data, 'html.parser')
+    affiliateid = soup('name')[0].string
+    swid = soup('personalization')[0]['swid']
+    identityPointId = affiliateid+':'+swid
+
+    # Split up the url so they can be used as needed
+    url_split = url
+    url_split = url.split(',')
+    eventid = str(url_split[0])
+    contentId = str(url_split[1])
+    eventId = str(url_split[2])
+    simulcastAiringId = str(url_split[3])
+    streamType = str(url_split[4])
+
     pk = ''.join([random.choice(string.ascii_letters + string.digits) for n in xrange(51)])
     pkan = pk + ('%3D')
     config = 'https://espn.go.com/watchespn/player/config'
     data = get_html(config)
     networks = BeautifulSoup(data, 'html.parser', parse_only = SoupStrainer('network'))
     for network in networks:
-        if videonetwork == network['id']:
+        if 'n360' == network['id']:
             playedId = network['playerid']
             cdnName = network['defaultcdn']
             channel = network['name']
@@ -233,28 +307,28 @@ def PLAY(url,videonetwork):
                 authurl +='&'
             else:
                 authurl +='?'
-            
+
             if streamType == 'HLS':
-		       authurl += 'affiliate='+affiliateid
-		       authurl += '&cdnName='+cdnName
-		       authurl += '&channel='+channel
-		       authurl += '&playbackScenario=FMS_CLOUD'
-		       authurl += '&pkan='+pkan
-		       authurl += '&pkanType=SWID'
-		       authurl += '&eventid='+eventid
-		       authurl += '&simulcastAiringId='+simulcastAiringId
-		       authurl += '&rand='+str(random.randint(100000,999999))
-		       authurl += '&playerId='+playedId
+               authurl += 'affiliate='+affiliateid
+               authurl += '&cdnName='+cdnName
+               authurl += '&channel='+channel
+               authurl += '&playbackScenario=FMS_CLOUD'
+               authurl += '&pkan='+pkan
+               authurl += '&pkanType=SWID'
+               authurl += '&eventid='+eventid
+               authurl += '&simulcastAiringId='+simulcastAiringId
+               authurl += '&rand='+str(random.randint(100000,999999))
+               authurl += '&playerId='+playedId
             elif streamType == 'HDS' or streamType == 'RTMP':
-		       authurl += 'identityPointId='+affiliateid
-		       authurl += '&cdnName='+cdnName
-		       authurl += '&channel='+channel
-		       authurl += '&playbackScenario=FMS_CLOUD'
-		       authurl += '&partnerContentId='+eventid
-		       authurl += '&eventId='+eventId
-		       authurl += '&contentId='+contentId
-		       authurl += '&rand='+str(random.randint(100000,999999))
-		       authurl += '&playerId='+playedId     
+               authurl += 'identityPointId='+affiliateid
+               authurl += '&cdnName='+cdnName
+               authurl += '&channel='+channel
+               authurl += '&playbackScenario=FMS_CLOUD'
+               authurl += '&partnerContentId='+eventid
+               authurl += '&eventId='+eventId
+               authurl += '&contentId='+contentId
+               authurl += '&rand='+str(random.randint(100000,999999))
+               authurl += '&playerId='+playedId
             html = get_html(authurl)
             tree = BeautifulSoup(html, 'html.parser')
             authstatus = tree.find('auth-status')
@@ -291,43 +365,73 @@ def PLAY(url,videonetwork):
                  item = xbmcgui.ListItem(path=finalurl)
                  return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, item)
 
-            elif streamType == 'HDS' or streamType == 'RTMP':  
-		       auth = smilurl.split('?')[1]
-		       smilurl += '&rand='+str(random.randint(100000,999999))
-		   
-		       #Grab smil url to get rtmp url and playpath
-		       html = get_html(smilurl)
-		       soup = BeautifulSoup(html, 'html.parser')
-		       rtmp = soup.findAll('meta')[0]['base']
-		       # Live Qualities
-		       #     0,     1,     2,      3,      4
-		       # Replay Qualities
-		       #            0,     1,      2,      3
-		       # Lowest, Low,  Medium, High,  Highest
-		       # 200000,400000,800000,1200000,1800000
-		       playpath=False
-		       if selfAddon.getSetting("askquality") == 'true':
-		           streams = soup.findAll('video')
-		           quality=xbmcgui.Dialog().select(translation(30033), [str(int(stream['system-bitrate'])/1000)+'kbps' for stream in streams])
-		           if quality!=-1:
-		               playpath = streams[quality]['src']
-		           else:
-		               return
-		       if 'ondemand' in rtmp:
-		           if not playpath:
-		               playpath = soup.findAll('video')[int(selfAddon.getSetting('replayquality'))]['src']
-		           finalurl = rtmp+'/?'+auth+' playpath='+playpath
-		       elif 'live' in rtmp:
-		           if not playpath:
-		               select = int(selfAddon.getSetting('livequality'))
-		               videos = soup.findAll('video')
-		               videosLen = len(videos)-1
-		               if select > videosLen:
-		                   select = videosLen
-		               playpath = videos[select]['src']
-		           finalurl = rtmp+' live=1 playlist=1 subscribe='+playpath+' playpath='+playpath+'?'+auth
-		       item = xbmcgui.ListItem(path=finalurl)
-		       return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, item)
+            elif streamType == 'HDS' or streamType == 'RTMP':
+               auth = smilurl.split('?')[1]
+               smilurl += '&rand='+str(random.randint(100000,999999))
+
+               #Grab smil url to get rtmp url and playpath
+               html = get_html(smilurl)
+               soup = BeautifulSoup(html, 'html.parser')
+               rtmp = soup.findAll('meta')[0]['base']
+               # Live Qualities
+               #     0,     1,     2,      3,      4
+               # Replay Qualities
+               #            0,     1,      2,      3
+               # Lowest, Low,  Medium, High,  Highest
+               # 200000,400000,800000,1200000,1800000
+               playpath=False
+               if selfAddon.getSetting("askquality") == 'true':
+                   streams = soup.findAll('video')
+                   quality=xbmcgui.Dialog().select(translation(30033), [str(int(stream['system-bitrate'])/1000)+'kbps' for stream in streams])
+                   if quality!=-1:
+                       playpath = streams[quality]['src']
+                   else:
+                       return
+               if 'ondemand' in rtmp:
+                   if not playpath:
+                       playpath = soup.findAll('video')[int(selfAddon.getSetting('replayquality'))]['src']
+                   finalurl = rtmp+'/?'+auth+' playpath='+playpath
+               elif 'live' in rtmp:
+                   if not playpath:
+                       select = int(selfAddon.getSetting('livequality'))
+                       videos = soup.findAll('video')
+                       videosLen = len(videos)-1
+                       if select > videosLen:
+                           select = videosLen
+                       playpath = videos[select]['src']
+                   finalurl = rtmp+' live=1 playlist=1 subscribe='+playpath+' playpath='+playpath+'?'+auth
+               item = xbmcgui.ListItem(path=finalurl)
+               return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, item)
+
+def check_user_settings():
+    mso_provider = get_mso_provider(selfAddon.getSetting('provider'))
+    username = selfAddon.getSetting('username')
+    password = selfAddon.getSetting('password')
+    if mso_provider is None:
+        dialog = xbmcgui.Dialog()
+        dialog.ok(translation(30037), translation(30100))
+        return False
+    if username is None:
+        dialog = xbmcgui.Dialog()
+        dialog.ok(translation(30037), translation(30110))
+        return False
+    if password is None:
+        dialog = xbmcgui.Dialog()
+        dialog.ok(translation(30037), translation(30120))
+        return False
+    return True
+
+
+def PLAY(url):
+    xbmc.log('ESPN3:  url: '+ url)
+    url_split = url
+    url_split = url.split(',')
+    networkid = str(url_split[5])
+    xbmc.log('ESPN3: networkid ' + networkid)
+    if networkid == 'n360':
+        PLAY_FREE_CONTENT(url)
+    else:
+        PLAY_PROTECTED_CONTENT(url)
 
 
 def saveUserdata():
@@ -347,7 +451,7 @@ def get_html(url):
         #xbmc.log('ESPN3:  get_response: '+response)
         usock.close()
         return response
-    except: 
+    except:
         xbmc.log('ESPN3:  get_response: Could not open URL: '+url)
         return False
 
@@ -398,6 +502,7 @@ def addLink(name, url, mode, iconimage, fanart=False, infoLabels=False):
         infoLabels={"Title": name}
     liz.setInfo(type="Video", infoLabels=infoLabels)
     liz.setProperty('IsPlayable', 'true')
+    liz.setIconImage(iconimage)
     if not fanart:
         fanart=defaultfanart
     liz.setProperty('fanart_image',fanart)
@@ -444,7 +549,7 @@ xbmc.log("Name: " + str(name))
 if mode == None or url == None or len(url) < 1:
     xbmc.log("Generate Main Menu")
     CATEGORIES()
-elif mode == 1:
+elif mode == LIVE_EVENTS_MODE:
     xbmc.log("Indexing Videos")
     INDEX(url,name)
 elif mode == 2:
@@ -453,10 +558,11 @@ elif mode == 2:
 elif mode == 3:
     xbmc.log("Index by sport")
     INDEXBYSPORT(url,name)
-elif mode == 4:
-    PLAYESPN3(url)
+elif mode == PLAY_MODE:
+    PLAY(url)
 elif mode == 5:
     xbmc.log("Upcoming")
     dialog = xbmcgui.Dialog()
     dialog.ok(translation(30035), translation(30036))
+
 
