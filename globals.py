@@ -7,7 +7,6 @@ import string, random
 import urllib, urllib2, httplib2
 import HTMLParser
 import time
-import cookielib
 import base64
 from StringIO import StringIO
 import gzip
@@ -31,7 +30,13 @@ def CLEAR_SAVED_DATA():
     except:
         pass
     ADDON.setSetting(id='clear_data', value='false')
-
+    
+# Fixes an issue with 32bit systems not supporting times after 2038
+def fix_cookie_expires(cj):
+    for cookie in cj:
+        xbmc.log('cookie expires %s' % cookie.expires)
+        if cookie.expires > 2000000000:
+            cookie.expires = 2000000000
 
 selfAddon = xbmcaddon.Addon(id='plugin.video.espn_3')
 translation = selfAddon.getLocalizedString

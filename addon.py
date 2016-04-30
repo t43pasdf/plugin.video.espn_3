@@ -5,7 +5,6 @@
 # Released under GPL(v2)
 
 import urllib, urllib2, xbmcplugin, xbmcaddon, xbmcgui, os, random, string, re
-import cookielib
 import time
 import mechanize
 from adobe import ADOBE
@@ -20,6 +19,8 @@ import util
 from espn import ESPN
 from mso_provider import get_mso_provider
 from user_details import UserDetails
+
+import cookielib
 
 LIVE_EVENTS_MODE = 1
 PLAY_MODE = 6

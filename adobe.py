@@ -7,6 +7,8 @@ from datetime import datetime
 from globals import *
 from bs4 import BeautifulSoup
 
+import cookielib
+
 class ADOBE():
 
     def __init__(self, requestor, mso_provider, user_details):
@@ -96,6 +98,8 @@ class ADOBE():
                 br.form[control.name] = self.user_details.get_password();
         br.submit()
         br.select_form(nr = 0)
+        xbmc.log('cj: %s' % cj)
+        fix_cookie_expires(cj)
         cj.save(os.path.join(ADDON_PATH_PROFILE, 'cookies.lwp'),ignore_discard=True, ignore_expires=True )
         saml = ''
         relay_state = '';
