@@ -135,6 +135,7 @@ class ADOBE():
 
         #If cookies are expired or auth token is not present run login or provider has changed
         if expired_cookies or auth_token is '' or (last_provider != self.mso_provider.get_mso_name()):
+            xbmc.log('ESPN3: Logging into provider')
             saml_response, relay_state = self.GET_IDP_DATA()
 
             if saml_response == '' and relay_state == '':
@@ -201,10 +202,10 @@ class ADOBE():
 
         response, content = http.request(url, 'POST', headers=headers, body=body)
         xbmc.log('ESPN3: POST_ASSERTION_CONSUMER_SERVICE')
-        xbmc.log('ESPN3: headers: ' + headers)
-        xbmc.log('ESPN3: body: ' + body)
-        xbmc.log('ESPN3: response: ' + response)
-        xbmc.log('ESPN3: content: ' + content)
+        xbmc.log('ESPN3: headers: %s' % headers)
+        xbmc.log('ESPN3: body: %s' % body)
+        xbmc.log('ESPN3: response: %s' % response)
+        xbmc.log('ESPN3: content: %s' % content)
 
     def POST_SESSION_DEVICE(self,signed_requestor_id):
         ###################################################################
@@ -246,10 +247,10 @@ class ADOBE():
 
         response, content = http.request(url, 'POST', headers=headers, body=data)
         xbmc.log('ESPN3: POST SESSION DEVICE')
-        xbmc.log('ESPN3: headers: ' + headers)
-        xbmc.log('ESPN3: body: ' + body)
-        xbmc.log('ESPN3: response: ' + response)
-        xbmc.log('ESPN3: content: ' + content)
+        xbmc.log('ESPN3: headers: %s ' % headers)
+        xbmc.log('ESPN3: body: %s' % data)
+        xbmc.log('ESPN3: response: %s' % response)
+        xbmc.log('ESPN3: content: %s' % content)
 
         soup = BeautifulSoup(content, 'html.parser')
         auth_token = soup.find('authntoken').text
