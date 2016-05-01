@@ -303,9 +303,9 @@ def PLAY_FREE_CONTENT(url):
             cdnName = network['defaultcdn']
             channel = network['name']
             if streamType == 'HLS':
-                 networkurl = 'http://broadband.espn.go.com/espn3/auth/watchespn/startSession?v=1.5'
+                networkurl = 'http://broadband.espn.go.com/espn3/auth/watchespn/startSession?v=1.5'
             elif streamType == 'HDS' or streamType == 'RTMP':
-                 networkurl = 'https://espn-ws.bamnetworks.com/pubajaxws/bamrest/MediaService2_0/op-findUserVerifiedEvent/v-2.1'
+                networkurl = 'https://espn-ws.bamnetworks.com/pubajaxws/bamrest/MediaService2_0/op-findUserVerifiedEvent/v-2.1'
             authurl = authurl = networkurl
             if '?' in authurl:
                 authurl +='&'
@@ -313,26 +313,26 @@ def PLAY_FREE_CONTENT(url):
                 authurl +='?'
 
             if streamType == 'HLS':
-               authurl += 'affiliate='+affiliateid
-               authurl += '&cdnName='+cdnName
-               authurl += '&channel='+channel
-               authurl += '&playbackScenario=FMS_CLOUD'
-               authurl += '&pkan='+pkan
-               authurl += '&pkanType=SWID'
-               authurl += '&eventid='+eventid
-               authurl += '&simulcastAiringId='+simulcastAiringId
-               authurl += '&rand='+str(random.randint(100000,999999))
-               authurl += '&playerId='+playedId
+                authurl += 'affiliate='+affiliateid
+                authurl += '&cdnName='+cdnName
+                authurl += '&channel='+channel
+                authurl += '&playbackScenario=FMS_CLOUD'
+                authurl += '&pkan='+pkan
+                authurl += '&pkanType=SWID'
+                authurl += '&eventid='+eventid
+                authurl += '&simulcastAiringId='+simulcastAiringId
+                authurl += '&rand='+str(random.randint(100000,999999))
+                authurl += '&playerId='+playedId
             elif streamType == 'HDS' or streamType == 'RTMP':
-               authurl += 'identityPointId='+affiliateid
-               authurl += '&cdnName='+cdnName
-               authurl += '&channel='+channel
-               authurl += '&playbackScenario=FMS_CLOUD'
-               authurl += '&partnerContentId='+eventid
-               authurl += '&eventId='+eventId
-               authurl += '&contentId='+contentId
-               authurl += '&rand='+str(random.randint(100000,999999))
-               authurl += '&playerId='+playedId
+                authurl += 'identityPointId='+affiliateid
+                authurl += '&cdnName='+cdnName
+                authurl += '&channel='+channel
+                authurl += '&playbackScenario=FMS_CLOUD'
+                authurl += '&partnerContentId='+eventid
+                authurl += '&eventId='+eventId
+                authurl += '&contentId='+contentId
+                authurl += '&rand='+str(random.randint(100000,999999))
+                authurl += '&playerId='+playedId
             html = get_html(authurl)
             tree = BeautifulSoup(html, 'html.parser')
             authstatus = tree.find('auth-status')
@@ -365,47 +365,47 @@ def PLAY_FREE_CONTENT(url):
                 return
 
             if streamType == 'HLS':
-                 finalurl = smilurl
-                 item = xbmcgui.ListItem(path=finalurl)
-                 return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, item)
+                finalurl = smilurl
+                item = xbmcgui.ListItem(path=finalurl)
+                return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, item)
 
             elif streamType == 'HDS' or streamType == 'RTMP':
-               auth = smilurl.split('?')[1]
-               smilurl += '&rand='+str(random.randint(100000,999999))
+                auth = smilurl.split('?')[1]
+                smilurl += '&rand='+str(random.randint(100000,999999))
 
-               #Grab smil url to get rtmp url and playpath
-               html = get_html(smilurl)
-               soup = BeautifulSoup(html, 'html.parser')
-               rtmp = soup.findAll('meta')[0]['base']
-               # Live Qualities
-               #     0,     1,     2,      3,      4
-               # Replay Qualities
-               #            0,     1,      2,      3
-               # Lowest, Low,  Medium, High,  Highest
-               # 200000,400000,800000,1200000,1800000
-               playpath=False
-               if selfAddon.getSetting("askquality") == 'true':
-                   streams = soup.findAll('video')
-                   quality=xbmcgui.Dialog().select(translation(30033), [str(int(stream['system-bitrate'])/1000)+'kbps' for stream in streams])
-                   if quality!=-1:
-                       playpath = streams[quality]['src']
-                   else:
-                       return
-               if 'ondemand' in rtmp:
-                   if not playpath:
-                       playpath = soup.findAll('video')[int(selfAddon.getSetting('replayquality'))]['src']
-                   finalurl = rtmp+'/?'+auth+' playpath='+playpath
-               elif 'live' in rtmp:
-                   if not playpath:
-                       select = int(selfAddon.getSetting('livequality'))
-                       videos = soup.findAll('video')
-                       videosLen = len(videos)-1
-                       if select > videosLen:
-                           select = videosLen
-                       playpath = videos[select]['src']
-                   finalurl = rtmp+' live=1 playlist=1 subscribe='+playpath+' playpath='+playpath+'?'+auth
-               item = xbmcgui.ListItem(path=finalurl)
-               return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, item)
+                #Grab smil url to get rtmp url and playpath
+                html = get_html(smilurl)
+                soup = BeautifulSoup(html, 'html.parser')
+                rtmp = soup.findAll('meta')[0]['base']
+                # Live Qualities
+                #     0,     1,     2,      3,      4
+                # Replay Qualities
+                #            0,     1,      2,      3
+                # Lowest, Low,  Medium, High,  Highest
+                # 200000,400000,800000,1200000,1800000
+                playpath=False
+                if selfAddon.getSetting("askquality") == 'true':
+                    streams = soup.findAll('video')
+                    quality=xbmcgui.Dialog().select(translation(30033), [str(int(stream['system-bitrate'])/1000)+'kbps' for stream in streams])
+                    if quality!=-1:
+                        playpath = streams[quality]['src']
+                    else:
+                        return
+                if 'ondemand' in rtmp:
+                    if not playpath:
+                        playpath = soup.findAll('video')[int(selfAddon.getSetting('replayquality'))]['src']
+                    finalurl = rtmp+'/?'+auth+' playpath='+playpath
+                elif 'live' in rtmp:
+                    if not playpath:
+                        select = int(selfAddon.getSetting('livequality'))
+                        videos = soup.findAll('video')
+                        videosLen = len(videos)-1
+                        if select > videosLen:
+                            select = videosLen
+                        playpath = videos[select]['src']
+                    finalurl = rtmp+' live=1 playlist=1 subscribe='+playpath+' playpath='+playpath+'?'+auth
+                item = xbmcgui.ListItem(path=finalurl)
+                return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, item)
 
 def check_user_settings():
     mso_provider = get_mso_provider(selfAddon.getSetting('provider'))
@@ -428,7 +428,6 @@ def check_user_settings():
 
 def PLAY(url):
     xbmc.log('ESPN3:  url: '+ url)
-    url_split = url
     url_split = url.split(',')
     networkid = str(url_split[5])
     xbmc.log('ESPN3: networkid ' + networkid)
