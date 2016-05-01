@@ -30,7 +30,7 @@ def CLEAR_SAVED_DATA():
     except:
         pass
     ADDON.setSetting(id='clear_data', value='false')
-    
+
 # Fixes an issue with 32bit systems not supporting times after 2038
 def fix_cookie_expires(cj):
     for cookie in cj:
@@ -66,7 +66,6 @@ KODI_VERSION = float(re.findall(r'\d{2}\.\d{1}', xbmc.getInfoLabel("System.Build
 LOCAL_STRING = ADDON.getLocalizedString
 FANART = ROOTDIR+"/fanart.jpg"
 ICON = ROOTDIR+"/icon.png"
-ROOT_URL = 'http://stream.nbcsports.com/data/mobile/'
 
 #Settings file location
 settings = xbmcaddon.Addon(id='plugin.video.espn_3')

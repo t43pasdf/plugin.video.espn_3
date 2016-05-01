@@ -24,6 +24,9 @@ import cookielib
 
 LIVE_EVENTS_MODE = 1
 PLAY_MODE = 6
+LIST_SPORTS_MODE = 2
+INDEX_SPORTS_MODE = 3
+UPCOMING_MODE = 5
 
 cj = cookielib.LWPCookieJar()
 channels = ''
@@ -35,7 +38,7 @@ def CATEGORIES():
     upcoming = int(selfAddon.getSetting('upcoming'))+1
     days = (curdate+timedelta(days=upcoming)).strftime("%Y%m%d")
     addDir(translation(30029), events.get_live_events_url(channel_list), LIVE_EVENTS_MODE, defaultlive)
-    addDir(translation(30030), events.get_upcoming_events_url(channel_list) + '&endDate='+days+'&startDate='+curdate.strftime("%Y%m%d"), 2,defaultupcoming)
+    addDir(translation(30030), events.get_upcoming_events_url(channel_list) + '&endDate='+days+'&startDate='+curdate.strftime("%Y%m%d"), LIST_SPORTS_MODE,defaultupcoming)
     enddate = '&endDate='+ (curdate+timedelta(days=1)).strftime("%Y%m%d")
     replays1 = [5,10,15,20,25]
     replays1 = replays1[int(selfAddon.getSetting('replays1'))]
@@ -50,35 +53,32 @@ def CATEGORIES():
     replays4 = replays4[int(selfAddon.getSetting('replays4'))]
     start4 = (curdate-timedelta(days=replays4)).strftime("%Y%m%d")
     startAll = (curdate-timedelta(days=365)).strftime("%Y%m%d")
-    addDir(translation(30031)+str(replays1)+' Days', events.get_replay_events_url(channel_list) +enddate+'&startDate='+start1, 2, defaultreplay)
-    addDir(translation(30031)+str(replays2)+' Days', events.get_replay_events_url(channel_list) +enddate+'&startDate='+start2, 2, defaultreplay)
-    addDir(translation(30031)+str(replays3)+' Days', events.get_replay_events_url(channel_list) +enddate+'&startDate='+start3, 2, defaultreplay)
-    addDir(translation(30031)+str(replays3)+'-'+str(replays4)+' Days', events.get_replay_events_url(channel_list) +'&endDate='+start3+'&startDate='+start4, 2, defaultreplay)
-    addDir(translation(30032), events.get_replay_events_url(channel_list) +enddate+'&startDate='+startAll, 2, defaultreplay)
+    addDir(translation(30031)+str(replays1)+' Days', events.get_replay_events_url(channel_list) +enddate+'&startDate='+start1, LIST_SPORTS_MODE, defaultreplay)
+    addDir(translation(30031)+str(replays2)+' Days', events.get_replay_events_url(channel_list) +enddate+'&startDate='+start2, LIST_SPORTS_MODE, defaultreplay)
+    addDir(translation(30031)+str(replays3)+' Days', events.get_replay_events_url(channel_list) +enddate+'&startDate='+start3, LIST_SPORTS_MODE, defaultreplay)
+    addDir(translation(30031)+str(replays3)+'-'+str(replays4)+' Days', events.get_replay_events_url(channel_list) +'&endDate='+start3+'&startDate='+start4, LIST_SPORTS_MODE, defaultreplay)
+    addDir(translation(30032), events.get_replay_events_url(channel_list) +enddate+'&startDate='+startAll, LIST_SPORTS_MODE, defaultreplay)
     xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
 def LISTNETWORKS(url,name):
     pass
 
 def LISTSPORTS(url,name):
-    data = get_html(url)
-    #data = '<?xml version="1.0" encoding="CP1252"?>'+data
-    SaveFile('videocache.xml', data, ADDONDATA)
     if 'action=replay' in url:
         image = defaultreplay
     elif 'action=upcoming' in url:
         image = defaultupcoming
     else:
         image = defaultimage
-    addDir(translation(30034), url, 1, image)
+    addDir(translation(30034), url, LIVE_EVENTS_MODE, image)
     sports = []
-    events = BeautifulSoup(data, 'html.parser', parse_only = SoupStrainer('event'))
-    for event in events.find_all('event'):
-        sport = event.find('sportdisplayvalue').string.title().encode('utf-8')
+    data = events.get_soup_events_cached(url)
+    for sport in data.findAll('sportdisplayvalue'):
+        sport = sport.string.title().encode('utf-8')
         if sport not in sports:
             sports.append(sport)
     for sport in sports:
-        addDir(sport, url, 3, image)
+        addDir(sport, url, INDEX_SPORTS_MODE, image)
     xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_VIDEO_SORT_TITLE)
     xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
@@ -88,11 +88,8 @@ def INDEXBYSPORT(url,name):
 def INDEX(url,name,bysport=False):
     if 'action=live' in url:
         data = events.get_events(url)
-        #data = '<?xml version="1.0" encoding="CP1252"?>'+data
     else:
-        data = ReadFile('videocache.xml', ADDONDATA)
-        data_soup = BeautifulSoup(data, 'html.parser')
-        data = data_soup.findAll('event')
+        data = events.get_soup_events_cached(url).findAll("event")
     for event in data:
         sport = event.find('sportdisplayvalue').string.encode('utf-8')
         desktopStreamSource = event.find('desktopstreamsource').string
@@ -556,15 +553,15 @@ if mode == None or url == None or len(url) < 1:
 elif mode == LIVE_EVENTS_MODE:
     xbmc.log("Indexing Videos")
     INDEX(url,name)
-elif mode == 2:
+elif mode == LIST_SPORTS_MODE:
     xbmc.log("List sports")
     LISTSPORTS(url,name)
-elif mode == 3:
+elif mode == INDEX_SPORTS_MODE:
     xbmc.log("Index by sport")
     INDEXBYSPORT(url,name)
 elif mode == PLAY_MODE:
     PLAY(url)
-elif mode == 5:
+elif mode == UPCOMING_MODE:
     xbmc.log("Upcoming")
     dialog = xbmcgui.Dialog()
     dialog.ok(translation(30035), translation(30036))

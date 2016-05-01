@@ -4,6 +4,7 @@ import os
 import time
 import globals
 import urllib
+import xbmc
 from bs4 import BeautifulSoup
 
 import util

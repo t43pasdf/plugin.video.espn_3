@@ -1,12 +1,10 @@
 #!/usr/bin/python2
-
 import os
-import time
-import urllib
-from bs4 import BeautifulSoup
+import hashlib
 
 import player_config
 import util
+import globals
 from player_config import get_live_event_url
 
 def get_channel_list(include_premium):
@@ -37,6 +35,12 @@ def get_live_events(network_names = []):
 def get_events(url):
     soup = util.get_url_as_xml_soup(url)
     return soup.findAll('event')
+
+def get_soup_events_cached(url):
+    cache_file = hashlib.sha224(url).hexdigest()
+    cache_file = os.path.join(globals.ADDON_PATH_PROFILE, cache_file + '.xml')
+    soup = util.get_url_as_xml_soup_cache(url, cache_file, 360)
+    return soup
 
 if __name__ == '__main__':
     events = get_live_events(get_channel_list(True))

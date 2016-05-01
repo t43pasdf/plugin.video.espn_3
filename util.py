@@ -1,10 +1,12 @@
 #!/usr/bin/python2
 
+import xbmc
 import os
 import time
 import urllib
 import urllib2
 from bs4 import BeautifulSoup
+import xmltodict
 
 import player_config
 
@@ -24,12 +26,17 @@ def load_file(cache_file):
 
 def get_url_as_xml_soup_cache(url, cache_file, timeout = 1):
     if not is_file_valid(cache_file, timeout):
-        print 'Fetching config file %s from %s' % (cache_file, url)
+        xbmc.log('ESPN3: Fetching config file %s from %s' % (cache_file, url))
         fetch_file(url, cache_file)
+    else:
+        xbmc.log('ESPN3: Using cache %s for %s' % (url, cache_file))
     config_file = load_file(cache_file)
     config_data = config_file.read()
-    config_soup = BeautifulSoup(config_data, 'html.parser')
     config_file.close()
+    xbmc.log('ESPN3: Start soup')
+    #config_soup = BeautifulSoup(config_data, 'html.parser')
+    config_soup = xmltodict.parse(config_data)
+    xbmc.log('ESPN3: End soup')
     return config_soup
 
 def get_url_as_xml_soup(url):
