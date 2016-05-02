@@ -4,14 +4,13 @@
 # Written by Ksosez, BlueCop, Romans I XVI, locomot1f, MetalChris
 # Released under GPL(v2)
 
-import urllib, urllib2, xbmcplugin, xbmcaddon, xbmcgui, os, random, string, re
+import urllib, xbmcplugin, xbmcaddon, xbmcgui, os, random, string, re
 import time
 from adobe import ADOBE
 from globals import *
 from datetime import datetime, timedelta
-from bs4 import BeautifulSoup, SoupStrainer
+from bs4 import BeautifulSoup
 import base64
-import xml.etree.ElementTree as ET
 
 import player_config
 import events
