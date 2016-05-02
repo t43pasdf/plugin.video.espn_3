@@ -11,7 +11,7 @@ def get_channel_list(include_premium):
     networks = player_config.get_networks()
     network_ids = []
     for network in networks:
-        network_name = network['name']
+        network_name = network.get('name')
         if include_premium or network_name == 'espn3':
             network_ids.append(network_name)
     return network_ids
@@ -30,11 +30,11 @@ def get_replay_events_url(network_names = []):
 
 def get_live_events(network_names = []):
     soup = util.get_url_as_xml_soup(get_live_event_url())
-    return soup.findAll('event')
+    return soup.findall('.//event')
 
 def get_events(url):
     soup = util.get_url_as_xml_soup(url)
-    return soup.findAll('event')
+    return soup.findall('.//event')
 
 def get_soup_events_cached(url):
     cache_file = hashlib.sha224(url).hexdigest()

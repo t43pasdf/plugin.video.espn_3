@@ -2,10 +2,12 @@ import mechanize
 import urlparse
 import urllib
 import os
+import xbmc
 from datetime import datetime
 
 from globals import *
 from bs4 import BeautifulSoup
+import xml.etree.ElementTree as ET
 
 import cookielib
 
@@ -15,16 +17,16 @@ class ADOBE():
         self.requestor = requestor
         self.mso_provider = mso_provider
         self.user_details = user_details
-        
+
     def get_auth_token_file(self):
         return os.path.join(ADDON_PATH_PROFILE, 'auth.token')
-        
+
     def get_auth_token(self):
         auth_token_file = self.get_auth_token_file()
         if os.path.isfile(auth_token_file):
             device_file = open(auth_token_file,'r')
             auth_token_contents = device_file.readline()
-            # Verify the auth token isn't expired 
+            # Verify the auth token isn't expired
             soup = BeautifulSoup(auth_token_contents, 'html.parser')
             token_expires_node = soup.find('simpletokenexpires')
             if not token_expires_node:
@@ -45,17 +47,17 @@ class ADOBE():
             return auth_token_contents
         else:
             return ''
-        
+
     def save_auth_token(self, auth_token):
         auth_token_file = self.get_auth_token_file()
         device_file = open(auth_token_file,'w')
         device_file.write(auth_token)
         device_file.close()
-        
+
     def delete_auth_token(self):
         fname = self.get_auth_token_file()
         os.remove(fname)
-        
+
     def get_provider(self):
         fname = os.path.join(ADDON_PATH_PROFILE, 'provider.info')
         if os.path.isfile(fname):
@@ -65,6 +67,10 @@ class ADOBE():
             return last_provider
         else:
             return ''
+
+    def save_cookies(self, cj):
+        fix_cookie_expires(cj)
+        cj.save(os.path.join(ADDON_PATH_PROFILE, 'cookies.lwp'),ignore_discard=True, ignore_expires=True )
 
     def GET_IDP_DATA(self):
         params = urllib.urlencode(
@@ -99,8 +105,7 @@ class ADOBE():
         br.submit()
         br.select_form(nr = 0)
         xbmc.log('cj: %s' % cj)
-        fix_cookie_expires(cj)
-        cj.save(os.path.join(ADDON_PATH_PROFILE, 'cookies.lwp'),ignore_discard=True, ignore_expires=True )
+        self.save_cookies(cj)
         saml = ''
         relay_state = '';
         for control in br.form.controls:
@@ -120,9 +125,9 @@ class ADOBE():
 
             for cookie in cj:
                 if cookie.name == 'BIGipServerAdobe_Pass_Prod':
-                    print cookie.name
-                    print cookie.expires
-                    print cookie.is_expired()
+                    xbmc.log('ESPN3 cookie.name %s' % cookie.name)
+                    xbmc.log('ESPN3 cookie.expires %s' % cookie.expires)
+                    xbmc.log('ESPN3 cookie.is_expired %s' % cookie.is_expired())
                     expired_cookies = cookie.is_expired()
         except:
             pass
@@ -219,17 +224,11 @@ class ADOBE():
         cj.load(os.path.join(ADDON_PATH_PROFILE, 'cookies.lwp'),ignore_discard=True)
         print cj
         cookies = ''
-        jsessionid = ''
-        bigip = ''
         for cookie in cj:
             #Possibly two JSESSION cookies being passed, may need to fix
             #if cookie.name == "BIGipServerAdobe_Pass_Prod" or cookie.name == "client_type" or cookie.name == "client_version" or cookie.name == "JSESSIONID" or cookie.name == "redirect_url":
             if (cookie.name == "BIGipServerAdobe_Pass_Prod" or cookie.name == "JSESSIONID") and cookie.path == "/":
                 cookies = cookies + cookie.name + "=" + cookie.value + "; "
-            if (cookie.name == 'JSESSIONID' and cookie.path =='/'):
-                jsessionid = cookie.value
-            if (cookie.name == 'BIGipServerAdobe_Pass_Prod' and cookie.path =='/'):
-                bigip = cookie.value
 
 
 
@@ -256,18 +255,12 @@ class ADOBE():
         xbmc.log('ESPN3: response: %s' % response)
         xbmc.log('ESPN3: content: %s' % content)
 
-        soup = BeautifulSoup(content, 'html.parser')
-        auth_token = soup.find('authntoken').text
-        xbmc.log('ESPN3: auth token: ' + auth_token)
-        auth_token = auth_token.replace("&lt;", "<")
-        auth_token = auth_token.replace("&gt;", ">")
-        # this has to be last:
-        auth_token = auth_token.replace("&amp;", "&")
-        xbmc.log('ESPN3: auth token: ' + auth_token)
-        
-        self.save_auth_token(auth_token)
 
-        #return auth_token, session_guid
+        content_tree = ET.fromstring(content)
+        authz = content_tree.find('.//authnToken').text
+        xbmc.log('ESPN3: authz ' + authz)
+
+        self.save_auth_token(authz)
 
 
     def POST_AUTHORIZE_DEVICE(self,resource_id,signed_requestor_id):
@@ -277,7 +270,7 @@ class ADOBE():
         auth_token = self.get_auth_token()
 
         xbmc.log('Auth Token: %s' % auth_token)
-        
+
         if auth_token is None or auth_token == '':
             return ''
 
@@ -326,17 +319,12 @@ class ADOBE():
             xbmc.log('ESPN3: expires_epoch ' + expires_epoch)
             ck = cookielib.Cookie(version=0, name='BIGipServerAdobe_Pass_Prod', value=value, port=None, port_specified=False, domain='sp.auth.adobe.com', domain_specified=True, domain_initial_dot=False, path='/', path_specified=True, secure=False, expires=expires_epoch, discard=True, comment=None, comment_url=None, rest={'HttpOnly': None}, rfc2109=False)
             cj.set_cookie(ck)
-            #cj.save(os.path.join(ADDON_PATH_PROFILE, 'cookies.lwp'),ignore_discard=True);
-            SAVE_COOKIE(cj)
+            self.save_cookies(cj)
 
         except:
             pass
-        soup = BeautifulSoup(content, 'html.parser')
-        authz = soup.find('authztoken').text
-        authz = authz.replace("&lt;", "<")
-        authz = authz.replace("&gt;", ">")
-        # this has to be last:
-        authz = authz.replace("&amp;", "&")
+        content_tree = ET.fromstring(content)
+        authz = content_tree.find('.//authzToken').text
         xbmc.log('ESPN3: authz ' + authz)
 
         return authz
@@ -348,10 +336,9 @@ class ADOBE():
         ###################################################################
         auth_token = self.get_auth_token()
 
+        # Keep soup because the auth_token isn't proper xml
         soup = BeautifulSoup(auth_token, 'html.parser')
         session_guid = soup.find('simpletokenauthenticationguid').text
-        print "SESSION GUID"
-        print session_guid
 
         url = 'https://sp.auth.adobe.com//adobe-services/1.0/deviceShortAuthorize'
         cj = cookielib.LWPCookieJar()
