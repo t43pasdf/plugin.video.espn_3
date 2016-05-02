@@ -224,17 +224,11 @@ class ADOBE():
         cj.load(os.path.join(ADDON_PATH_PROFILE, 'cookies.lwp'),ignore_discard=True)
         print cj
         cookies = ''
-        jsessionid = ''
-        bigip = ''
         for cookie in cj:
             #Possibly two JSESSION cookies being passed, may need to fix
             #if cookie.name == "BIGipServerAdobe_Pass_Prod" or cookie.name == "client_type" or cookie.name == "client_version" or cookie.name == "JSESSIONID" or cookie.name == "redirect_url":
             if (cookie.name == "BIGipServerAdobe_Pass_Prod" or cookie.name == "JSESSIONID") and cookie.path == "/":
                 cookies = cookies + cookie.name + "=" + cookie.value + "; "
-            if (cookie.name == 'JSESSIONID' and cookie.path =='/'):
-                jsessionid = cookie.value
-            if (cookie.name == 'BIGipServerAdobe_Pass_Prod' and cookie.path =='/'):
-                bigip = cookie.value
 
 
 
@@ -261,18 +255,12 @@ class ADOBE():
         xbmc.log('ESPN3: response: %s' % response)
         xbmc.log('ESPN3: content: %s' % content)
 
-        soup = BeautifulSoup(content, 'html.parser')
-        auth_token = soup.find('authntoken').text
-        xbmc.log('ESPN3: auth token: ' + auth_token)
-        auth_token = auth_token.replace("&lt;", "<")
-        auth_token = auth_token.replace("&gt;", ">")
-        # this has to be last:
-        auth_token = auth_token.replace("&amp;", "&")
-        xbmc.log('ESPN3: auth token: ' + auth_token)
 
-        self.save_auth_token(auth_token)
+        content_tree = ET.fromstring(content)
+        authz = content_tree.find('.//authnToken').text
+        xbmc.log('ESPN3: authz ' + authz)
 
-        #return auth_token, session_guid
+        self.save_auth_token(authz)
 
 
     def POST_AUTHORIZE_DEVICE(self,resource_id,signed_requestor_id):
