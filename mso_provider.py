@@ -1,7 +1,4 @@
-import urllib2
-
 import player_config
-import util
 
 class MSOProvider:
 
@@ -15,8 +12,7 @@ class MSOProvider:
         return self.mso_name
 
 def get_mso_provider(provider_name):
-    url = player_config.get_providers_url()
-    providers_soup = util.get_url_as_xml_soup(url)
+    providers_soup = player_config.get_providers_data()
     providers = providers_soup.findall('.//providersItem')
     for provider in providers:
         if provider_name == provider.find('.//name').text:

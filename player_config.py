@@ -5,10 +5,10 @@ import time
 import globals
 import urllib
 import xbmc
-from bs4 import BeautifulSoup
 
 import util
 
+# 1 day
 TIME_DIFFERENCE = 60 * 60 * 24;
 
 PLAYER_CONFIG_FILE = 'player_config.xml'
@@ -19,6 +19,9 @@ USER_DATA_FILE = 'user_data.xml'
 USER_DATA_FILE = os.path.join(globals.ADDON_PATH_PROFILE, USER_DATA_FILE)
 USER_DATA_URL = 'http://broadband.espn.go.com/espn3/auth/watchespn/userData?format=xml'
 
+PROVIDERS_FILE = 'providers.xml'
+PROVIDERS_FILE = os.path.join(globals.ADDON_PATH_PROFILE, PROVIDERS_FILE)
+
 #TODO: Hook up check rights?
 CHECK_RIGHTS_URL = 'http://broadband.espn.go.com/espn3/auth/espnnetworks/user'
 
@@ -27,6 +30,9 @@ def get_config_soup():
 
 def get_user_data():
     return util.get_url_as_xml_soup_cache(USER_DATA_URL, USER_DATA_FILE, TIME_DIFFERENCE)
+
+def get_providers_data():
+    return util.get_url_as_xml_soup_cache(get_providers_url(), PROVIDERS_FILE, TIME_DIFFERENCE)
 
 def get_networks():
     networks = get_config_soup().findall('.//network')
