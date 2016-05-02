@@ -35,6 +35,8 @@ ESPN_URL = 'ESPN_URL'
 MODE = 'MODE'
 SPORT = 'SPORT'
 
+BAM_NS = '{http://services.bamnetworks.com/media/types/2.1}'
+
 def CATEGORIES():
     include_premium = selfAddon.getSetting('ShowPremiumChannels') == 'true'
     channel_list = events.get_channel_list(include_premium)
@@ -209,29 +211,28 @@ def PLAYESPN3(url):
     PLAY(url,'n360')
 
 def check_blackout(authurl):
-    ns = {'bam': 'http://services.bamnetworks.com/media/types/2.1'}
     tree = util.get_url_as_xml_soup(authurl)
-    authstatus = tree.find('.//bam:auth-status', ns)
-    blackoutstatus = tree.find('.//bam:blackout-status', ns)
-    if authstatus.find('./bam:successStatus', ns) is not None:
-        if authstatus.find('.//bam:notAuthorizedStatus', ns) is not None:
-            if authstatus.find('.//bam:errorMessage', ns) is not None:
+    authstatus = tree.find('.//' + BAM_NS + 'auth-status')
+    blackoutstatus = tree.find('.//' + BAM_NS + 'blackout-status')
+    if authstatus.find('./' + BAM_NS + 'successStatus') is not None:
+        if authstatus.find('.//' + BAM_NS + 'notAuthorizedStatus') is not None:
+            if authstatus.find('.//' + BAM_NS + 'errorMessage') is not None:
                 dialog = xbmcgui.Dialog()
                 import textwrap
-                errormessage = authstatus.find('.//bam:errormessage', ns).text
+                errormessage = authstatus.find('.//' + BAM_NS + 'errormessage').text
                 try:
                     errormessage = textwrap.fill(errormessage, width=50).split('\n')
                     dialog.ok(translation(30037), errormessage[0],errormessage[1],errormessage[2])
                 except:
                     dialog.ok(translation(30037), errormessage[0])
-                return (tree, ns, True)
+                return (tree, True)
         else:
-            if blackoutstatus.find('.//bam:successStatus', ns) is not None:
-                if blackoutstatus.find('.//bam:blackout', ns) is not None:
+            if blackoutstatus.find('.//' + BAM_NS + 'successStatus') is not None:
+                if blackoutstatus.find('.//' + BAM_NS + 'blackout') is not None:
                     dialog = xbmcgui.Dialog()
-                    dialog.ok(translation(30040), blackoutstatus.find('.//bam:blackout', ns).text)
-                    return (tree, ns, True)
-    return (tree, ns, False)
+                    dialog.ok(translation(30040), blackoutstatus.find('.//' + BAM_NS + 'blackout').text)
+                    return (tree, True)
+    return (tree, False)
 
 def PLAY_PROTECTED_CONTENT(url):
 
@@ -271,13 +272,13 @@ def PLAY_PROTECTED_CONTENT(url):
 
     xbmc.log('ESPN3: start_session_url: ' + start_session_url)
 
-    (tree, ns, result) = check_blackout(start_session_url)
+    (tree, result) = check_blackout(start_session_url)
     if result:
         return
 
-    pkan = tree.find('.//bam:pkanJar', ns).text
+    pkan = tree.find('.//' + BAM_NS + 'pkanJar').text
     # FFMPEG does not support hds so use hls
-    smilurl = tree.find('.//bam:hls-backup-url', ns).text
+    smilurl = tree.find('.//' + BAM_NS + 'hls-backup-url').text
     xbmc.log('ESPN3:  smilurl: '+smilurl)
     xbmc.log('ESPN3:  streamType: '+streamType)
     if smilurl == ' ' or smilurl == '':
@@ -337,11 +338,11 @@ def PLAY_FREE_CONTENT(args):
 
     xbmc.log('ESPN3: Content URL %s' % authurl)
 
-    (tree, ns, result) = check_blackout(authurl)
+    (tree, result) = check_blackout(authurl)
     if result:
         return
 
-    smilurl = tree.find('.//bam:url', ns).text
+    smilurl = tree.find('.//' + BAM_NS + 'url').text
     xbmc.log('ESPN3:  smilurl: %s' % smilurl)
     if smilurl == ' ' or smilurl == '':
         dialog = xbmcgui.Dialog()

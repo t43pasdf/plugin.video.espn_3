@@ -38,20 +38,31 @@ def get_networks():
     networks = get_config_soup().findall('.//network')
     return networks
 
+# Handle elementtree 1.2.8 which doesn't support [@ xpath notation
+def select_feed_by_id(feed_id):
+    try:
+        return get_config_soup().find('.//feed[@id=\'' + feed_id + '\']').text
+    except:
+        feeds = get_config_soup().findall('.//feed')
+        for feed in feeds:
+            if feed.get('id') == feed_id:
+                return feed.text
+    return None
+
 def get_live_event_url():
-    return get_config_soup().find('.//feed[@id=\'liveEvent\']').text
+    return select_feed_by_id('liveEvent')
 
 def get_replay_event_url():
-    return get_config_soup().find('.//feed[@id=\'replayEvent\']').text
+    return select_feed_by_id('replayEvent')
 
 def get_upcoming_event_url():
-    return get_config_soup().find('.//feed[@id=\'upcomingEvent\']').text
+    return select_feed_by_id('upcomingEvent')
 
 def get_start_session_url():
-    return get_config_soup().find('.//feed[@id=\'startSession\']').text
+    return select_feed_by_id('startSession')
 
 def get_providers_url():
-    return get_config_soup().find('.//feed[@id=\'adobePassProviders\']').text
+    return select_feed_by_id('adobePassProviders')
 
 def get_network_name(network_id):
     network = get_network(network_id)

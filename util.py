@@ -27,12 +27,18 @@ def get_url_as_xml_soup_cache(url, cache_file, timeout = 1):
         fetch_file(url, cache_file)
     else:
         xbmc.log('ESPN3: Using cache %s for %s' % (url, cache_file))
-    parser = ET.XMLParser(encoding='iso-8859-1')
-    config_soup = ET.parse(cache_file, parser)
+    try:
+        parser = ET.XMLParser(encoding='iso-8859-1')
+        config_soup = ET.parse(cache_file, parser)
+    except:
+        config_soup = ET.parse(cache_file)
     return config_soup
 
 def get_url_as_xml_soup(url):
     config_data = urllib2.urlopen(url).read()
-    parser = ET.XMLParser(encoding='iso-8859-1')
-    config_soup = ET.fromstring(config_data, parser)
+    try:
+        parser = ET.XMLParser(encoding='iso-8859-1')
+        config_soup = ET.fromstring(config_data, parser)
+    except:
+        config_soup = ET.fromstring(config_data)
     return config_soup
