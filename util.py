@@ -6,7 +6,7 @@ import time
 import urllib
 import urllib2
 from bs4 import BeautifulSoup
-import xmltodict
+import xml.etree.ElementTree as ET
 
 import player_config
 
@@ -22,7 +22,7 @@ def fetch_file(url, cache_file):
     urllib.urlretrieve(url, cache_file)
 
 def load_file(cache_file):
-    return open(cache_file, 'r')
+    return open(cache_file, mode='r')
 
 def get_url_as_xml_soup_cache(url, cache_file, timeout = 1):
     if not is_file_valid(cache_file, timeout):
@@ -30,16 +30,12 @@ def get_url_as_xml_soup_cache(url, cache_file, timeout = 1):
         fetch_file(url, cache_file)
     else:
         xbmc.log('ESPN3: Using cache %s for %s' % (url, cache_file))
-    config_file = load_file(cache_file)
-    config_data = config_file.read()
-    config_file.close()
-    xbmc.log('ESPN3: Start soup')
-    #config_soup = BeautifulSoup(config_data, 'html.parser')
-    config_soup = xmltodict.parse(config_data)
-    xbmc.log('ESPN3: End soup')
+    parser = ET.XMLParser(encoding='iso-8859-1')
+    config_soup = ET.parse(cache_file, parser)
     return config_soup
 
 def get_url_as_xml_soup(url):
     config_data = urllib2.urlopen(url).read()
-    config_soup = BeautifulSoup(config_data, 'html.parser')
+    parser = ET.XMLParser(encoding='iso-8859-1')
+    config_soup = ET.fromstring(config_data, parser)
     return config_soup
