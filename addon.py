@@ -109,6 +109,8 @@ def INDEX(args):
     if chosen_sport is not None:
         chosen_sport = chosen_sport[0]
     live = 'action=live' in espn_url
+    upcoming = 'action=upcoming' in espn_url
+    replay = 'action=replay' in espn_url
     if live:
         data = events.get_events(espn_url)
     else:
@@ -180,7 +182,7 @@ def INDEX(args):
                 plot += 'Air Date: '+start+'\n'
             if length <> None and length <> ' ' and live:
                 plot += 'Duration: Approximately '+ str(length_minutes)+' minutes remaining'+'\n'
-            elif length <> None and length <> ' ' and ('action=replay' in espn_url or 'action=upcoming' in espn_url):
+            elif length <> None and length <> ' ' and (replay or upcoming):
                 plot += 'Duration: '+ str(length_minutes) +' minutes'+'\n'
             plot += end
             infoLabels = {'title': ename,
@@ -192,17 +194,13 @@ def INDEX(args):
                           'studio':network,
                           'mpaa':mpaa,
                           'videoaspect' : aspect_ratio}
-            if 'action=upcoming' in espn_url:
-                mode = 5
-            else:
-                mode = PLAY_MODE
 
             authurl = dict()
             authurl[EVENT_ID] = eventid
             authurl[SIMULCAST_AIRING_ID] = simulcastAiringId
             authurl[DESKTOP_STREAM_SOURCE] = desktopStreamSource
             authurl[NETWORK_ID] = networkid
-            authurl[MODE] = PLAY_MODE
+            authurl[MODE] = UPCOMING_MODE if upcoming else PLAY_MODE
             addLink(ename, authurl, fanart, fanart, infoLabels=infoLabels)
     xbmcplugin.setContent(pluginhandle, 'episodes')
     xbmcplugin.endOfDirectory(int(sys.argv[1]))
@@ -234,16 +232,14 @@ def check_blackout(authurl):
                     return (tree, True)
     return (tree, False)
 
-def PLAY_PROTECTED_CONTENT(url):
+def PLAY_PROTECTED_CONTENT(args):
 
     if not check_user_settings():
         return
 
     user_data = player_config.get_user_data()
     affiliateid = user_data.find('.//affiliate/name').text
-    swid = user_data.find('.//personalization').get('swid')
 
-    eventid = args.get(EVENT_ID)[0]
     simulcastAiringId = args.get(SIMULCAST_AIRING_ID)[0]
     streamType = args.get(DESKTOP_STREAM_SOURCE)[0]
     networkId = args.get(NETWORK_ID)[0]
@@ -296,8 +292,6 @@ def PLAY_PROTECTED_CONTENT(url):
 def PLAY_FREE_CONTENT(args):
     user_data = player_config.get_user_data()
     affiliateid = user_data.find('.//affiliate/name').text
-    swid = user_data.find('.//personalization').get('swid')
-    identityPointId = affiliateid+':'+swid
 
     eventid = args.get(EVENT_ID)[0]
     simulcastAiringId = args.get(SIMULCAST_AIRING_ID)[0]
