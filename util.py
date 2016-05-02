@@ -5,10 +5,7 @@ import os
 import time
 import urllib
 import urllib2
-from bs4 import BeautifulSoup
 import xml.etree.ElementTree as ET
-
-import player_config
 
 def is_file_valid(cache_file, timeout):
     if os.path.isfile(cache_file):

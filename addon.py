@@ -6,7 +6,6 @@
 
 import urllib, urllib2, xbmcplugin, xbmcaddon, xbmcgui, os, random, string, re
 import time
-import mechanize
 from adobe import ADOBE
 from globals import *
 from datetime import datetime, timedelta
@@ -21,7 +20,6 @@ from espn import ESPN
 from mso_provider import get_mso_provider
 from user_details import UserDetails
 import urlparse
-import cookielib
 
 LIVE_EVENTS_MODE = 'LIVE_EVENTS'
 PLAY_MODE = 'PLAY'
@@ -36,9 +34,6 @@ DESKTOP_STREAM_SOURCE = 'DESKTOP_STREAM_SOURCE'
 ESPN_URL = 'ESPN_URL'
 MODE = 'MODE'
 SPORT = 'SPORT'
-
-cj = cookielib.LWPCookieJar()
-channels = ''
 
 def CATEGORIES():
     include_premium = selfAddon.getSetting('ShowPremiumChannels') == 'true'
