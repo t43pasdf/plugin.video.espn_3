@@ -222,7 +222,6 @@ class ADOBE():
         ###################################################################
         cj = cookielib.LWPCookieJar()
         cj.load(os.path.join(ADDON_PATH_PROFILE, 'cookies.lwp'),ignore_discard=True)
-        print cj
         cookies = ''
         for cookie in cj:
             #Possibly two JSESSION cookies being passed, may need to fix

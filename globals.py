@@ -12,7 +12,6 @@ from StringIO import StringIO
 import gzip
 
 def CLEAR_SAVED_DATA():
-    print "IN CLEAR"
     try:
         os.remove(ADDON_PATH_PROFILE+'/device.id')
     except:
