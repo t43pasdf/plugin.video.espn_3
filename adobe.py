@@ -87,15 +87,26 @@ class ADOBE():
                             'adobe-services/1.0/authenticate/saml',
                             params, ''])
 
-        br = mechanize.Browser()
+        factory = mechanize.RobustFactory()
+        br = mechanize.Browser(factory=factory)
         cj = cookielib.LWPCookieJar()
         br.set_cookiejar(cj);
         br.set_debug_http(True)
         br.set_debug_responses(True)
         br.set_handle_robots(False)
+        xbmc.log('ESPN3: IDP %s' % idp_url)
         br.open(idp_url)
+        #response = br.open(idp_url)
+        #forms = mechanize.ParseResponseEx(response)
+        #response.close()
 
         br.select_form(nr = 0)
+
+        # Detect redirect form (DirectTV)
+        for control in br.form.controls:
+            if control.type == 'hidden' and control.name == 'SAMLRequest':
+                br.submit()
+                br.select_form(nr = 0)
 
         for control in br.form.controls:
             if control.type == 'text':
@@ -109,7 +120,6 @@ class ADOBE():
         saml = ''
         relay_state = '';
         for control in br.form.controls:
-            xbmc.log('ESPN3 ' + str(control.name) + ' = ' + str(control.value))
             if control.name == 'SAMLResponse':
                 saml = control.value
             if control.name == 'RelayState':
