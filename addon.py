@@ -252,6 +252,9 @@ def PLAY_PROTECTED_CONTENT(args):
     media_token = adobe.GET_MEDIA_TOKEN()
     resource_id = requestor.get_resource_id()
 
+    if media_token is None:
+        return
+
     start_session_url = player_config.get_start_session_url()
     start_session_url += 'affiliate='+affiliateid
     start_session_url += '&channel='+player_config.get_network_name(networkId)

@@ -56,7 +56,8 @@ class ADOBE():
 
     def delete_auth_token(self):
         fname = self.get_auth_token_file()
-        os.remove(fname)
+        if os.path.isfile(fname):
+            os.remove(fname)
 
     def get_provider(self):
         fname = os.path.join(ADDON_PATH_PROFILE, 'provider.info')
@@ -154,6 +155,7 @@ class ADOBE():
 
         #If cookies are expired or auth token is not present run login or provider has changed
         if expired_cookies or auth_token is '' or (last_provider != self.mso_provider.get_mso_name()):
+            self.delete_auth_token()
             xbmc.log('ESPN3: Logging into provider')
             saml_response, relay_state = self.GET_IDP_DATA()
 
