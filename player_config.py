@@ -8,8 +8,8 @@ import xbmc
 
 import util
 
-# 1 day
-TIME_DIFFERENCE = 60 * 60 * 24;
+# 1 hour
+TIME_DIFFERENCE = 60 * 60;
 
 PLAYER_CONFIG_FILE = 'player_config.xml'
 PLAYER_CONFIG_FILE = os.path.join(globals.ADDON_PATH_PROFILE, PLAYER_CONFIG_FILE)

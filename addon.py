@@ -340,7 +340,7 @@ def PLAY_FREE_CONTENT(args):
 
     smilurl = tree.find('.//' + BAM_NS + 'url').text
     xbmc.log('ESPN3:  smilurl: %s' % smilurl)
-    if smilurl == ' ' or smilurl == '':
+    if smilurl is None or smilurl == ' ' or smilurl == '':
         dialog = xbmcgui.Dialog()
         dialog.ok(translation(30037), translation(30038),translation(30039))
         return

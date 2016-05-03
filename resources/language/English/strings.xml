@@ -25,7 +25,7 @@
     <string id="30036">Event has not started.</string>
     <string id="30037">Error</string>
     <string id="30038">SMIL URL Blank</string>
-    <string id="30039">Unable to playback video</string>
+    <string id="30039">Unable to playback video your provider may not support ESPN3 or may require you to login.</string>
     <string id="30040">Blacked Out</string>
     <string id="30050">Color of LIVE Events(6 digit HEX Value)</string>
     <string id="30060">List ONLY RTMP/HDS Streams</string>
