@@ -3,13 +3,13 @@
 '''
 Generates a list of TV providers for settings.xml
 '''
-import urllib2
+import urllib
+from bs4 import BeautifulSoup
 
-import player_config
-import util
 
-url = player_config.get_providers_url()
-providers_soup = util.get_url_as_xml_soup(url)
+url = 'http://api-app.espn.com/v1/watch/clients/watchespn-flash/providers?_accept=text/xml&mvpd=true'
+urllib.urlretrieve(url, 'providers.xml')
+providers_soup = BeautifulSoup(open('providers.xml').read())
 providers = providers_soup.findAll('providersitem')
 provider_names = []
 for provider in providers:
