@@ -27,18 +27,25 @@ def get_url_as_xml_soup_cache(url, cache_file, timeout = 1):
         fetch_file(url, cache_file)
     else:
         xbmc.log('ESPN3: Using cache %s for %s' % (url, cache_file))
-    try:
-        parser = ET.XMLParser(encoding='iso-8859-1')
-        config_soup = ET.parse(cache_file, parser)
-    except:
-        config_soup = ET.parse(cache_file)
-    return config_soup
+    xml_file = open(cache_file)
+    xml_data = xml_file.read()
+    xml_file.close()
+    return load_element_tree(xml_data)
 
 def get_url_as_xml_soup(url):
     config_data = urllib2.urlopen(url).read()
+    return load_element_tree(config_data)
+
+# ESPN files are in iso-8859-1 and sometimes do not have the xml preamble
+def load_element_tree(data):
     try:
         parser = ET.XMLParser(encoding='iso-8859-1')
-        config_soup = ET.fromstring(config_data, parser)
+        data_tree = ET.fromstring(data, parser)
     except:
-        config_soup = ET.fromstring(config_data)
-    return config_soup
+        if '<?xml version' not in data:
+            xbmc.log('EPSN3: Fixing up data because of no xml preamble')
+            data = '<?xml version="1.0" encoding="ISO-8859-1" ?>' + data
+        data_tree = ET.fromstring(data)
+
+    return data_tree
+
