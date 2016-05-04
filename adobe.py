@@ -227,6 +227,7 @@ class ADOBE():
         xbmc.log('ESPN3: body: %s' % body)
         xbmc.log('ESPN3: response: %s' % response)
         xbmc.log('ESPN3: content: %s' % content)
+        self.save_cookies(cj)
 
     def POST_SESSION_DEVICE(self,signed_requestor_id):
         ###################################################################
@@ -270,6 +271,7 @@ class ADOBE():
         content_tree = ET.fromstring(content)
         authz = content_tree.find('.//authnToken').text
         xbmc.log('ESPN3: authz ' + authz)
+        self.save_cookies(cj)
 
         self.save_auth_token(authz)
 
