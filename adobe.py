@@ -98,30 +98,35 @@ class ADOBE():
         br = mechanize.Browser(factory=factory)
         cj = cookielib.LWPCookieJar()
         br.set_cookiejar(cj);
-        br.set_debug_http(False)
-        br.set_debug_responses(False)
+        br.set_debug_redirects(True)
+        br.set_debug_responses(True)
         br.set_handle_robots(False)
         xbmc.log('ESPN3: IDP %s' % idp_url)
-        br.open(idp_url)
-        #response = br.open(idp_url)
-        #forms = mechanize.ParseResponseEx(response)
-        #response.close()
+        response = br.open(idp_url)
+        xbmc.log('ESPN3: IDP Response Url %s' % response.geturl())
+        response.close()
 
         br.select_form(nr = 0)
 
         # Detect redirect form (DirectTV)
         for control in br.form.controls:
             if control.type == 'hidden' and control.name == 'SAMLRequest':
-                br.submit()
+                response = br.submit()
+                xbmc.log('ESPN3: IDP Redirect Response Url %s' % response.geturl())
+                response.close()
                 br.select_form(nr = 0)
 
         for control in br.form.controls:
+            xbmc.log('ESPN3 Found control %s %s' % (control.type, control.name))
             if control.type == 'text':
-                br.form[control.name] = self.user_details.get_username();
+                br.form[control.name] = self.user_details.get_username()
             if control.type == 'password':
-                br.form[control.name] = self.user_details.get_password();
+                br.form[control.name] = self.user_details.get_password()
+        # TODO: Fix this so it doesn't redirect to adobepass://android.app
         br.set_handle_refresh(False)
-        br.submit()
+        response = br.submit()
+        xbmc.log('ESPN3: Response Url %s' % response.geturl())
+        response.close()
         br.select_form(nr = 0)
         self.save_cookies(cj)
         saml = ''
