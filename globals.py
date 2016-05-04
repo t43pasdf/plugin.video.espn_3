@@ -99,17 +99,6 @@ device_file = open(fname,'r')
 DEVICE_ID = device_file.readline()
 device_file.close()
 
-#Create a file for storing Provider info
-fname = os.path.join(ADDON_PATH_PROFILE, 'provider.info')
-if os.path.isfile(fname):
-    provider_file = open(fname,'r')
-    last_provider = provider_file.readline()
-    provider_file.close()
-
-provider_file = open(fname,'w')
-provider_file.write(selfAddon.getSetting('provider'))
-provider_file.close()
-
 
 #Event Colors
 FREE = 'FF43CD80'

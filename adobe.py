@@ -69,6 +69,12 @@ class ADOBE():
         else:
             return ''
 
+    def save_provider(self):
+        fname = os.path.join(ADDON_PATH_PROFILE, 'provider.info')
+        provider_file = open(fname,'w')
+        provider_file.write(selfAddon.getSetting('provider'))
+        provider_file.close()
+
     def save_cookies(self, cj):
         fix_cookie_expires(cj)
         cj.save(os.path.join(ADDON_PATH_PROFILE, 'cookies.lwp'),ignore_discard=True, ignore_expires=True )
@@ -92,8 +98,8 @@ class ADOBE():
         br = mechanize.Browser(factory=factory)
         cj = cookielib.LWPCookieJar()
         br.set_cookiejar(cj);
-        br.set_debug_http(True)
-        br.set_debug_responses(True)
+        br.set_debug_http(False)
+        br.set_debug_responses(False)
         br.set_handle_robots(False)
         xbmc.log('ESPN3: IDP %s' % idp_url)
         br.open(idp_url)
@@ -114,9 +120,9 @@ class ADOBE():
                 br.form[control.name] = self.user_details.get_username();
             if control.type == 'password':
                 br.form[control.name] = self.user_details.get_password();
+        br.set_handle_refresh(False)
         br.submit()
         br.select_form(nr = 0)
-        xbmc.log('cj: %s' % cj)
         self.save_cookies(cj)
         saml = ''
         relay_state = '';
@@ -184,6 +190,7 @@ class ADOBE():
             self.delete_auth_token()
         else:
             media_token = self.POST_SHORT_AUTHORIZED(signed_requestor_id,authz)
+            self.save_provider()
             return media_token
 
     def POST_ASSERTION_CONSUMER_SERVICE(self,saml_response,relay_state):
