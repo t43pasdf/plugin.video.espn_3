@@ -224,10 +224,10 @@ def check_blackout(authurl):
                     dialog.ok(translation(30037), errormessage[0])
                 return (tree, True)
         else:
-            if blackoutstatus.find('.//' + BAM_NS + 'successStatus') is not None:
-                if blackoutstatus.find('.//' + BAM_NS + 'blackout') is not None:
+            if blackoutstatus.find('.//' + BAM_NS + 'errorCode') is not None:
+                if blackoutstatus.find('.//' + BAM_NS + 'errorMessage') is not None:
                     dialog = xbmcgui.Dialog()
-                    dialog.ok(translation(30040), blackoutstatus.find('.//' + BAM_NS + 'blackout').text)
+                    dialog.ok(translation(30040), blackoutstatus.find('.//' + BAM_NS + 'errorMessage').text)
                     return (tree, True)
     return (tree, False)
 
