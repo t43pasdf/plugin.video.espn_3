@@ -83,66 +83,10 @@ class ADOBE():
     def get_form_action(self, soup):
         return soup.find('form').get('action')
 
-    def get_cookie_headers(self, cj):
-        cookies = ''
-        for cookie in cj:
-            cookies = cookies + cookie.name + "=" + cookie.value + "; "
-        return cookies
-
     def get_origin(self, url):
         origin = urlparse.urlparse(url)
         origin = '%s://%s' % (origin.scheme, origin.netloc)
         return origin
-
-    def get_cookie(self, response, redirect_url):
-        url_domain = urlparse.urlparse(redirect_url).netloc
-        set_cookie = response['set-cookie']
-        xbmc.log('ESPN3: Handling cookie %s' % set_cookie)
-        set_cookie = set_cookie.split(', ')
-        request_cookie = ''
-        domain = None
-        for cookie in set_cookie:
-            xbmc.log(cookie)
-            parts = cookie.split(';')
-            xbmc.log(str(parts))
-            for part in parts:
-                xbmc.log(part)
-                part_parts = part.split('=')
-                if part_parts[0].strip() == 'Domain':
-                    domain = part_parts[1]
-            if domain is None or domain in url_domain:
-                request_cookie = request_cookie + parts[0] + '; '
-        xbmc.log('ESPN3: Processed cookie %s' % request_cookie)
-        return request_cookie
-
-    def handle_request(self, http, url, method, headers, body):
-        xbmc.log('ESPN3: Handlig request %s' % url)
-        xbmc.log('Headers %s \n Body %s' % (headers, body))
-        response, content = http.request(url, method, headers=headers, body=body)
-        # Check 302
-        if response['status'] == '302':
-            original_host = self.get_origin(url)
-            redirect_url = response['location']
-            url_parsed = urlparse.urlparse(redirect_url)
-            if url_parsed.scheme == '':
-                redirect_url = '%s/%s' % (original_host, redirect_url)
-            headers['Referer'] = url
-            headers['Origin'] = original_host
-            headers['Cookie'] = self.get_cookie(response, redirect_url)
-            xbmc.log('ESPN3: Redirecting to %s' % redirect_url)
-            return self.handle_request(http, redirect_url, 'GET', headers, body)
-        # Check http equiv
-        content_soup = BeautifulSoup(content, 'html.parser')
-        meta = content_soup.find('meta', {'http-equiv' : 'refresh'})
-        if meta is not None:
-            url = meta.get('content')
-            url = url[(url.index('url=') + 4):]
-            xbmc.log('ESPN3 http-equiv to %s' % url)
-            return self.handle_request(http, url, 'GET', headers, body)
-        xbmc.log('Response %s Content %s' % (response, content))
-        if response.get('content-location'):
-            url = response.get('content-location')
-        return (response, content, url)
 
     def resolve_relative_url(self, relative_url, url):
         relative_parsed = urlparse.urlparse(relative_url)
@@ -192,6 +136,7 @@ class ADOBE():
                             'sp.auth.adobe.com',
                             'adobe-services/1.0/authenticate/saml',
                             params, ''])
+        xbmc.log('ESPN3: Using IDP %s' % idp_url)
         cj = cookielib.LWPCookieJar(os.path.join(ADDON_PATH_PROFILE, 'cookies.lwp'))
         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
         opener.addheaders = [ ("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"),
@@ -211,25 +156,33 @@ class ADOBE():
         need_idp_request = 'https://sp.auth.adobe.com' in url
 
         # Some use a post form, others use an http-equiv
+        saml_request = ''
+        relay_state = ''
         if need_idp_request:
-            # TODO: Update with urllib2
-            origin = self.get_origin(idp_url)
-            headers = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-                                "Accept-Encoding": "gzip, deflate",
-                                "Accept-Language": "en-us",
-                                "Content-Type": "application/x-www-form-urlencoded",
-                                "Proxy-Connection": "keep-alive",
-                                "Connection": "keep-alive",
-                                "Origin": origin,
-                                "Referer": idp_url,
-                                "User-Agent": UA_PC}
+            for control in idp_soup.find_all('input'):
+                xbmc.log('ESPN3: Looking at control %s' % control.get('name'))
+                if control.get('name') == 'SAMLRequest':
+                    saml_request = control.get('value')
+                if control.get('name') == 'RelayState':
+                    relay_state = control.get('value')
 
+            origin = self.get_origin(idp_url)
+            opener.addheaders = [ ("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"),
+                            ("Accept-Encoding", "gzip, deflate"),
+                            ("Accept-Language", "en-us"),
+                            ("Content-Type", "application/x-www-form-urlencoded"),
+                            ("Proxy-Connection", "keep-alive"),
+                            ("Connection", "keep-alive"),
+                            ("Referer", idp_url),
+                            ("Origin", origin),
+                            ("User-Agent", UA_PC)]
             body_contents = dict()
             for control in idp_soup.find_all('input'):
                 body_contents[control.get('name')] = control.get('value')
-
             body = urllib.urlencode(body_contents);
-            response, content, url = self.handle_request(http, idp_action, 'POST', headers=headers, body=body)
+
+            (content, url) = self.handle_url(opener, idp_action, body)
+            xbmc.log('ESPN3: Ended up at url %s' % url)
 
         content_soup = BeautifulSoup(content, 'html.parser')
         content_action = self.get_form_action(content_soup)
@@ -237,11 +190,17 @@ class ADOBE():
         body_contents = dict()
         for control in content_soup.find_all('input'):
             body_contents[control.get('name')] = control.get('value')
-            xbmc.log('ESPN3: Populating control %s %s' % (control.get('name'), control.get('type')))
+            xbmc.log('ESPN3: Populating control %s %s %s' % (control.get('name'), control.get('type'), control.get('value')))
             if control.get('type') == 'text':
                 body_contents[control.get('name')] = self.user_details.get_username()
             if control.get('type') == 'password':
                 body_contents[control.get('name')] = self.user_details.get_password()
+            if control.get('name') == 'SAMLRequest' and saml_request != '':
+                xbmc.log('ESPN3: Set saml request to %s' % saml_request)
+                body_contents[control.get('name')] = saml_request
+            if control.get('name') == 'RelayState' and relay_state != '':
+                xbmc.log('ESPN3: Set relay state to %s' % relay_state)
+                body_contents[control.get('name')] = relay_state
 
         for control in content_soup.find_all('select'):
             body_contents[control.get('name')] = control.get('value')

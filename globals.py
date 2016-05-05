@@ -33,7 +33,6 @@ def CLEAR_SAVED_DATA():
 # Fixes an issue with 32bit systems not supporting times after 2038
 def fix_cookie_expires(cj):
     for cookie in cj:
-        xbmc.log('cookie expires %s' % cookie.expires)
         if cookie.expires > 2000000000:
             cookie.expires = 2000000000
 
