@@ -152,6 +152,31 @@ class ADOBE():
             return '%s%s' % (origin, relative_url)
         return relative_url
 
+    def check_redirect(self, content):
+        content_soup = BeautifulSoup(content, 'html.parser')
+        meta = content_soup.find('meta', {'http-equiv' : 'refresh'})
+        if meta is not None:
+            url = meta.get('content')
+            url = url[(url.index('url=') + 4):]
+            xbmc.log('ESPN3 http-equiv to %s' % url)
+            return url
+        return None
+
+    def handle_url(self, opener, url, body  = None):
+        resp = opener.open(url, body)
+        if resp.info().get('Content-Encoding') == 'gzip':
+            buf = StringIO(resp.read())
+            f = gzip.GzipFile(fileobj=buf)
+            content = f.read()
+        else:
+            content = resp.read()
+        url = resp.geturl()
+        resp.close()
+        redirect = self.check_redirect(content)
+        if redirect is not None:
+            return self.handle_url(opener, redirect)
+        return (content, url)
+
     def GET_IDP_DATA(self):
         params = urllib.urlencode(
                                   {'domain_name' : 'adobe.com',
@@ -167,17 +192,17 @@ class ADOBE():
                             'sp.auth.adobe.com',
                             'adobe-services/1.0/authenticate/saml',
                             params, ''])
+        cj = cookielib.LWPCookieJar(os.path.join(ADDON_PATH_PROFILE, 'cookies.lwp'))
+        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+        opener.addheaders = [ ("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"),
+                            ("Accept-Language", "en-us"),
+                            ("Proxy-Connection", "keep-alive"),
+                            ("Connection", "keep-alive"),
+                            ("User-Agent", UA_ANDROID)]
 
-        http = httplib2.Http()
-        http.disable_ssl_certificate_validation=True
-        headers = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-                            "Accept-Encoding": "gzip, deflate",
-                            "Accept-Language": "en-us",
-                            "Proxy-Connection": "keep-alive",
-                            "Connection": "keep-alive",
-                            "Cookie" : "",
-                            "User-Agent": UA_PC}
-        response, content, url = self.handle_request(http, idp_url, 'GET', headers=headers, body=dict())
+        (content, url) = self.handle_url(opener, idp_url)
+
+
         idp_soup = BeautifulSoup(content, 'html.parser')
         idp_action = self.get_form_action(idp_soup)
         idp_action = self.resolve_relative_url(idp_action, url)
@@ -187,6 +212,7 @@ class ADOBE():
 
         # Some use a post form, others use an http-equiv
         if need_idp_request:
+            # TODO: Update with urllib2
             origin = self.get_origin(idp_url)
             headers = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
                                 "Accept-Encoding": "gzip, deflate",
@@ -223,68 +249,30 @@ class ADOBE():
         for control in content_soup.find_all('button'):
             body_contents[control.get('name')] = control.get('value')
 
-        headers = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-                            "Accept-Encoding": "gzip, deflate",
-                            "Accept-Language": "en-us",
-                            "Content-Type": "application/x-www-form-urlencoded",
-                            "Proxy-Connection": "keep-alive",
-                            "Connection": "keep-alive",
-                            "Origin": self.get_origin(url),
-                            "Referer": url,
-                            "Cookie": self.get_cookie(response.get('set-cookie'), content_action),
-                            "User-Agent": UA_PC}
+        opener.addheaders = [ ("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"),
+                            ("Accept-Encoding", "gzip, deflate"),
+                            ("Accept-Language", "en-us"),
+                            ("Content-Type", "application/x-www-form-urlencoded"),
+                            ("Proxy-Connection", "keep-alive"),
+                            ("Connection", "keep-alive"),
+                            ("Referer", url),
+                            ("Origin", self.get_origin(url)),
+                            ("User-Agent", UA_PC)]
         body = urllib.urlencode(body_contents);
-        response, content, url = self.handle_request(http, content_action, 'POST', headers=headers, body=body)
 
-
-
-        return ('', '')
-
-
-
-        factory = mechanize.RobustFactory()
-        br = mechanize.Browser(factory=factory)
-        cj = cookielib.LWPCookieJar()
-        br.set_cookiejar(cj);
-        br.set_debug_redirects(True)
-        br.set_debug_responses(True)
-        br.set_handle_robots(False)
-        xbmc.log('ESPN3: IDP %s' % idp_url)
-        response = br.open(idp_url)
-        xbmc.log('ESPN3: IDP Response Url %s' % response.geturl())
-        response.close()
-
-        br.select_form(nr = 0)
-
-        # Detect redirect form (DirectTV)
-        for control in br.form.controls:
-            if control.type == 'hidden' and control.name == 'SAMLRequest':
-                response = br.submit()
-                xbmc.log('ESPN3: IDP Redirect Response Url %s' % response.geturl())
-                response.close()
-                br.select_form(nr = 0)
-
-        for control in br.form.controls:
-            xbmc.log('ESPN3 Found control %s %s' % (control.type, control.name))
-            if control.type == 'text':
-                br.form[control.name] = self.user_details.get_username()
-            if control.type == 'password':
-                br.form[control.name] = self.user_details.get_password()
-        # TODO: Fix this so it doesn't redirect to adobepass://android.app
-        br.set_handle_refresh(False)
-        response = br.submit()
-        xbmc.log('ESPN3: Response Url %s' % response.geturl())
-        response.close()
-        br.select_form(nr = 0)
-        self.save_cookies(cj)
+        (content, url) = self.handle_url(opener, content_action, body)
+        content_soup = BeautifulSoup(content, 'html.parser')
         saml = ''
-        relay_state = '';
-        for control in br.form.controls:
-            if control.name == 'SAMLResponse':
-                saml = control.value
-            if control.name == 'RelayState':
-                relay_state = control.value
+        relay_state = ''
+        for control in content_soup.find_all('input'):
+            xbmc.log('ESPN3: Getting control %s %s' % (control.get('name'), control.get('type')))
+            name = control.get('name')
+            if name == 'SAMLResponse':
+                saml = control.get('value')
+            if name == 'RelayState':
+                relay_state = control.get('value')
         xbmc.log('ESPN3 getting adobe response')
+        self.save_cookies(cj)
         return (saml, relay_state)
 
     def GET_MEDIA_TOKEN(self):
