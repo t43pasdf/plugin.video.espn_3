@@ -211,24 +211,21 @@ def check_blackout(authurl):
     tree = util.get_url_as_xml_soup(authurl)
     authstatus = tree.find('.//' + BAM_NS + 'auth-status')
     blackoutstatus = tree.find('.//' + BAM_NS + 'blackout-status')
-    if authstatus.find('./' + BAM_NS + 'successStatus') is not None:
-        if authstatus.find('.//' + BAM_NS + 'notAuthorizedStatus') is not None:
-            if authstatus.find('.//' + BAM_NS + 'errorMessage') is not None:
-                dialog = xbmcgui.Dialog()
-                import textwrap
-                errormessage = authstatus.find('.//' + BAM_NS + 'errormessage').text
-                try:
-                    errormessage = textwrap.fill(errormessage, width=50).split('\n')
-                    dialog.ok(translation(30037), errormessage[0],errormessage[1],errormessage[2])
-                except:
-                    dialog.ok(translation(30037), errormessage[0])
-                return (tree, True)
-        else:
-            if blackoutstatus.find('.//' + BAM_NS + 'errorCode') is not None:
-                if blackoutstatus.find('.//' + BAM_NS + 'errorMessage') is not None:
-                    dialog = xbmcgui.Dialog()
-                    dialog.ok(translation(30040), blackoutstatus.find('.//' + BAM_NS + 'errorMessage').text)
-                    return (tree, True)
+    if blackoutstatus.find('.//' + BAM_NS + 'errorCode') is not None:
+        if blackoutstatus.find('.//' + BAM_NS + 'errorMessage') is not None:
+            dialog = xbmcgui.Dialog()
+            dialog.ok(translation(30040), blackoutstatus.find('.//' + BAM_NS + 'errorMessage').text)
+            return (tree, True)
+    if authstatus.find('.//' + BAM_NS + 'errorCode') is not None or authstatus.find('.//' + BAM_NS + 'errorMessage') is not None:
+        dialog = xbmcgui.Dialog()
+        import textwrap
+        errormessage = '%s - %s' % (authstatus.find('.//' + BAM_NS + 'errorCode').text,  authstatus.find('.//' + BAM_NS + 'errorMessage').text)
+        try:
+            errormessage = textwrap.fill(errormessage, width=50).split('\n')
+            dialog.ok(translation(30037), errormessage[0],errormessage[1],errormessage[2])
+        except:
+            dialog.ok(translation(30037), errormessage[0])
+        return (tree, True)
     return (tree, False)
 
 def PLAY_PROTECTED_CONTENT(args):
@@ -242,6 +239,7 @@ def PLAY_PROTECTED_CONTENT(args):
     simulcastAiringId = args.get(SIMULCAST_AIRING_ID)[0]
     streamType = args.get(DESKTOP_STREAM_SOURCE)[0]
     networkId = args.get(NETWORK_ID)[0]
+    eventId = args.get(EVENT_ID)[0]
 
     requestor = ESPN()
     mso_provider = get_mso_provider(selfAddon.getSetting('provider'))
@@ -256,17 +254,17 @@ def PLAY_PROTECTED_CONTENT(args):
         return
 
     start_session_url = player_config.get_start_session_url()
-    start_session_url += 'affiliate='+affiliateid
+    start_session_url += '&affiliate='+affiliateid
     start_session_url += '&channel='+player_config.get_network_name(networkId)
     start_session_url += '&partner=watchespn'
-    start_session_url += '&playbackScenario=HTTP_CLOUD_MOBILE'
-    start_session_url += '&v=2.0.0'
-    start_session_url += '&platform=android_tablet'
-    start_session_url += '&sdkVersion=1.1.0'
+    start_session_url += '&playbackScenario=FMS_CLOUD'
     start_session_url += '&token='+urllib.quote(base64.b64encode(media_token))
     start_session_url += '&resource=' + urllib.quote(base64.b64encode(resource_id))
     start_session_url += '&simulcastAiringId='+simulcastAiringId
     start_session_url += '&tokenType=ADOBEPASS'
+    start_session_url += '&eventId=' + eventId
+    start_session_url += '&cdnName=PRIMARY_AKAMAI'
+    start_session_url += '&playerId=domestic'
 
     xbmc.log('ESPN3: start_session_url: ' + start_session_url)
 
@@ -342,6 +340,9 @@ def PLAY_FREE_CONTENT(args):
 
     smilurl = tree.find('.//' + BAM_NS + 'url').text
     xbmc.log('ESPN3:  smilurl: %s' % smilurl)
+    if smilurl is None:
+        smilurl = tree.find('.//' + BAM_NS + 'hls-backup-url').text
+        xbmc.log('ESPN3:  smilurl hls backup: %s' % smilurl)
     if smilurl is None or smilurl == ' ' or smilurl == '':
         dialog = xbmcgui.Dialog()
         dialog.ok(translation(30037), translation(30038),translation(30039))

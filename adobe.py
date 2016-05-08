@@ -128,13 +128,11 @@ class ADOBE():
                                    'no_iframe' : 'true',
                                    'mso_id' : self.mso_provider.get_mso_id(),
                                    'requestor_id' : self.requestor.get_requestor_id(),
-                                   'redirect_url' : 'adobepass://android.app',
-                                   'client_type' : 'android',
-                                   'client_version' : '1.7.3'})
+                                   'redirect_url' : 'adobepass://android.app'})
 
         idp_url = urlparse.urlunsplit(['https',
                             'sp.auth.adobe.com',
-                            'adobe-services/1.0/authenticate/saml',
+                            'adobe-services/1.0/authenticate',
                             params, ''])
         xbmc.log('ESPN3: Using IDP %s' % idp_url)
         cj = cookielib.LWPCookieJar(os.path.join(ADDON_PATH_PROFILE, 'cookies.lwp'))
@@ -143,7 +141,7 @@ class ADOBE():
                             ("Accept-Language", "en-us"),
                             ("Proxy-Connection", "keep-alive"),
                             ("Connection", "keep-alive"),
-                            ("User-Agent", UA_ANDROID)]
+                            ("User-Agent", UA_PC)]
 
         (content, url) = self.handle_url(opener, idp_url)
 
