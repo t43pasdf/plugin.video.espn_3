@@ -6,6 +6,7 @@ import globals
 import urllib
 import xbmc
 
+
 import util
 
 # 1 hour
@@ -33,6 +34,11 @@ def get_user_data():
 
 def get_providers_data():
     return util.get_url_as_xml_soup_cache(get_providers_url(), PROVIDERS_FILE, TIME_DIFFERENCE)
+
+def can_access_free_content():
+    json = util.get_url_as_json(CHECK_RIGHTS_URL)
+    xbmc.log(json['espn3'])
+    return json['espn3'] != 'invalid'
 
 def get_networks():
     networks = get_config_soup().findall('.//network')

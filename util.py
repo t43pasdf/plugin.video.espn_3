@@ -5,6 +5,7 @@ import os
 import time
 import urllib
 import urllib2
+import json
 import xml.etree.ElementTree as ET
 
 def is_file_valid(cache_file, timeout):
@@ -49,3 +50,6 @@ def load_element_tree(data):
 
     return data_tree
 
+def get_url_as_json(url):
+    response = urllib2.urlopen(url)
+    return json.load(response)

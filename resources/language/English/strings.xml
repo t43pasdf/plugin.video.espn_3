@@ -36,4 +36,6 @@
 	<string id="30110">Set your username in the add-on settings</string>
 	<string id="30120">Set your password in the add-on settings</string>
 	<string id="30130">Show premium channels</string>
+	<string id="30140">Unable to access</string>
+	<string id="30150">ESPN reports that your provider doesn't have access to ESPN3</string>
 </strings>

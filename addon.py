@@ -289,9 +289,13 @@ def PLAY_PROTECTED_CONTENT(args):
     item = xbmcgui.ListItem(path=finalurl)
     return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, item)
 
-# TODO: This may need to log in the user with adobe
-# if their ISP doesn't support it 100%
 def PLAY_FREE_CONTENT(args):
+    free_content_check = player_config.can_access_free_content()
+    if not free_content_check:
+        dialog = xbmcgui.Dialog()
+        dialog.ok(translation(30037), translation(30140),translation(30150))
+        return
+
     user_data = player_config.get_user_data()
     affiliateid = user_data.find('.//affiliate/name').text
 
