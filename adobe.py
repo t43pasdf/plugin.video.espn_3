@@ -305,7 +305,7 @@ class ADOBE():
         ###################################################################
         cj = cookielib.LWPCookieJar()
         cj.load(os.path.join(ADDON_PATH_PROFILE, 'cookies.lwp'),ignore_discard=True)
-        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj), urllib2.HTTPSHandler(debuglevel=1))
+        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
         opener.addheaders = [ ("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"),
                             ("Accept-Language", "en-us"),
                             ("Proxy-Connection", "keep-alive"),
@@ -351,7 +351,7 @@ class ADOBE():
         url = 'https://sp.auth.adobe.com//adobe-services/1.0/authorizeDevice'
         cj = cookielib.LWPCookieJar()
         cj.load(os.path.join(ADDON_PATH_PROFILE, 'cookies.lwp'),ignore_discard=True)
-        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj), urllib2.HTTPSHandler(debuglevel=1))
+        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
         opener.addheaders = [ ("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"),
                             ("Accept-Language", "en-us"),
                             ("Proxy-Connection", "keep-alive"),
