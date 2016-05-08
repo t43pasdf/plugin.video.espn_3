@@ -349,15 +349,15 @@ class ADOBE():
 
 
         url = 'https://sp.auth.adobe.com//adobe-services/1.0/authorizeDevice'
-        http = httplib2.Http()
-        http.disable_ssl_certificate_validation=True
-
-        headers = {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                    "Proxy-Connection": "keep-alive",
-                    "Connection": "keep-alive",
-                    "User-Agent":  UA_ANDROID}
-
+        cj = cookielib.LWPCookieJar()
+        cj.load(os.path.join(ADDON_PATH_PROFILE, 'cookies.lwp'),ignore_discard=True)
+        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj), urllib2.HTTPSHandler(debuglevel=1))
+        opener.addheaders = [ ("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"),
+                            ("Accept-Language", "en-us"),
+                            ("Proxy-Connection", "keep-alive"),
+                            ("Connection", "keep-alive"),
+                            ("Content-Type", "application/x-www-form-urlencoded"),
+                            ("User-Agent",  UA_ANDROID)]
 
         data = urllib.urlencode({'requestor_id' : self.requestor.get_requestor_id(),
                                  'resource_id' : resource_id,
@@ -368,37 +368,12 @@ class ADOBE():
                                  'userMeta' : '1'
                                 })
 
-        xbmc.log('data: %s ' % data)
-        response, content = http.request(url, 'POST', headers=headers, body=data)
+        (content, url) = self.handle_url(opener, url, data)
 
-        xbmc.log('content: %s ' % content)
-        xbmc.log('response: %s ' % response)
-
-        try:
-            xbmc.log("REFRESHED COOKIE")
-            adobe_pass = response['set-cookie']
-            xbmc.log('ESPN3: adobe_pass ' + adobe_pass)
-            cj = cookielib.LWPCookieJar(os.path.join(ADDON_PATH_PROFILE, 'cookies.lwp'))
-            cj.load(os.path.join(ADDON_PATH_PROFILE, 'cookies.lwp'),ignore_discard=True)
-            #BIGipServerAdobe_Pass_Prod=526669578.20480.0000; expires=Fri, 19-Jun-2015 19:58:42 GMT; path=/
-            value = FIND(adobe_pass,'BIGipServerAdobe_Pass_Prod=',';')
-            expires = FIND(adobe_pass,'expires=',' GMT;')
-            #date_time = '29.08.2011 11:05:02'
-            #pattern = '%d.%m.%Y %H:%M:%S'
-            #Fri, 19-Jun-2015 19:58:42
-            pattern = '%a, %d-%b-%Y %H:%M:%S'
-            xbmc.log('ESPN3: expires ' + expires)
-            expires_epoch = int(time.mktime(time.strptime(expires, pattern)))
-            xbmc.log('ESPN3: expires_epoch ' + expires_epoch)
-            ck = cookielib.Cookie(version=0, name='BIGipServerAdobe_Pass_Prod', value=value, port=None, port_specified=False, domain='sp.auth.adobe.com', domain_specified=True, domain_initial_dot=False, path='/', path_specified=True, secure=False, expires=expires_epoch, discard=True, comment=None, comment_url=None, rest={'HttpOnly': None}, rfc2109=False)
-            cj.set_cookie(ck)
-            self.save_cookies(cj)
-
-        except:
-            pass
         content_tree = ET.fromstring(content)
         authz = content_tree.find('.//authzToken').text
         xbmc.log('ESPN3: authz ' + authz)
+        self.save_cookies(cj)
 
         return authz
 
