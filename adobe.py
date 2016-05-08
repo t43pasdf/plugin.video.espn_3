@@ -12,6 +12,14 @@ import xml.etree.ElementTree as ET
 
 import cookielib
 
+# Ignores adobepass://
+class IgnoreHTTPRedirectHandler(urllib2.HTTPRedirectHandler):
+    def http_error_302(self, req, fp, code, mgs, hdrs):
+        if 'location' in hdrs and 'adobepass://' in hdrs['location']:
+            xbmc.log('ESPN3: Ignoring redirect to %s' % hdrs['location'])
+            return {'action' : 'skip_redirect', 'location' : hdrs['location']}
+        return urllib2.HTTPRedirectHandler.http_error_302(self, req, fp, code, mgs, hdrs)
+
 class ADOBE():
 
     def __init__(self, requestor, mso_provider, user_details):
@@ -108,6 +116,8 @@ class ADOBE():
 
     def handle_url(self, opener, url, body  = None):
         resp = opener.open(url, body)
+        if isinstance(resp, dict) and 'action' in resp and resp['action'] == 'skip_redirect':
+            return ('skip redirect to %s' % (resp['location']), url)
         if resp.info().get('Content-Encoding') == 'gzip':
             buf = StringIO(resp.read())
             f = gzip.GzipFile(fileobj=buf)
@@ -135,13 +145,14 @@ class ADOBE():
                             'adobe-services/1.0/authenticate',
                             params, ''])
         xbmc.log('ESPN3: Using IDP %s' % idp_url)
-        cj = cookielib.LWPCookieJar(os.path.join(ADDON_PATH_PROFILE, 'cookies.lwp'))
-        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+        cj = cookielib.LWPCookieJar()
+        cj.load(os.path.join(ADDON_PATH_PROFILE, 'cookies.lwp'),ignore_discard=True)
+        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj), IgnoreHTTPRedirectHandler())
         opener.addheaders = [ ("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"),
                             ("Accept-Language", "en-us"),
                             ("Proxy-Connection", "keep-alive"),
                             ("Connection", "keep-alive"),
-                            ("User-Agent", UA_PC)]
+                            ("User-Agent", UA_ANDROID)]
 
         (content, url) = self.handle_url(opener, idp_url)
 
@@ -217,39 +228,45 @@ class ADOBE():
                             ("User-Agent", UA_PC)]
         body = urllib.urlencode(body_contents);
 
+        # Post to provider to log in
         (content, url) = self.handle_url(opener, content_action, body)
-        content_soup = BeautifulSoup(content, 'html.parser')
-        saml = ''
-        relay_state = ''
-        for control in content_soup.find_all('input'):
-            xbmc.log('ESPN3: Getting control %s %s' % (control.get('name'), control.get('type')))
-            name = control.get('name')
-            if name == 'SAMLResponse':
-                saml = control.get('value')
-            if name == 'RelayState':
-                relay_state = control.get('value')
-        xbmc.log('ESPN3 getting adobe response')
+        # Due to cookies sometimes the user does not need to log in and it goes
+        # Right to adobe
+        if 'skip redirect' not in content:
+            adobe_soup = BeautifulSoup(content, 'html.parser')
+            adobe_action = self.get_form_action(adobe_soup)
+            adobe_action = self.resolve_relative_url(adobe_action, url)
+            if adobe_action == content_action:
+                # Some error
+                msg = "Please verify that your username and password are correct"
+                dialog = xbmcgui.Dialog()
+                dialog.ok('Login Failed', msg)
+                return False
+
+            # Send final saml response to adobe
+            origin = self.get_origin(idp_url)
+            opener.addheaders = [ ("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"),
+                            ("Accept-Encoding", "gzip, deflate"),
+                            ("Accept-Language", "en-us"),
+                            ("Content-Type", "application/x-www-form-urlencoded"),
+                            ("Proxy-Connection", "keep-alive"),
+                            ("Connection", "keep-alive"),
+                            ("Referer", url),
+                            ("Origin", self.get_origin(url)),
+                            ("User-Agent", UA_PC)]
+            body_contents = dict()
+            for control in adobe_soup.find_all('input'):
+                body_contents[control.get('name')] = control.get('value')
+            body = urllib.urlencode(body_contents);
+
+            (content, url) = self.handle_url(opener, adobe_action, body)
+
         self.save_cookies(cj)
-        return (saml, relay_state)
+        return True
 
     def GET_MEDIA_TOKEN(self):
-        expired_cookies = True
-        try:
-            cj = cookielib.LWPCookieJar()
-            cj.load(os.path.join(ADDON_PATH_PROFILE, 'cookies.lwp'),ignore_discard=True)
-
-            for cookie in cj:
-                if cookie.name == 'BIGipServerAdobe_Pass_Prod':
-                    xbmc.log('ESPN3 cookie.name %s' % cookie.name)
-                    xbmc.log('ESPN3 cookie.expires %s' % cookie.expires)
-                    xbmc.log('ESPN3 cookie.is_expired %s' % cookie.is_expired())
-                    expired_cookies = cookie.is_expired()
-        except:
-            pass
-
         last_provider = self.get_provider()
         auth_token = self.get_auth_token()
-        xbmc.log("Did cookies expire? " + str(expired_cookies))
         xbmc.log("Does the auth token file exist? " + auth_token)
         xbmc.log("Does the last provider match the current provider? " + str(last_provider == self.mso_provider.get_mso_name()))
         xbmc.log("Who was the last provider? " +str(last_provider))
@@ -257,24 +274,15 @@ class ADOBE():
         resource_id = self.requestor.get_resource_id()
         signed_requestor_id = self.requestor.get_signed_requestor_id()
 
-        #If cookies are expired or auth token is not present run login or provider has changed
-        if expired_cookies or auth_token is '' or (last_provider != self.mso_provider.get_mso_name()):
+        #auth token is not present run login or provider has changed
+        if auth_token is '' or (last_provider != self.mso_provider.get_mso_name()):
             self.delete_auth_token()
             xbmc.log('ESPN3: Logging into provider')
-            saml_response, relay_state = self.GET_IDP_DATA()
+            success = self.GET_IDP_DATA()
 
-            if saml_response == '' and relay_state == '':
-                msg = "Please verify that your username and password are correct"
-                dialog = xbmcgui.Dialog()
-                ok = dialog.ok('Login Failed', msg)
-                return
-            elif saml_response == 'captcha':
-                msg = "Login requires captcha. Please try again later"
-                dialog = xbmcgui.Dialog()
-                ok = dialog.ok('Captcha Found', msg)
+            if not success:
                 return
 
-            self.POST_ASSERTION_CONSUMER_SERVICE(saml_response,relay_state)
             self.POST_SESSION_DEVICE(signed_requestor_id)
 
 
@@ -284,55 +292,12 @@ class ADOBE():
         if 'Authorization failed' in authz or authz == '':
             msg = "Failed to authorize"
             dialog = xbmcgui.Dialog()
-            ok = dialog.ok('Authorization Failed', msg)
+            dialog.ok('Authorization Failed', msg)
             self.delete_auth_token()
         else:
             media_token = self.POST_SHORT_AUTHORIZED(signed_requestor_id,authz)
             self.save_provider()
             return media_token
-
-    def POST_ASSERTION_CONSUMER_SERVICE(self,saml_response,relay_state):
-        ###################################################################
-        # SAML Assertion Consumer
-        ###################################################################
-        url = 'https://sp.auth.adobe.com/sp/saml/SAMLAssertionConsumer'
-
-        cj = cookielib.LWPCookieJar()
-        cj.load(os.path.join(ADDON_PATH_PROFILE, 'cookies.lwp'),ignore_discard=True)
-
-        cookies = ''
-        for cookie in cj:
-            #if (cookie.name == "BIGipServerAdobe_Pass_Prod" or cookie.name == "client_type" or cookie.name == "client_version" or cookie.name == "JSESSIONID" or cookie.name == "redirect_url") and cookie.domain == "sp.auth.adobe.com":
-            if cookie.domain == "sp.auth.adobe.com":
-                cookies = cookies + cookie.name + "=" + cookie.value + "; "
-
-
-        http = httplib2.Http()
-        http.disable_ssl_certificate_validation=True
-        headers = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-                            "Accept-Encoding": "gzip, deflate",
-                            "Accept-Language": "en-us",
-                            "Content-Type": "application/x-www-form-urlencoded",
-                            "Proxy-Connection": "keep-alive",
-                            "Connection": "keep-alive",
-                            "Origin": ORIGIN,
-                            "Referer": REFERER,
-                            "Cookie": cookies,
-                            "User-Agent": UA_IPHONE}
-
-
-        body = urllib.urlencode({'SAMLResponse' : saml_response,
-                                 'RelayState' : relay_state
-                                 })
-
-
-        response, content = http.request(url, 'POST', headers=headers, body=body)
-        xbmc.log('ESPN3: POST_ASSERTION_CONSUMER_SERVICE')
-        xbmc.log('ESPN3: headers: %s' % headers)
-        xbmc.log('ESPN3: body: %s' % body)
-        xbmc.log('ESPN3: response: %s' % response)
-        xbmc.log('ESPN3: content: %s' % content)
-        self.save_cookies(cj)
 
     def POST_SESSION_DEVICE(self,signed_requestor_id):
         ###################################################################
@@ -340,38 +305,28 @@ class ADOBE():
         ###################################################################
         cj = cookielib.LWPCookieJar()
         cj.load(os.path.join(ADDON_PATH_PROFILE, 'cookies.lwp'),ignore_discard=True)
-        cookies = ''
-        for cookie in cj:
-            #Possibly two JSESSION cookies being passed, may need to fix
-            #if cookie.name == "BIGipServerAdobe_Pass_Prod" or cookie.name == "client_type" or cookie.name == "client_version" or cookie.name == "JSESSIONID" or cookie.name == "redirect_url":
-            if (cookie.name == "BIGipServerAdobe_Pass_Prod" or cookie.name == "JSESSIONID") and cookie.path == "/":
-                cookies = cookies + cookie.name + "=" + cookie.value + "; "
+        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj), urllib2.HTTPSHandler(debuglevel=1))
+        opener.addheaders = [ ("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"),
+                            ("Accept-Language", "en-us"),
+                            ("Proxy-Connection", "keep-alive"),
+                            ("Connection", "keep-alive"),
+                            ("Content-Type", "application/x-www-form-urlencoded"),
+                            ("User-Agent",  UA_ANDROID)]
 
-
-
-        url = 'https://sp.auth.adobe.com//adobe-services/1.0/sessionDevice'
-        http = httplib2.Http()
-        http.disable_ssl_certificate_validation=True
         data = urllib.urlencode({'requestor_id' : self.requestor.get_requestor_id(),
                                  '_method' : 'GET',
                                  'signed_requestor_id' : signed_requestor_id,
                                  'device_id' : DEVICE_ID
                                 })
 
-        headers = {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                    "Connection": "keep-alive",
-                    "Content-Length" : str(len(data)),
-                    "Cookie": cookies,
-                    "User-Agent": UA_IPHONE}
 
-        response, content = http.request(url, 'POST', headers=headers, body=data)
+        url = 'https://sp.auth.adobe.com/adobe-services/1.0/sessionDevice'
+
+        (content, url) = self.handle_url(opener, url, data)
+
         xbmc.log('ESPN3: POST SESSION DEVICE')
-        xbmc.log('ESPN3: headers: %s ' % headers)
         xbmc.log('ESPN3: body: %s' % data)
-        xbmc.log('ESPN3: response: %s' % response)
         xbmc.log('ESPN3: content: %s' % content)
-
 
         content_tree = ET.fromstring(content)
         authz = content_tree.find('.//authnToken').text

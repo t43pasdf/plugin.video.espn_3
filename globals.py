@@ -81,14 +81,14 @@ UA_IPHONE = 'Mozilla/5.0 (iPhone; CPU iPhone OS 8_4 like Mac OS X) AppleWebKit/6
 UA_PC = 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.81 Safari/537.36'
 UA_ADOBE_PASS = 'AdobePassNativeClient/1.9 (iPhone; U; CPU iPhone OS 8.4 like Mac OS X; en-us)'
 UA_NBCSN = 'AppleCoreMedia/1.0.0.12H143 (iPhone; U; CPU OS 8_4 like Mac OS X; en_us)'
-UA_ANDROID = 'AdobePassNativeClient/1.7.3 (Linux; U; Android 5.1.1; en-us)'
+UA_ANDROID = 'AdobePassNativeClient/1.8 (Linux; U; Android 5.1.1; en-us)'
 
 #Create Random Device ID and save it to a file
 fname = os.path.join(ADDON_PATH_PROFILE, 'device.id')
 if not os.path.isfile(fname):
     if not os.path.exists(ADDON_PATH_PROFILE):
         os.makedirs(ADDON_PATH_PROFILE)
-    new_device_id = ''.join([random.choice('0123456789abcdef') for x in range(64)])
+    new_device_id = ''.join([random.choice('0123456789abcdef') for x in range(16)])
     device_file = open(fname,'w')
     device_file.write(new_device_id)
     device_file.close()

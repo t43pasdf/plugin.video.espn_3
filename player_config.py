@@ -37,8 +37,11 @@ def get_providers_data():
 
 def can_access_free_content():
     json = util.get_url_as_json(CHECK_RIGHTS_URL)
-    xbmc.log(json['espn3'])
     return json['espn3'] != 'invalid'
+
+def can_access_channel(network):
+    json = util.get_url_as_json(CHECK_RIGHTS_URL)
+    return (network in json['networks'], json['networks'])
 
 def get_networks():
     networks = get_config_soup().findall('.//network')
