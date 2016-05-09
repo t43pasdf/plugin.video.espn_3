@@ -2,6 +2,7 @@ import urlparse
 import urllib
 import os
 import xbmc
+import xbmcgui
 import urllib2
 import time
 from datetime import datetime
@@ -244,8 +245,9 @@ class ADOBE():
             adobe_soup = BeautifulSoup(content, 'html.parser')
             adobe_action = self.get_form_action(adobe_soup)
             adobe_action = self.resolve_relative_url(adobe_action, url)
-            if adobe_action == content_action:
-                # Some error
+            xbmc.log('ESPN3: Final Adobe url: %s' % adobe_action)
+            if adobe_action == content_action or 'sp.auth.adobe.com' not in adobe_action:
+                # Some error, assume invalid username and password
                 msg = "Please verify that your username and password are correct"
                 dialog = xbmcgui.Dialog()
                 dialog.ok('Login Failed', msg)
