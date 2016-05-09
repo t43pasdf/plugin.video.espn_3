@@ -163,6 +163,7 @@ class ADOBE():
                             ("Connection", "keep-alive"),
                             ("User-Agent", UA_ANDROID)]
 
+        # The IDP url is used to redirect the user to their provider's login form
         (content, url) = self.handle_url(opener, idp_url)
 
 
@@ -173,10 +174,12 @@ class ADOBE():
 
         need_idp_request = 'https://sp.auth.adobe.com' in url
 
-        # Some use a post form, others use an http-equiv
+        # Some providers use an HTTP POST form to have a redirect, others
+        # use a HTTP equiv header to do the redirect
         saml_request = ''
         relay_state = ''
         if need_idp_request:
+            # Post the form to go to the user's provider
             for control in idp_soup.find_all('input'):
                 xbmc.log('ESPN3: Looking at control %s' % control.get('name'))
                 if control.get('name') == 'SAMLRequest':
@@ -202,6 +205,9 @@ class ADOBE():
             (content, url) = self.handle_url(opener, idp_action, body)
             xbmc.log('ESPN3: Ended up at url %s' % url)
 
+        # The next step is to populate the username and password
+        # of the user on the form, assuming text boxes are for the
+        # username and password boxes are for the password
         content_soup = BeautifulSoup(content, 'html.parser')
         content_action = self.get_form_action(content_soup)
         content_action = self.resolve_relative_url(content_action, url)
@@ -242,6 +248,7 @@ class ADOBE():
         # Due to cookies sometimes the user does not need to log in and it goes
         # Right to adobe
         if 'skip redirect' not in content:
+            # Lastly the SAMLResponse is sent to adobe to store the authentication
             adobe_soup = BeautifulSoup(content, 'html.parser')
             adobe_action = self.get_form_action(adobe_soup)
             adobe_action = self.resolve_relative_url(adobe_action, url)
