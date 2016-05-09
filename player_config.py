@@ -1,11 +1,5 @@
-#!/usr/bin/python2
-
 import os
-import time
-import globals
-import urllib
-import xbmc
-
+from globals import ADDON_PATH_PROFILE
 
 import util
 
@@ -13,17 +7,16 @@ import util
 TIME_DIFFERENCE = 60 * 60;
 
 PLAYER_CONFIG_FILE = 'player_config.xml'
-PLAYER_CONFIG_FILE = os.path.join(globals.ADDON_PATH_PROFILE, PLAYER_CONFIG_FILE)
+PLAYER_CONFIG_FILE = os.path.join(ADDON_PATH_PROFILE, PLAYER_CONFIG_FILE)
 PLAYER_CONFIG_URL = 'https://espn.go.com/watchespn/player/config'
 
 USER_DATA_FILE = 'user_data.xml'
-USER_DATA_FILE = os.path.join(globals.ADDON_PATH_PROFILE, USER_DATA_FILE)
+USER_DATA_FILE = os.path.join(ADDON_PATH_PROFILE, USER_DATA_FILE)
 USER_DATA_URL = 'http://broadband.espn.go.com/espn3/auth/watchespn/userData?format=xml'
 
 PROVIDERS_FILE = 'providers.xml'
-PROVIDERS_FILE = os.path.join(globals.ADDON_PATH_PROFILE, PROVIDERS_FILE)
+PROVIDERS_FILE = os.path.join(ADDON_PATH_PROFILE, PROVIDERS_FILE)
 
-#TODO: Hook up check rights?
 CHECK_RIGHTS_URL = 'http://broadband.espn.go.com/espn3/auth/espnnetworks/user'
 
 def get_config_soup():

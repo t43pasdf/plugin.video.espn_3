@@ -1,16 +1,24 @@
-import mechanize
 import urlparse
 import urllib
 import os
 import xbmc
-import urllib, urllib2, httplib2
+import urllib2
+import time
 from datetime import datetime
 
-from globals import *
+from globals import ADDON_PATH_PROFILE, UA_ANDROID, UA_PC, DEVICE_ID, UA_ADOBE_PASS, selfAddon
 from bs4 import BeautifulSoup
 import xml.etree.ElementTree as ET
 
+import gzip
+from StringIO import StringIO
 import cookielib
+
+# Fixes an issue with 32bit systems not supporting times after 2038
+def fix_cookie_expires(cj):
+    for cookie in cj:
+        if cookie.expires > 2000000000:
+            cookie.expires = 2000000000
 
 # Ignores adobepass://
 class IgnoreHTTPRedirectHandler(urllib2.HTTPRedirectHandler):

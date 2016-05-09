@@ -1,11 +1,9 @@
-#!/usr/bin/python2
 import os
 import hashlib
 
 import player_config
 import util
-import globals
-from player_config import get_live_event_url
+from globals import ADDON_PATH_PROFILE
 
 def get_channel_list(include_premium):
     networks = player_config.get_networks()
@@ -29,7 +27,7 @@ def get_replay_events_url(network_names = []):
     return player_config.get_replay_event_url() + '&channel=' + query_params
 
 def get_live_events(network_names = []):
-    soup = util.get_url_as_xml_soup(get_live_event_url())
+    soup = util.get_url_as_xml_soup(player_config.get_live_event_url())
     return soup.findall('.//event')
 
 def get_events(url):
@@ -38,7 +36,7 @@ def get_events(url):
 
 def get_soup_events_cached(url):
     cache_file = hashlib.sha224(url).hexdigest()
-    cache_file = os.path.join(globals.ADDON_PATH_PROFILE, cache_file + '.xml')
+    cache_file = os.path.join(ADDON_PATH_PROFILE, cache_file + '.xml')
     soup = util.get_url_as_xml_soup_cache(url, cache_file, 360)
     return soup
 

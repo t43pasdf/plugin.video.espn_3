@@ -1,5 +1,3 @@
-#!/usr/bin/python2
-
 class ESPN:
     def get_resource_id(self):
         return '<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/"><channel><title>espn1</title><item><title>Los Angeles Clippers vs. San Antonio Spurs</title><guid>espn1/Los Angeles Clippers vs. San Antonio Spurs/2675047</guid><media:rating scheme="urn:v-chip">G</media:rating></item></channel></rss>'
