@@ -35,6 +35,9 @@ class ADOBE():
         self.requestor = requestor
         self.mso_provider = mso_provider
         self.user_details = user_details
+        if not os.path.isfile(os.path.join(ADDON_PATH_PROFILE, 'cookies.lwp')):
+            cj = cookielib.LWPCookieJar()
+            self.save_cookies(cj)
 
     def get_auth_token_file(self):
         return os.path.join(ADDON_PATH_PROFILE, 'auth.token')

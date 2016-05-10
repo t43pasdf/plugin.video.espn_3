@@ -67,7 +67,14 @@ def CLEAR_SAVED_DATA():
         os.remove(ADDON_PATH_PROFILE+'/auth.token')
     except:
         pass
-    ADDON.setSetting(id='clear_data', value='false')
+    try:
+        for root, dirs, files in os.walk(ADDON_PATH_PROFILE):
+            for currentFile in files:
+                if currentFile.lower().endswith('.xml') and not currentFile.lower() == 'settings.xml':
+                    os.remove(os.path.join(ADDON_PATH_PROFILE, currentFile))
+    except:
+        pass
+    ADDON.setSetting(id='ClearData', value='false')
 
 if selfAddon.getSetting('ClearData') == 'true':
     CLEAR_SAVED_DATA()
