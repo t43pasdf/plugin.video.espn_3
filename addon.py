@@ -283,8 +283,9 @@ def PLAY_PROTECTED_CONTENT(args):
         return
 
     finalurl = smilurl
-    ua = urllib.quote('VisualOn OSMP+ Player(Linux;Android;WatchESPN/1.0_Handset)')
-    finalurl = finalurl + '|User-Agent=' + ua + '&Cookie=_mediaAuth=' + urllib.quote(base64.b64encode(pkan))
+    #ua = urllib.quote('VisualOn OSMP+ Player(Linux;Android;WatchESPN/1.0_Handset)')
+    ua = UA_PC
+    finalurl = finalurl + '|Connection=keep-alive&User-Agent=' + ua + '&Cookie=_mediaAuth=' + urllib.quote(base64.b64encode(pkan))
     xbmc.log('ESPN3: finalurl %s' % finalurl)
     item = xbmcgui.ListItem(path=finalurl)
     return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, item)
