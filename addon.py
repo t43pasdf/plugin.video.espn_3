@@ -234,7 +234,7 @@ def PLAY_PROTECTED_CONTENT(args):
         return
 
     user_data = player_config.get_user_data()
-    affiliateid = user_data.find('.//affiliate/name').text
+    affiliateid = user_data['name']
 
     simulcastAiringId = args.get(SIMULCAST_AIRING_ID)[0]
     streamType = args.get(DESKTOP_STREAM_SOURCE)[0]
@@ -272,9 +272,13 @@ def PLAY_PROTECTED_CONTENT(args):
     if result:
         return
 
+
     pkan = tree.find('.//' + BAM_NS + 'pkanJar').text
-    # FFMPEG does not support hds so use hls
-    smilurl = tree.find('.//' + BAM_NS + 'hls-backup-url').text
+    if streamType == 'HDS':
+        # FFMPEG does not support hds so use hls
+        smilurl = tree.find('.//' + BAM_NS + 'hls-backup-url').text
+    else: # HLS
+        smilurl = tree.find('.//' + BAM_NS + 'url').text
     xbmc.log('ESPN3:  smilurl: '+smilurl)
     xbmc.log('ESPN3:  streamType: '+streamType)
     if smilurl == ' ' or smilurl == '':
@@ -293,12 +297,13 @@ def PLAY_PROTECTED_CONTENT(args):
 def PLAY_FREE_CONTENT(args):
     free_content_check = player_config.can_access_free_content()
     if not free_content_check:
-        dialog = xbmcgui.Dialog()
-        dialog.ok(translation(30037), translation(30140),translation(30150))
-        return
+        xbmc.log('ESPN3: User needs login to ESPN3')
+        return PLAY_PROTECTED_CONTENT(args)
+        #dialog = xbmcgui.Dialog()
+        #dialog.ok(translation(30037), translation(30140),translation(30150))
 
     user_data = player_config.get_user_data()
-    affiliateid = user_data.find('.//affiliate/name').text
+    affiliateid = user_data['name']
 
     eventid = args.get(EVENT_ID)[0]
     simulcastAiringId = args.get(SIMULCAST_AIRING_ID)[0]
@@ -311,25 +316,12 @@ def PLAY_FREE_CONTENT(args):
     playedId = network.get('playerId')
     cdnName = network.get('defaultCdn')
     channel = network.get('name')
-    if streamType == 'HLS':
-        networkurl = 'http://broadband.espn.go.com/espn3/auth/watchespn/startSession?v=1.5'
-    elif streamType == 'HDS' or streamType == 'RTMP':
-        networkurl = 'https://espn-ws.bamnetworks.com/pubajaxws/bamrest/MediaService2_0/op-findUserVerifiedEvent/v-2.1'
-    authurl = networkurl
-    if '?' in authurl:
-        authurl +='&'
-    else:
-        authurl +='?'
 
-    if streamType == 'HLS':
-        authurl += 'affiliate='+affiliateid
-        authurl += '&pkan='+pkan
-        authurl += '&pkanType=SWID'
-        authurl += '&simulcastAiringId='+simulcastAiringId
-    elif streamType == 'HDS' or streamType == 'RTMP':
-        authurl += 'identityPointId='+affiliateid
-        authurl += '&partnerContentId='+eventid
-        authurl += '&contentId='+contentId
+    authurl = player_config.get_start_session_url()
+    authurl += '&affiliate='+affiliateid
+    authurl += '&pkan='+pkan
+    authurl += '&pkanType=SWID'
+    authurl += '&simulcastAiringId='+simulcastAiringId
     authurl += '&cdnName='+cdnName
     authurl += '&channel='+channel
     authurl += '&playbackScenario=FMS_CLOUD'
@@ -343,7 +335,11 @@ def PLAY_FREE_CONTENT(args):
     if result:
         return
 
-    smilurl = tree.find('.//' + BAM_NS + 'url').text
+    if streamType == 'HDS':
+        # FFMPEG does not support hds so use hls
+        smilurl = tree.find('.//' + BAM_NS + 'hls-backup-url').text
+    else: # HLS
+        smilurl = tree.find('.//' + BAM_NS + 'url').text
     xbmc.log('ESPN3:  smilurl: %s' % smilurl)
     if smilurl is None:
         smilurl = tree.find('.//' + BAM_NS + 'hls-backup-url').text
@@ -353,49 +349,9 @@ def PLAY_FREE_CONTENT(args):
         dialog.ok(translation(30037), translation(30038),translation(30039))
         return
 
-    if streamType == 'HLS':
-        finalurl = smilurl
-        item = xbmcgui.ListItem(path=finalurl)
-        return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, item)
-
-    elif streamType == 'HDS' or streamType == 'RTMP':
-        # Not Tested
-        auth = smilurl.split('?')[1]
-        smilurl += '&rand='+str(random.randint(100000,999999))
-
-        #Grab smil url to get rtmp url and playpath
-        html = get_html(smilurl)
-        soup = BeautifulSoup(html, 'html.parser')
-        rtmp = soup.findAll('meta')[0]['base']
-        # Live Qualities
-        #     0,     1,     2,      3,      4
-        # Replay Qualities
-        #            0,     1,      2,      3
-        # Lowest, Low,  Medium, High,  Highest
-        # 200000,400000,800000,1200000,1800000
-        playpath=False
-        if selfAddon.getSetting("askquality") == 'true':
-            streams = soup.findAll('video')
-            quality=xbmcgui.Dialog().select(translation(30033), [str(int(stream['system-bitrate'])/1000)+'kbps' for stream in streams])
-            if quality!=-1:
-                playpath = streams[quality]['src']
-            else:
-                return
-        if 'ondemand' in rtmp:
-            if not playpath:
-                playpath = soup.findAll('video')[int(selfAddon.getSetting('replayquality'))]['src']
-            finalurl = rtmp+'/?'+auth+' playpath='+playpath
-        elif 'live' in rtmp:
-            if not playpath:
-                select = int(selfAddon.getSetting('livequality'))
-                videos = soup.findAll('video')
-                videosLen = len(videos)-1
-                if select > videosLen:
-                    select = videosLen
-                playpath = videos[select]['src']
-            finalurl = rtmp+' live=1 playlist=1 subscribe='+playpath+' playpath='+playpath+'?'+auth
-        item = xbmcgui.ListItem(path=finalurl)
-        return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, item)
+    finalurl = smilurl
+    item = xbmcgui.ListItem(path=finalurl)
+    return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, item)
 
 def check_user_settings():
     mso_provider = get_mso_provider(selfAddon.getSetting('provider'))

@@ -10,9 +10,9 @@ PLAYER_CONFIG_FILE = 'player_config.xml'
 PLAYER_CONFIG_FILE = os.path.join(ADDON_PATH_PROFILE, PLAYER_CONFIG_FILE)
 PLAYER_CONFIG_URL = 'https://espn.go.com/watchespn/player/config'
 
-USER_DATA_FILE = 'user_data.xml'
+USER_DATA_FILE = 'user_data.json'
 USER_DATA_FILE = os.path.join(ADDON_PATH_PROFILE, USER_DATA_FILE)
-USER_DATA_URL = 'http://broadband.espn.go.com/espn3/auth/watchespn/userData?format=xml'
+USER_DATA_URL = 'http://broadband.espn.go.com/espn3/auth/watchespn/userData?format=json'
 
 PROVIDERS_FILE = 'providers.xml'
 PROVIDERS_FILE = os.path.join(ADDON_PATH_PROFILE, PROVIDERS_FILE)
@@ -23,14 +23,13 @@ def get_config_soup():
     return util.get_url_as_xml_soup_cache(PLAYER_CONFIG_URL, PLAYER_CONFIG_FILE, TIME_DIFFERENCE)
 
 def get_user_data():
-    return util.get_url_as_xml_soup_cache(USER_DATA_URL, USER_DATA_FILE, TIME_DIFFERENCE)
+    return util.get_url_as_json_cache(USER_DATA_URL, USER_DATA_FILE, TIME_DIFFERENCE)
 
 def get_providers_data():
     return util.get_url_as_xml_soup_cache(get_providers_url(), PROVIDERS_FILE, TIME_DIFFERENCE)
 
 def can_access_free_content():
-    json = util.get_url_as_json(CHECK_RIGHTS_URL)
-    return json['espn3'] != 'invalid'
+    return get_user_data()['affvalid'] == 'true'
 
 def can_access_channel(network):
     json = util.get_url_as_json(CHECK_RIGHTS_URL)

@@ -53,3 +53,17 @@ def load_element_tree(data):
 def get_url_as_json(url):
     response = urllib2.urlopen(url)
     return json.load(response)
+
+def get_url_as_json_cache(url, cache_file, timeout = 1):
+    if not is_file_valid(cache_file, timeout):
+        xbmc.log('ESPN3: Fetching config file %s from %s' % (cache_file, url))
+        fetch_file(url, cache_file)
+    else:
+        xbmc.log('ESPN3: Using cache %s for %s' % (url, cache_file))
+    json_file = open(cache_file)
+    json_data = json_file.read()
+    json_file.close()
+    json_data = json_data.replace('ud=', '')
+    json_data = json_data.replace('\'', '"')
+    xbmc.log('json: %s' % json_data)
+    return json.loads(json_data)

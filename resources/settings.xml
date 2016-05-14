@@ -23,11 +23,6 @@
         <setting id="color" type="text" label="30050" default="FFFFFF"/>
          <setting type="sep" />
   </category>
-  <category label="Stream Type">
-      <setting type="sep" />
-      <setting id="StreamType" type="bool" label="30060" default="false" />
-      <setting type="sep" />
-  </category>
   <category label="Premium Content">
   	  <setting id="ShowPremiumChannels" type="bool" label="30130" default="true" />
       <setting label="30070" id="username" type="text" />

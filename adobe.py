@@ -14,6 +14,7 @@ import xml.etree.ElementTree as ET
 import gzip
 from StringIO import StringIO
 import cookielib
+import base64
 
 # Fixes an issue with 32bit systems not supporting times after 2038
 def fix_cookie_expires(cj):
