@@ -102,11 +102,106 @@ def LISTSPORTS(args):
     xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_VIDEO_SORT_TITLE)
     xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
+def INDEX_EVENT(event, live, upcoming, replay, chosen_sport):
+    sport = event.find('sportDisplayValue').text.encode('utf-8')
+    desktopStreamSource = event.find('desktopStreamSource').text
+    ename = event.find('name').text
+    eventid = event.get('id')
+    simulcastAiringId = event.find('simulcastAiringId').text
+    networkid = event.find('networkId').text
+    if networkid is not None:
+        network = player_config.get_network_name(networkid)
+    sport2 = event.find('sport').text
+    if sport <> sport2:
+        sport += ' ('+sport2+')'
+    league = event.find('league').text
+    location = event.find('site').text
+    fanart = event.find('.//thumbnail/large').text
+    fanart = fanart.split('&')[0]
+    mpaa = event.find('parentalRating').text
+    starttime = int(event.find('startTimeGmtMs').text)/1000
+    etime = time.strftime("%I:%M %p",time.localtime(float(starttime)))
+    endtime = int(event.find('endTimeGmtMs').text)/1000
+    start = time.strftime("%m/%d/%Y %I:%M %p",time.localtime(starttime))
+    aired = time.strftime("%Y-%m-%d",time.localtime(starttime))
+    udate = time.strftime("%m/%d",time.localtime(starttime))
+    now = datetime.now().strftime('%H%M')
+    etime24 = time.strftime("%H%M",time.localtime(starttime))
+    aspect_ratio = event.find('aspectRatio').text
+    length = str(int(round((endtime - time.time()))))
+    title_time = etime
+    if live and now > etime24:
+        color = str(selfAddon.getSetting('color'))
+    elif live:
+        color = '999999'
+    else:
+        color = 'E0E0E0'
+        length = str(int(round((endtime - starttime))))
+        title_time = ' - '.join((udate, etime))
+
+    if network == 'longhorn':
+        channel_color = 'BF5700'
+    elif network == 'sec' or network == 'secplus':
+        channel_color = '004C8D'
+    else:
+        channel_color = 'CC0000'
+
+    ename = '[COLOR=FF%s]%s[/COLOR] [COLOR=FFB700EB]%s[/COLOR] [COLOR=FF%s]%s[/COLOR]' % (channel_color, network, title_time, color, ename)
+
+    length_minutes = int(length) / 60
+
+    end = event.find('summary').text
+    if end is None or len(end) == 0:
+        end = event.find('caption').text
+
+    if end is None:
+        end = ''
+    end += '\nNetwork: ' + network
+
+    plot = ''
+    if sport <> None and sport <> ' ':
+        plot += 'Sport: '+sport+'\n'
+    if league <> None and league <> ' ':
+        plot += 'League: '+league+'\n'
+    if location <> None and location <> ' ':
+        plot += 'Location: '+location+'\n'
+    if start <> None and start <> ' ':
+        plot += 'Air Date: '+start+'\n'
+    if length <> None and length <> ' ' and live:
+        plot += 'Duration: Approximately '+ str(length_minutes)+' minutes remaining'+'\n'
+    elif length <> None and length <> ' ' and (replay or upcoming):
+        plot += 'Duration: '+ str(length_minutes) +' minutes'+'\n'
+    plot += end
+    infoLabels = {'title': ename,
+                  'genre':sport,
+                  'plot':plot,
+                  'aired':aired,
+                  'premiered':aired,
+                  'duration':length,
+                  'studio':network,
+                  'mpaa':mpaa,
+                  'videoaspect' : aspect_ratio}
+
+    authurl = dict()
+    authurl[EVENT_ID] = eventid
+    authurl[SIMULCAST_AIRING_ID] = simulcastAiringId
+    authurl[DESKTOP_STREAM_SOURCE] = desktopStreamSource
+    authurl[NETWORK_ID] = networkid
+    authurl[MODE] = UPCOMING_MODE if upcoming else PLAY_MODE
+    addLink(ename, authurl, fanart, fanart, infoLabels=infoLabels)
+
 def INDEX(args):
     espn_url = args.get(ESPN_URL)[0]
     chosen_sport = args.get(SPORT, None)
     if chosen_sport is not None:
         chosen_sport = chosen_sport[0]
+    chosen_network = args.get(NETWORK_ID, None)
+    if chosen_network is not None:
+        chosen_network = chosen_network[0]
+    else:
+        include_premium = selfAddon.getSetting('ShowPremiumChannels') == 'true'
+        if not include_premium:
+            chosen_network = 'n360'
     live = 'action=live' in espn_url
     upcoming = 'action=upcoming' in espn_url
     replay = 'action=replay' in espn_url
@@ -114,93 +209,24 @@ def INDEX(args):
         data = events.get_events(espn_url)
     else:
         data = events.get_soup_events_cached(espn_url).findall(".//event")
+    num_espn3 = 0;
     for event in data:
         sport = event.find('sportDisplayValue').text.encode('utf-8')
-        desktopStreamSource = event.find('desktopStreamSource').text
         if chosen_sport <> sport and chosen_sport is not None:
             continue
-        elif desktopStreamSource == 'HLS' and StreamType == 'true':
-            pass
+        networkid = event.find('networkId').text
+        if chosen_network <> networkid and chosen_network is not None:
+            continue
+        if networkid == 'n360' and chosen_network is None :
+            num_espn3 = num_espn3 + 1
         else:
-            ename = event.find('name').text
-            eventid = event.get('id')
-            simulcastAiringId = event.find('simulcastAiringId').text
-            networkid = event.find('networkId').text
-            if networkid is not None:
-                network = player_config.get_network_name(networkid)
-            sport2 = event.find('sport').text
-            if sport <> sport2:
-                sport += ' ('+sport2+')'
-            league = event.find('league').text
-            location = event.find('site').text
-            fanart = event.find('.//thumbnail/large').text
-            fanart = fanart.split('&')[0]
-            mpaa = event.find('parentalRating').text
-            starttime = int(event.find('startTimeGmtMs').text)/1000
-            etime = time.strftime("%I:%M %p",time.localtime(float(starttime)))
-            endtime = int(event.find('endTimeGmtMs').text)/1000
-            start = time.strftime("%m/%d/%Y %I:%M %p",time.localtime(starttime))
-            aired = time.strftime("%Y-%m-%d",time.localtime(starttime))
-            udate = time.strftime("%m/%d",time.localtime(starttime))
-            now = datetime.now().strftime('%H%M')
-            etime24 = time.strftime("%H%M",time.localtime(starttime))
-            aspect_ratio = event.find('aspectRatio').text
-            length = str(int(round((endtime - time.time()))))
-            title_time = etime
-            if live and now > etime24:
-                color = str(selfAddon.getSetting('color'))
-            elif live:
-                color = '999999'
-            else:
-                color = 'E0E0E0'
-                length = str(int(round((endtime - starttime))))
-                title_time = ' - '.join((udate, etime))
-
-            channel_color = 'CC0000'
-
-            ename = '[COLOR=FF%s]%s[/COLOR] [COLOR=FFB700EB]%s[/COLOR] [COLOR=FF%s]%s[/COLOR]' % (channel_color, network, title_time, color, ename)
-
-            length_minutes = int(length) / 60
-
-            end = event.find('summary').text
-            if end is None or len(end) == 0:
-                end = event.find('caption').text
-
-            if end is None:
-                end = ''
-            end += '\nNetwork: ' + network
-
-            plot = ''
-            if sport <> None and sport <> ' ':
-                plot += 'Sport: '+sport+'\n'
-            if league <> None and league <> ' ':
-                plot += 'League: '+league+'\n'
-            if location <> None and location <> ' ':
-                plot += 'Location: '+location+'\n'
-            if start <> None and start <> ' ':
-                plot += 'Air Date: '+start+'\n'
-            if length <> None and length <> ' ' and live:
-                plot += 'Duration: Approximately '+ str(length_minutes)+' minutes remaining'+'\n'
-            elif length <> None and length <> ' ' and (replay or upcoming):
-                plot += 'Duration: '+ str(length_minutes) +' minutes'+'\n'
-            plot += end
-            infoLabels = {'title': ename,
-                          'genre':sport,
-                          'plot':plot,
-                          'aired':aired,
-                          'premiered':aired,
-                          'duration':length,
-                          'studio':network,
-                          'mpaa':mpaa,
-                          'videoaspect' : aspect_ratio}
-
-            authurl = dict()
-            authurl[EVENT_ID] = eventid
-            authurl[SIMULCAST_AIRING_ID] = simulcastAiringId
-            authurl[DESKTOP_STREAM_SOURCE] = desktopStreamSource
-            authurl[NETWORK_ID] = networkid
-            authurl[MODE] = UPCOMING_MODE if upcoming else PLAY_MODE
-            addLink(ename, authurl, fanart, fanart, infoLabels=infoLabels)
+            INDEX_EVENT(event, live, upcoming, replay, chosen_sport)
+    # Dir for ESPN3
+    if chosen_network is None:
+        translation_number = 30191 if num_espn3 == 1 else 30190
+        addDir('[COLOR=FFCC0000]' + (translation(translation_number) % num_espn3) + '[/COLOR]',
+           dict(ESPN_URL=espn_url, MODE=LIVE_EVENTS_MODE, NETWORK_ID='n360'),
+           defaultlive)
     xbmcplugin.setContent(pluginhandle, 'episodes')
     xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
