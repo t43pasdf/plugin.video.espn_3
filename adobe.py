@@ -165,7 +165,7 @@ class ADOBE():
                             ("Accept-Language", "en-us"),
                             ("Proxy-Connection", "keep-alive"),
                             ("Connection", "keep-alive"),
-                            ("User-Agent", UA_ANDROID)]
+                            ("User-Agent", UA_PC)]
 
         # The IDP url is used to redirect the user to their provider's login form
         (content, url) = self.handle_url(opener, idp_url)
@@ -334,7 +334,7 @@ class ADOBE():
                             ("Proxy-Connection", "keep-alive"),
                             ("Connection", "keep-alive"),
                             ("Content-Type", "application/x-www-form-urlencoded"),
-                            ("User-Agent",  UA_ANDROID)]
+                            ("User-Agent",  UA_PC)]
 
         data = urllib.urlencode({'requestor_id' : self.requestor.get_requestor_id(),
                                  '_method' : 'GET',
@@ -380,7 +380,7 @@ class ADOBE():
                             ("Proxy-Connection", "keep-alive"),
                             ("Connection", "keep-alive"),
                             ("Content-Type", "application/x-www-form-urlencoded"),
-                            ("User-Agent",  UA_ANDROID)]
+                            ("User-Agent",  UA_ADOBE_PASS)]
 
         data = urllib.urlencode({'requestor_id' : self.requestor.get_requestor_id(),
                                  'resource_id' : resource_id,

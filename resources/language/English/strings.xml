@@ -42,4 +42,5 @@
 	<string id="30170">Clear cached data</string>
 	<string id="30180">Disable SSL Certificate checks (Unsafe)</string>
 	<string id="30190">ESPN3 (%d events)</string>
+	<string id="30191">ESPN3 (%d event)</string>
 </strings>
