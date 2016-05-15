@@ -31,6 +31,7 @@
   </category>
   <category label="Advanced">
   	  <setting id="ClearData" type="bool" label="30170" default="false" />
+  	  <setting id="DisableSSL" type="bool" label="30180" default="false" />
   </category>
 
 </settings>

@@ -40,4 +40,5 @@
 	<string id="30150">ESPN reports that your provider doesn't have access to ESPN3</string>
 	<string id="30160">ESPN reports that you don't have access to this channel. Supported channels are </string>
 	<string id="30170">Clear cached data</string>
+	<string id="30180">Disable SSL Certificate checks (Unsafe)</string>
 </strings>

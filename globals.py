@@ -79,6 +79,10 @@ def CLEAR_SAVED_DATA():
 if selfAddon.getSetting('ClearData') == 'true':
     CLEAR_SAVED_DATA()
 
+if selfAddon.getSetting('DisableSSL') == 'true':
+    import ssl
+    ssl._create_default_https_context = ssl._create_unverified_context
+
 #Create Random Device ID and save it to a file
 fname = os.path.join(ADDON_PATH_PROFILE, 'device.id')
 if not os.path.isfile(fname):

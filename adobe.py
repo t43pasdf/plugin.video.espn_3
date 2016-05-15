@@ -215,6 +215,7 @@ class ADOBE():
         content_soup = BeautifulSoup(content, 'html.parser')
         content_action = self.get_form_action(content_soup)
         content_action = self.resolve_relative_url(content_action, url)
+        xbmc.log('ESPN3: Content action %s' % content_action)
         body_contents = dict()
         for control in content_soup.find_all('input'):
             body_contents[control.get('name')] = control.get('value')
@@ -236,6 +237,7 @@ class ADOBE():
         for control in content_soup.find_all('button'):
             body_contents[control.get('name')] = control.get('value')
 
+        xbmc.log('ESPN3: Referer : %s ' % url)
         opener.addheaders = [ ("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"),
                             ("Accept-Encoding", "gzip, deflate"),
                             ("Accept-Language", "en-us"),
