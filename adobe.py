@@ -219,7 +219,7 @@ class ADOBE():
         xbmc.log('ESPN3: IDP Action %s ' % idp_action)
 
         # Check for redirect with POST
-        (content, url, saml_request, relay_state) = self.handle_post_redirect(opener, idp_url, content)
+        (content, url, saml_request, relay_state) = self.handle_post_redirect(opener, url, content)
 
         # Due to cookies sometimes the user does not need to log in and it goes
         # Right to adobe
