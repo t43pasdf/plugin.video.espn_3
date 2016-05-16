@@ -114,7 +114,9 @@ class ADOBE():
         relative_parsed = urlparse.urlparse(relative_url)
         if relative_parsed.scheme == '':
             origin = urlparse.urlparse(url)
-            origin = '%s://%s/' % (origin.scheme, origin.netloc)
+            origin = '%s://%s' % (origin.scheme, origin.netloc)
+            if not origin.endswith('/') and not relative_url.startswith('/'):
+                origin = origin + '/'
             return '%s%s' % (origin, relative_url)
         return relative_url
 
@@ -144,6 +146,45 @@ class ADOBE():
         if redirect is not None:
             return self.handle_url(opener, redirect)
         return (content, url)
+
+    def handle_post_redirect(self, opener, url, content, count = 0):
+        # Post the form to go to the user's provider
+        soup = BeautifulSoup(content, 'html.parser')
+        action = self.get_form_action(soup)
+        action = self.resolve_relative_url(action, url)
+        has_password = False
+        saml_request = ''
+        relay_state = ''
+        for control in soup.find_all('input'):
+            xbmc.log('ESPN3: Looking at control %s' % control.get('name'))
+            if control.get('name') == 'SAMLRequest':
+                saml_request = control.get('value')
+            if control.get('name') == 'RelayState':
+                relay_state = control.get('value')
+            if control.get('type') == 'password':
+                has_password = True
+
+        if has_password or count > 5:
+            return (content, url, '', '')
+
+        origin = self.get_origin(url)
+        opener.addheaders = [ ("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"),
+                        ("Accept-Encoding", "gzip, deflate"),
+                        ("Accept-Language", "en-us"),
+                        ("Content-Type", "application/x-www-form-urlencoded"),
+                        ("Proxy-Connection", "keep-alive"),
+                        ("Connection", "keep-alive"),
+                        ("Referer", url),
+                        ("Origin", origin),
+                        ("User-Agent", UA_PC)]
+        body_contents = dict()
+        for control in soup.find_all('input'):
+            body_contents[control.get('name')] = control.get('value')
+        body = urllib.urlencode(body_contents);
+
+        (content, url) = self.handle_url(opener, action, body)
+        xbmc.log('ESPN3: Ended up at url %s' % url)
+        return (content, url, saml_request, relay_state)
 
     def GET_IDP_DATA(self):
         params = urllib.urlencode(
@@ -177,81 +218,78 @@ class ADOBE():
         idp_action = self.resolve_relative_url(idp_action, url)
         xbmc.log('ESPN3: IDP Action %s ' % idp_action)
 
-        need_idp_request = 'https://sp.auth.adobe.com' in url
+        # Check for redirect with POST
+        (content, url, saml_request, relay_state) = self.handle_post_redirect(opener, idp_url, content)
 
-        # Some providers use an HTTP POST form to have a redirect, others
-        # use a HTTP equiv header to do the redirect
-        saml_request = ''
-        relay_state = ''
-        if need_idp_request:
-            # Post the form to go to the user's provider
-            for control in idp_soup.find_all('input'):
-                xbmc.log('ESPN3: Looking at control %s' % control.get('name'))
-                if control.get('name') == 'SAMLRequest':
-                    saml_request = control.get('value')
-                if control.get('name') == 'RelayState':
-                    relay_state = control.get('value')
+        # Due to cookies sometimes the user does not need to log in and it goes
+        # Right to adobe
+        if 'skip redirect' not in content:
+            # The next step is to populate the username and password
+            # of the user on the form, assuming text boxes are for the
+            # username and password boxes are for the password
+            content_soup = BeautifulSoup(content, 'html.parser')
 
-            origin = self.get_origin(idp_url)
-            opener.addheaders = [ ("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"),
-                            ("Accept-Encoding", "gzip, deflate"),
-                            ("Accept-Language", "en-us"),
-                            ("Content-Type", "application/x-www-form-urlencoded"),
-                            ("Proxy-Connection", "keep-alive"),
-                            ("Connection", "keep-alive"),
-                            ("Referer", idp_url),
-                            ("Origin", origin),
-                            ("User-Agent", UA_PC)]
+            # Dish network has another redirect
+            method = content_soup.find('form').get('method')
+            if method == 'get':
+                # Assemble get URL
+                params = dict()
+                for control in content_soup.find_all('input'):
+                    params[control.get('name')] = control.get('value')
+                params['coeff'] = 1
+                params['history'] = 1
+                params = urllib.urlencode(params)
+                url_parsed = urlparse.urlparse(url)
+                url = urlparse.urlunsplit([url_parsed.scheme,
+                                    url_parsed.netloc,
+                                    url_parsed.path,
+                                    params, ''])
+                xbmc.log('ESPN3: Redirect to %s' % url)
+                (content, url) = self.handle_url(opener, url)
+                # Check post redirect again
+                (content, url, saml_request, relay_state) = self.handle_post_redirect(opener, idp_url, content)
+                content_soup = BeautifulSoup(content, 'html.parser')
+
+            xbmc.log('ESPN3: At %s' % url)
+            content_action = self.get_form_action(content_soup)
+            xbmc.log('ESPN3: Content action %s' % content_action)
+            content_action = self.resolve_relative_url(content_action, url)
+            xbmc.log('ESPN3: Content action final %s' % content_action)
             body_contents = dict()
-            for control in idp_soup.find_all('input'):
+            for control in content_soup.find('form').find_all('input'):
                 body_contents[control.get('name')] = control.get('value')
+                xbmc.log('ESPN3: Populating control %s %s %s' % (control.get('name'), control.get('type'), control.get('value')))
+                if control.get('type') == 'text':
+                    body_contents[control.get('name')] = self.user_details.get_username()
+                if control.get('type') == 'password':
+                    body_contents[control.get('name')] = self.user_details.get_password()
+                if control.get('name') == 'SAMLRequest' and saml_request != '':
+                    xbmc.log('ESPN3: Set saml request to %s' % saml_request)
+                    body_contents[control.get('name')] = saml_request
+                if control.get('name') == 'RelayState' and relay_state != '':
+                    xbmc.log('ESPN3: Set relay state to %s' % relay_state)
+                    body_contents[control.get('name')] = relay_state
+
+            for control in content_soup.find('form').find_all('select'):
+                body_contents[control.get('name')] = control.get('value')
+
+            for control in content_soup.find('form').find_all('button'):
+                body_contents[control.get('name')] = control.get('value')
+
+            xbmc.log('ESPN3: Referer : %s ' % url)
+            opener.addheaders = [ ("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"),
+                                ("Accept-Encoding", "gzip, deflate"),
+                                ("Accept-Language", "en-us"),
+                                ("Content-Type", "application/x-www-form-urlencoded"),
+                                ("Proxy-Connection", "keep-alive"),
+                                ("Connection", "keep-alive"),
+                                ("Referer", url),
+                                ("Origin", self.get_origin(url)),
+                                ("User-Agent", UA_PC)]
             body = urllib.urlencode(body_contents);
 
-            (content, url) = self.handle_url(opener, idp_action, body)
-            xbmc.log('ESPN3: Ended up at url %s' % url)
-
-        # The next step is to populate the username and password
-        # of the user on the form, assuming text boxes are for the
-        # username and password boxes are for the password
-        content_soup = BeautifulSoup(content, 'html.parser')
-        content_action = self.get_form_action(content_soup)
-        content_action = self.resolve_relative_url(content_action, url)
-        xbmc.log('ESPN3: Content action %s' % content_action)
-        body_contents = dict()
-        for control in content_soup.find_all('input'):
-            body_contents[control.get('name')] = control.get('value')
-            xbmc.log('ESPN3: Populating control %s %s %s' % (control.get('name'), control.get('type'), control.get('value')))
-            if control.get('type') == 'text':
-                body_contents[control.get('name')] = self.user_details.get_username()
-            if control.get('type') == 'password':
-                body_contents[control.get('name')] = self.user_details.get_password()
-            if control.get('name') == 'SAMLRequest' and saml_request != '':
-                xbmc.log('ESPN3: Set saml request to %s' % saml_request)
-                body_contents[control.get('name')] = saml_request
-            if control.get('name') == 'RelayState' and relay_state != '':
-                xbmc.log('ESPN3: Set relay state to %s' % relay_state)
-                body_contents[control.get('name')] = relay_state
-
-        for control in content_soup.find_all('select'):
-            body_contents[control.get('name')] = control.get('value')
-
-        for control in content_soup.find_all('button'):
-            body_contents[control.get('name')] = control.get('value')
-
-        xbmc.log('ESPN3: Referer : %s ' % url)
-        opener.addheaders = [ ("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"),
-                            ("Accept-Encoding", "gzip, deflate"),
-                            ("Accept-Language", "en-us"),
-                            ("Content-Type", "application/x-www-form-urlencoded"),
-                            ("Proxy-Connection", "keep-alive"),
-                            ("Connection", "keep-alive"),
-                            ("Referer", url),
-                            ("Origin", self.get_origin(url)),
-                            ("User-Agent", UA_PC)]
-        body = urllib.urlencode(body_contents);
-
-        # Post to provider to log in
-        (content, url) = self.handle_url(opener, content_action, body)
+            # Post to provider to log in
+            (content, url) = self.handle_url(opener, content_action, body)
         # Due to cookies sometimes the user does not need to log in and it goes
         # Right to adobe
         if 'skip redirect' not in content:
@@ -268,7 +306,6 @@ class ADOBE():
                 return False
 
             # Send final saml response to adobe
-            origin = self.get_origin(idp_url)
             opener.addheaders = [ ("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"),
                             ("Accept-Encoding", "gzip, deflate"),
                             ("Accept-Language", "en-us"),
