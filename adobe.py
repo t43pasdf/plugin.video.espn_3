@@ -48,6 +48,7 @@ class ADOBE():
         if os.path.isfile(auth_token_file):
             device_file = open(auth_token_file,'r')
             auth_token_contents = device_file.readline()
+            device_file.close()
             # Verify the auth token isn't expired
             soup = BeautifulSoup(auth_token_contents, 'html.parser')
             token_expires_node = soup.find('simpletokenexpires')
@@ -113,7 +114,7 @@ class ADOBE():
         relative_parsed = urlparse.urlparse(relative_url)
         if relative_parsed.scheme == '':
             origin = urlparse.urlparse(url)
-            origin = '%s://%s' % (origin.scheme, origin.netloc)
+            origin = '%s://%s/' % (origin.scheme, origin.netloc)
             return '%s%s' % (origin, relative_url)
         return relative_url
 
