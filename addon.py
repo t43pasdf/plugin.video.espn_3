@@ -36,6 +36,10 @@ SPORT = 'SPORT'
 
 BAM_NS = '{http://services.bamnetworks.com/media/types/2.1}'
 
+# Taken from https://espn.go.com/watchespn/player/config
+ESPN3_ID = 'n360'
+SECPLUS_ID = 'n323'
+
 def CATEGORIES():
     include_premium = selfAddon.getSetting('ShowPremiumChannels') == 'true'
     channel_list = events.get_channel_list(include_premium)
@@ -78,9 +82,6 @@ def CATEGORIES():
            dict(ESPN_URL=events.get_replay_events_url(channel_list) +enddate+'&startDate='+startAll, MODE=LIST_SPORTS_MODE),
            defaultreplay)
     xbmcplugin.endOfDirectory(int(sys.argv[1]))
-
-def LISTNETWORKS(url,name):
-    pass
 
 def LISTSPORTS(args):
     espn_url = args.get(ESPN_URL)[0]
@@ -201,7 +202,7 @@ def INDEX(args):
     else:
         include_premium = selfAddon.getSetting('ShowPremiumChannels') == 'true'
         if not include_premium:
-            chosen_network = 'n360'
+            chosen_network = ESPN3_ID
     live = 'action=live' in espn_url
     upcoming = 'action=upcoming' in espn_url
     replay = 'action=replay' in espn_url
@@ -218,29 +219,26 @@ def INDEX(args):
         networkid = event.find('networkId').text
         if chosen_network <> networkid and chosen_network is not None:
             continue
-        if networkid == 'n360' and chosen_network is None :
+        if networkid == ESPN3_ID and chosen_network is None :
             num_espn3 = num_espn3 + 1
-        elif networkid == 'n323' and chosen_network is None :
+        elif networkid == SECPLUS_ID and chosen_network is None :
             num_secplus = num_secplus + 1
         else:
             INDEX_EVENT(event, live, upcoming, replay, chosen_sport)
-    # Dir for ESPN3
+    # Dir for ESPN3/SECPlus
     if chosen_network is None:
         if num_espn3 > 0:
             translation_number = 30191 if num_espn3 == 1 else 30190
             addDir('[COLOR=FFCC0000]' + (translation(translation_number) % num_espn3) + '[/COLOR]',
-               dict(ESPN_URL=espn_url, MODE=LIVE_EVENTS_MODE, NETWORK_ID='n360'),
+               dict(ESPN_URL=espn_url, MODE=LIVE_EVENTS_MODE, NETWORK_ID=ESPN3_ID),
                defaultlive)
         if num_secplus > 0:
             translation_number = 30201 if num_espn3 == 1 else 30200
             addDir('[COLOR=FF004C8D]' + (translation(translation_number) % num_secplus) + '[/COLOR]',
-               dict(ESPN_URL=espn_url, MODE=LIVE_EVENTS_MODE, NETWORK_ID='n323'),
+               dict(ESPN_URL=espn_url, MODE=LIVE_EVENTS_MODE, NETWORK_ID=SECPLUS_ID),
                defaultlive)
     xbmcplugin.setContent(pluginhandle, 'episodes')
     xbmcplugin.endOfDirectory(int(sys.argv[1]))
-
-def PLAYESPN3(url):
-    PLAY(url,'n360')
 
 def check_blackout(authurl):
     tree = util.get_url_as_xml_soup(authurl)
@@ -264,7 +262,6 @@ def check_blackout(authurl):
     return (tree, False)
 
 def PLAY_PROTECTED_CONTENT(args):
-
     if not check_user_settings():
         return
 
@@ -322,15 +319,12 @@ def PLAY_FREE_CONTENT(args):
     if not free_content_check:
         xbmc.log('ESPN3: User needs login to ESPN3')
         return PLAY_PROTECTED_CONTENT(args)
-        #dialog = xbmcgui.Dialog()
-        #dialog.ok(translation(30037), translation(30140),translation(30150))
 
     user_data = player_config.get_user_data()
     affiliateid = user_data['name']
 
     eventid = args.get(EVENT_ID)[0]
     simulcastAiringId = args.get(SIMULCAST_AIRING_ID)[0]
-    streamType = args.get(DESKTOP_STREAM_SOURCE)[0]
     networkId = args.get(NETWORK_ID)[0]
 
     pk = ''.join([random.choice(string.ascii_letters + string.digits) for n in xrange(51)])
@@ -342,12 +336,13 @@ def PLAY_FREE_CONTENT(args):
 
     authurl = player_config.get_start_session_url()
     authurl += '&affiliate='+affiliateid
+    authurl += '&platform=tvos'
     authurl += '&pkan='+pkan
     authurl += '&pkanType=SWID'
     authurl += '&simulcastAiringId='+simulcastAiringId
     authurl += '&cdnName='+cdnName
     authurl += '&channel='+channel
-    authurl += '&playbackScenario=FMS_CLOUD'
+    authurl += '&playbackScenario=HTTP_CLOUD_HIGH'
     authurl += '&eventid='+eventid
     authurl += '&rand='+str(random.randint(100000,999999))
     authurl += '&playerId='+playedId
@@ -358,11 +353,7 @@ def PLAY_FREE_CONTENT(args):
     if result:
         return
 
-    if streamType == 'HDS':
-        # FFMPEG does not support hds so use hls
-        smilurl = tree.find('.//' + BAM_NS + 'hls-backup-url').text
-    else: # HLS
-        smilurl = tree.find('.//' + BAM_NS + 'url').text
+    smilurl = tree.find('.//' + BAM_NS + 'url').text
     xbmc.log('ESPN3:  smilurl: %s' % smilurl)
     if smilurl is None:
         smilurl = tree.find('.//' + BAM_NS + 'hls-backup-url').text
@@ -397,7 +388,7 @@ def check_user_settings():
 
 def PLAY(args):
     networkId = args.get(NETWORK_ID)[0]
-    if networkId == 'n360':
+    if networkId == ESPN3_ID:
         PLAY_FREE_CONTENT(args)
     else:
         PLAY_PROTECTED_CONTENT(args)
