@@ -1,0 +1,11 @@
+http://espn.go.com/watchespn/appletv/featured
+How the AppleTV gets the feed data
+
+http://api-app.espn.com/v1/watch/clients/watchespn-tvos
+Information about the feeds
+
+http://watch.product.api.espn.com/api/product/v1/tvos/watchespn/event?eventId=2778758&tz=America%2FDetroit&lang=en
+Sample event url
+
+http://watch.product.api.espn.com/api/product/v1/tvos/watchespn/channel/espn1
+Listings url

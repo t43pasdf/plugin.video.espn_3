@@ -43,4 +43,6 @@
 	<string id="30180">Disable SSL Certificate checks (Unsafe)</string>
 	<string id="30190">ESPN3 (%d events)</string>
 	<string id="30191">ESPN3 (%d event)</string>
+	<string id="30200">SECPLUS (%d events)</string>
+	<string id="30201">SECPLUS (%d event)</string>
 </strings>
