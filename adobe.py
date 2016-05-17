@@ -7,7 +7,7 @@ import urllib2
 import time
 from datetime import datetime
 
-from globals import ADDON_PATH_PROFILE, UA_ANDROID, UA_PC, DEVICE_ID, UA_ADOBE_PASS, selfAddon
+from globals import ADDON_PATH_PROFILE, UA_ANDROID, UA_PC, DEVICE_ID, UA_ADOBE_PASS, selfAddon, UA_ATV
 from bs4 import BeautifulSoup
 import xml.etree.ElementTree as ET
 
@@ -176,7 +176,7 @@ class ADOBE():
                         ("Connection", "keep-alive"),
                         ("Referer", url),
                         ("Origin", origin),
-                        ("User-Agent", UA_PC)]
+                        ("User-Agent", UA_ATV)]
         body_contents = dict()
         for control in soup.find_all('input'):
             body_contents[control.get('name')] = control.get('value')
@@ -207,7 +207,7 @@ class ADOBE():
                             ("Accept-Language", "en-us"),
                             ("Proxy-Connection", "keep-alive"),
                             ("Connection", "keep-alive"),
-                            ("User-Agent", UA_PC)]
+                            ("User-Agent", UA_ATV)]
 
         # The IDP url is used to redirect the user to their provider's login form
         (content, url) = self.handle_url(opener, idp_url)
@@ -314,7 +314,7 @@ class ADOBE():
                             ("Connection", "keep-alive"),
                             ("Referer", url),
                             ("Origin", self.get_origin(url)),
-                            ("User-Agent", UA_PC)]
+                            ("User-Agent", UA_ATV)]
             body_contents = dict()
             for control in adobe_soup.find_all('input'):
                 body_contents[control.get('name')] = control.get('value')

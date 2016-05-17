@@ -280,17 +280,15 @@ def PLAY_PROTECTED_CONTENT(args):
         return
 
     start_session_url = player_config.get_start_session_url()
-    start_session_url += '&affiliate='+affiliateid
+    start_session_url = start_session_url.replace('v=1.5', '')
+    #start_session_url += '&affiliate='+affiliateid
     start_session_url += '&channel='+player_config.get_network_name(networkId)
     start_session_url += '&partner=watchespn'
-    start_session_url += '&playbackScenario=FMS_CLOUD'
+    start_session_url += '&playbackScenario=HTTP_CLOUD_HIGH'
+    start_session_url += '&platform=tvos'
     start_session_url += '&token='+urllib.quote(base64.b64encode(media_token))
-    start_session_url += '&resource=' + urllib.quote(base64.b64encode(resource_id))
     start_session_url += '&simulcastAiringId='+simulcastAiringId
     start_session_url += '&tokenType=ADOBEPASS'
-    start_session_url += '&eventId=' + eventId
-    start_session_url += '&cdnName=PRIMARY_AKAMAI'
-    start_session_url += '&playerId=domestic'
 
     xbmc.log('ESPN3: start_session_url: ' + start_session_url)
 
@@ -304,7 +302,8 @@ def PLAY_PROTECTED_CONTENT(args):
         # FFMPEG does not support hds so use hls
         smilurl = tree.find('.//' + BAM_NS + 'hls-backup-url').text
     else: # HLS
-        smilurl = tree.find('.//' + BAM_NS + 'url').text
+        pass
+    smilurl = tree.find('.//' + BAM_NS + 'url').text
     xbmc.log('ESPN3:  smilurl: '+smilurl)
     xbmc.log('ESPN3:  streamType: '+streamType)
     if smilurl == ' ' or smilurl == '':
