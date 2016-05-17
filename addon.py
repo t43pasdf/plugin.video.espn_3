@@ -210,8 +210,8 @@ def INDEX(args):
         data = events.get_events(espn_url)
     else:
         data = events.get_soup_events_cached(espn_url).findall(".//event")
-    num_espn3 = 0;
-    num_secplus = 0;
+    num_espn3 = 0
+    num_secplus = 0
     for event in data:
         sport = event.find('sportDisplayValue').text.encode('utf-8')
         if chosen_sport <> sport and chosen_sport is not None:
@@ -219,9 +219,9 @@ def INDEX(args):
         networkid = event.find('networkId').text
         if chosen_network <> networkid and chosen_network is not None:
             continue
-        if networkid == ESPN3_ID and chosen_network is None :
+        if networkid == ESPN3_ID and chosen_network is None and live :
             num_espn3 = num_espn3 + 1
-        elif networkid == SECPLUS_ID and chosen_network is None :
+        elif networkid == SECPLUS_ID and chosen_network is None and live :
             num_secplus = num_secplus + 1
         else:
             INDEX_EVENT(event, live, upcoming, replay, chosen_sport)
