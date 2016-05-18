@@ -1704,6 +1704,8 @@ var espn = function(a) {
             var f = "/regcode",
                 g = d + "/reggie/v1/" + e + f + "?deviceId=" + c + "&deviceType=appletv&ttl=" + i,
                 h = k("POST", f);
+            console.log('g: %o', g);
+            console.log('h: %o', h);
             return a.utils.qAjax({
                 url: g,
                 type: "POST",
