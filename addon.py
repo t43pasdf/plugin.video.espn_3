@@ -6,7 +6,6 @@
 
 import urllib, xbmcplugin, xbmcaddon, xbmcgui, os, random, string, re
 import time
-from adobe import ADOBE
 from globals import *
 from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
@@ -15,9 +14,6 @@ import base64
 import player_config
 import events
 import util
-from espn import ESPN
-from mso_provider import get_mso_provider
-from user_details import UserDetails
 import urlparse
 
 import adobe_activate_api
