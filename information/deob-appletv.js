@@ -142,7 +142,7 @@ var atvutils = {
         b.type = a.type || "emailAddress", b.title = a.title || "", b.image = a.image || null, b.instructions = a.instructions || "", b.label = a.label || "", b.footnote = a.footnote || "", b.defaultValue = a.defaultValue || null, b.defaultToAppleID = a.defaultToAppleID || !1, b.onSubmit = a.onSubmit, b.onCancel = a.onCancel, b.show()
     },
     log: function(a, b) {
-        var c = atv.sessionStorage.getItem("DEBUG_LEVEL"),
+        var c = 100, //atv.sessionStorage.getItem("DEBUG_LEVEL"),
             b = b || 0;
         c >= b && console.log(a)
     },
@@ -1673,7 +1673,8 @@ var espn = function(a) {
     }(espn || {}),
     espn = function(a) {
         function b(a) {
-            h && console.log(a)
+            //h && console.log(a)
+        	console.log(a);
         }
         var c = a.adobePassClient = a.adobePassClient || {},
             d = a.settings.ADOBE_PASS_HOST || "https://api.auth.adobe.com",
@@ -1692,6 +1693,7 @@ var espn = function(a) {
                 var c = Date.now(),
                     d = a.toUpperCase() + " requestor_id=" + e + ", nonce=" + j() + ", signature_method=HMAC-SHA1, request_time=" + c + ", request_uri=" + b,
                     h = CryptoJS.HmacSHA1(d, g);
+                	console.log('h %o d %o g %o', h, d, g);
                 return h = h.toString(CryptoJS.enc.Base64), d = d + ", public_key=" + f + ", signature=" + h
             };
         return c.getResource = function(a) {
@@ -1706,6 +1708,13 @@ var espn = function(a) {
                 h = k("POST", f);
             console.log('g: %o', g);
             console.log('h: %o', h);
+            console.log({
+                url: g,
+                type: "POST",
+                dataType: "json",
+                headers: {
+                    Authorization: h
+                }});
             return a.utils.qAjax({
                 url: g,
                 type: "POST",
@@ -1720,6 +1729,7 @@ var espn = function(a) {
             var f = "/authenticate/" + c,
                 g = d + "/api/v1" + f + "?requestor=" + e,
                 h = k("GET", f);
+            console.log('url %o', g);
             return a.utils.qAjax({
                 url: g,
                 dataType: "json",
@@ -1733,6 +1743,7 @@ var espn = function(a) {
             var f = "/tokens/authn",
                 g = d + "/api/v1" + f + "?requestor=" + e + "&deviceId=" + c,
                 h = k("GET", f);
+            console.log('url %o', g)
             return a.utils.qAjax({
                 url: g,
                 dataType: "json",

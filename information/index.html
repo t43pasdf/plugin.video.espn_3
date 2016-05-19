@@ -10,17 +10,21 @@
             crypto : {
                 SHA1: function() {}
             },
-            uuid: function () {}
+            uuid: function () {},
+            setTimeout: function() {}
         };
     </script>
     <script src="deob-appletv.js"></script>
+    <!-- <script src="page.min.js"></script>  -->
 </head>
 <body>
 
 <script>
 
-
-
+// test is DEVICE_ID
+// espn.adobePassClient.generateRegCode('test')
+// espn.adobePassClient.authenticateRegCode('test')
+espn.adobePassClient.getAuthnToken('test')
 </script>
 </body>
 </html>
