@@ -18,6 +18,7 @@ from globals import ADDON_PATH_PROFILE
 
 SETTINGS_FILE = 'adobe.json'
 UA_ATV = 'AppleCoreMedia/1.0.0.13Y234 (Apple TV; U; CPU OS 9_2 like Mac OS X; en_us)'
+TAG = 'ESPN3-adobe-api: '
 
 def save_settings(settings):
     settings_file = os.path.join(ADDON_PATH_PROFILE, SETTINGS_FILE)
@@ -76,12 +77,12 @@ def generate_message(method, path):
 def is_reg_code_valid():
     settings = load_settings()
     if 'generateRegCode' not in settings:
-        xbmc.log('Unable to find reg code')
+        xbmc.log(TAG + 'Unable to find reg code')
         return False
     # Check code isn't expired
     expiration = settings['generateRegCode']['expires']
     if is_expired(expiration):
-        xbmc.log('Reg code is expired at %s' % expiration)
+        xbmc.log(TAG + 'Reg code is expired at %s' % expiration)
         return False
     return True
 
@@ -91,6 +92,7 @@ def is_reg_code_valid():
 # (generateRegCode)
 def get_regcode():
     if is_reg_code_valid():
+        xbmc.log(TAG + 'Loading reg code from cache')
         return load_settings()['generateRegCode']['code']
 
     params = urllib.urlencode(
@@ -116,6 +118,7 @@ def get_regcode():
 # Sample: '{"mvpd":"","requestor":"ESPN","userId":"","expires":"1466208969000"}'
 def authenticate():
     if not is_reg_code_valid():
+        xbmc.log(TAG + 'reg code is invalid')
         raise ValueError('Registration code is invalid, please restart the authentication process')
 
     reg_code = get_regcode()

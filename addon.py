@@ -472,9 +472,21 @@ elif mode[0] == AUTHENTICATE_MODE:
                    translation(30360),
                    translation(30350))
     if ok:
-        adobe_activate_api.authenticate()
-        adobe_activate_api.authorize()
-        dialog.ok(translation(30310), translation(30370))
+        authenticated = False
+        try:
+            adobe_activate_api.authenticate()
+            authenticated = True
+        except urllib2.HTTPError as e:
+            dialog.ok(translation(30037), translation(30420) % e)
+        if authenticated:
+            authorized = False
+            try:
+                adobe_activate_api.authorize()
+                authorized = True
+            except urllib2.HTTPError as e:
+                dialog.ok(translation(30037), translation(30420) % e)
+            if authorized:
+                dialog.ok(translation(30310), translation(30370))
 elif mode[0] == AUTHENTICATION_DETAILS_MODE:
     dialog = xbmcgui.Dialog()
     dialog.ok(translation(30380),
