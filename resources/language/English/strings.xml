@@ -45,4 +45,16 @@
 	<string id="30191">ESPN3 (%d event)</string>
 	<string id="30200">SECPlus (%d events)</string>
 	<string id="30201">SECPlus (%d event)</string>
+	<string id="30300">Authenticate with provider to access premium content</string>
+	<string id="30310">Authentication Process</string>
+	<string id="30320">1. Go to https://espn.go.com/watchespn/activate</string>
+	<string id="30330">2. Enter %s as the activation code</string>
+	<string id="30340">3. Press Ok when it says your device is activated on the website</string>
+	<string id="30350">Continue</string>
+	<string id="30360">Cancel</string>
+	<string id="30370">Your device has been authenticated.</string>
+	<string id="30380">Authentication Details</string>
+	<string id="30390">Authentication Expires: %s</string>
+	<string id="30400">Authorization Expires: %s</string>
+	<string id="30410">This device isn't authorized</string>
 </strings>

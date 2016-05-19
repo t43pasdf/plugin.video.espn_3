@@ -20,11 +20,16 @@ from mso_provider import get_mso_provider
 from user_details import UserDetails
 import urlparse
 
+import adobe_activate_api
+from adobe_activate_api import is_authenticated
+
 LIVE_EVENTS_MODE = 'LIVE_EVENTS'
 PLAY_MODE = 'PLAY'
 LIST_SPORTS_MODE = 'LIST_SPORTS'
 INDEX_SPORTS_MODE = 'INDEX_SPORTS'
 UPCOMING_MODE = 'UPCOMING'
+AUTHENTICATE_MODE = 'AUTHENTICATE'
+AUTHENTICATION_DETAILS_MODE = 'AUTHENTICATION_DETAILS'
 NETWORK_ID = 'NETWORK_ID'
 EVENT_ID = 'EVENT_ID'
 SIMULCAST_AIRING_ID = 'SIMULCAST_AIRING_ID'
@@ -41,7 +46,7 @@ ESPN3_ID = 'n360'
 SECPLUS_ID = 'n323'
 
 def CATEGORIES():
-    include_premium = selfAddon.getSetting('ShowPremiumChannels') == 'true'
+    include_premium = adobe_activate_api.is_authenticated()
     channel_list = events.get_channel_list(include_premium)
     curdate = datetime.utcnow()
     upcoming = int(selfAddon.getSetting('upcoming'))+1
@@ -81,6 +86,14 @@ def CATEGORIES():
     addDir(translation(30032),
            dict(ESPN_URL=events.get_replay_events_url(channel_list) +enddate+'&startDate='+startAll, MODE=LIST_SPORTS_MODE),
            defaultreplay)
+    if adobe_activate_api.is_authenticated():
+        addDir(translation(30380),
+           dict(MODE=AUTHENTICATION_DETAILS_MODE),
+           defaultreplay)
+    else:
+        addDir(translation(30300),
+               dict(MODE=AUTHENTICATE_MODE),
+               defaultreplay)
     xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
 def LISTSPORTS(args):
@@ -212,6 +225,7 @@ def INDEX(args):
         data = events.get_soup_events_cached(espn_url).findall(".//event")
     num_espn3 = 0
     num_secplus = 0
+    num_events = 0
     for event in data:
         sport = event.find('sportDisplayValue').text.encode('utf-8')
         if chosen_sport <> sport and chosen_sport is not None:
@@ -224,9 +238,17 @@ def INDEX(args):
         elif networkid == SECPLUS_ID and chosen_network is None and live :
             num_secplus = num_secplus + 1
         else:
+            num_events = num_events + 1
+            INDEX_EVENT(event, live, upcoming, replay, chosen_sport)
+    # Don't show ESPN3 folder if there are no premium events
+    if num_events == 0:
+        for event in data:
+            sport = event.find('sportDisplayValue').text.encode('utf-8')
+            if chosen_sport <> sport and chosen_sport is not None:
+                continue
             INDEX_EVENT(event, live, upcoming, replay, chosen_sport)
     # Dir for ESPN3/SECPlus
-    if chosen_network is None:
+    elif chosen_network is None:
         if num_espn3 > 0:
             translation_number = 30191 if num_espn3 == 1 else 30190
             addDir('[COLOR=FFCC0000]' + (translation(translation_number) % num_espn3) + '[/COLOR]',
@@ -262,20 +284,16 @@ def check_blackout(authurl):
     return (tree, False)
 
 def PLAY_PROTECTED_CONTENT(args):
-    if not check_user_settings():
+    if not is_authenticated():
+        dialog = xbmcgui.Dialog()
+        dialog.ok(translation(30037), translation(30410))
         return
 
     simulcastAiringId = args.get(SIMULCAST_AIRING_ID)[0]
     streamType = args.get(DESKTOP_STREAM_SOURCE)[0]
     networkId = args.get(NETWORK_ID)[0]
 
-    requestor = ESPN()
-    mso_provider = get_mso_provider(selfAddon.getSetting('provider'))
-    user_details = UserDetails(selfAddon.getSetting('username'), selfAddon.getSetting('password'))
-
-
-    adobe = ADOBE(requestor, mso_provider, user_details)
-    media_token = adobe.GET_MEDIA_TOKEN()
+    media_token = adobe_activate_api.get_short_media_token()
 
     if media_token is None:
         return
@@ -287,7 +305,7 @@ def PLAY_PROTECTED_CONTENT(args):
     start_session_url += '&partner=watchespn'
     start_session_url += '&playbackScenario=HTTP_CLOUD_HIGH'
     start_session_url += '&platform=tvos'
-    start_session_url += '&token='+urllib.quote(base64.b64encode(media_token))
+    start_session_url += '&token='+urllib.quote(media_token)
     start_session_url += '&simulcastAiringId='+simulcastAiringId
     start_session_url += '&tokenType=ADOBEPASS'
 
@@ -447,5 +465,24 @@ elif mode[0] == UPCOMING_MODE:
     xbmc.log("Upcoming")
     dialog = xbmcgui.Dialog()
     dialog.ok(translation(30035), translation(30036))
+elif mode[0] == AUTHENTICATE_MODE:
+    xbmc.log('Authenticate Device')
+    regcode = adobe_activate_api.get_regcode()
+    dialog = xbmcgui.Dialog()
+    ok = dialog.yesno(translation(30310),
+                   translation(30320),
+                   translation(30330) % regcode,
+                   translation(30340),
+                   translation(30360),
+                   translation(30350))
+    if ok:
+        adobe_activate_api.authenticate()
+        adobe_activate_api.authorize()
+        dialog.ok(translation(30310), translation(30370))
+elif mode[0] == AUTHENTICATION_DETAILS_MODE:
+    dialog = xbmcgui.Dialog()
+    dialog.ok(translation(30380),
+                   translation(30390) % adobe_activate_api.get_authentication_expires(),
+                   translation(30400) % adobe_activate_api.get_authorization_expires())
 
 

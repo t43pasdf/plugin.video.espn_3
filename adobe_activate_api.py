@@ -1,0 +1,218 @@
+#!/usr/bin/python2
+import urlparse
+import urllib
+import uuid
+import hashlib
+import hmac
+import base64
+import urllib2
+import random
+import time
+import json
+import gzip
+import os
+from StringIO import StringIO
+
+import xbmc
+from globals import ADDON_PATH_PROFILE
+
+SETTINGS_FILE = 'adobe.json'
+UA_ATV = 'AppleCoreMedia/1.0.0.13Y234 (Apple TV; U; CPU OS 9_2 like Mac OS X; en_us)'
+
+def save_settings(settings):
+    settings_file = os.path.join(ADDON_PATH_PROFILE, SETTINGS_FILE)
+    with open(settings_file, 'w') as fp:
+        json.dump(settings, fp, sort_keys=True, indent=4)
+
+def load_settings():
+    settings_file = os.path.join(ADDON_PATH_PROFILE, SETTINGS_FILE)
+    if not os.path.isfile(settings_file):
+        save_settings(dict())
+    with open(settings_file, 'r') as fp:
+        return json.load(fp)
+
+def get_device_id():
+    settings = load_settings()
+    if 'device_id' not in settings:
+        settings['device_id'] = str(uuid.uuid1())
+        save_settings(settings)
+    return settings['device_id']
+
+def read_response(resp):
+    if resp.info().get('Content-Encoding') == 'gzip':
+        buf = StringIO(resp.read())
+        f = gzip.GzipFile(fileobj=buf)
+        content = f.read()
+    else:
+        content = resp.read()
+    return json.loads(content)
+
+def is_expired(expiration):
+    return (time.time() * 1000) >= int(expiration)
+
+def get_url_response(url, message, body = None):
+    opener = urllib2.build_opener()
+    opener.addheaders = [ ("Accept", "application/json"),
+                            ("Accept-Encoding", "gzip, deflate"),
+                            ("Accept-Language", "en-us"),
+                            ("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8"),
+                            ("Connection", "close"),
+                            ("User-Agent", UA_ATV),
+                            ("Authorization", message)]
+    resp = opener.open(url, body)
+    resp = read_response(resp)
+    return resp
+
+def generate_message(method, path):
+    nonce = str(uuid.uuid4())
+    today = str(int(time.time() * 1000))
+    key = 'gB8HYdEPyezeYbR1'
+    message = method + ' requestor_id=ESPN, nonce=' + nonce + ', signature_method=HMAC-SHA1, request_time=' + today + ', request_uri=' + path
+    signature = hmac.new(key, message, hashlib.sha1)
+    signature = base64.b64encode(signature.digest())
+    message = message + ', public_key=yKpsHYd8TOITdTMJHmkJOVmgbb2DykNK, signature=' + signature
+    return message
+
+def is_reg_code_valid():
+    settings = load_settings()
+    if 'generateRegCode' not in settings:
+        xbmc.log('Unable to find reg code')
+        return False
+    # Check code isn't expired
+    expiration = settings['generateRegCode']['expires']
+    if is_expired(expiration):
+        xbmc.log('Reg code is expired at %s' % expiration)
+        return False
+    return True
+
+# Gets called when the user wants to authorize this device, it returns a registration code to enter
+# on the activation website page
+# Sample : '{"id":"","code":"","requestor":"ESPN","generated":1463616806831,"expires":1463618606831,"info":{"deviceId":"","deviceType":"appletv","deviceUser":null,"appId":null,"appVersion":null,"registrationURL":null}}'
+# (generateRegCode)
+def get_regcode():
+    if is_reg_code_valid():
+        return load_settings()['generateRegCode']['code']
+
+    params = urllib.urlencode(
+        {'deviceId': get_device_id(),
+         'deviceType': 'appletv',
+         'ttl': '1800'})
+
+    path = '/regcode'
+    url = urlparse.urlunsplit(['https', 'api.auth.adobe.com',
+                               'reggie/v1/ESPN' + path,
+                               params, ''])
+
+    message = generate_message('POST', path)
+
+    resp = get_url_response(url, message, dict())
+
+    settings = load_settings()
+    settings['generateRegCode'] = resp
+    save_settings(settings)
+    return resp['code']
+
+# Authenticates the user after they have been authenticated on the activation website (authenticateRegCode)
+# Sample: '{"mvpd":"","requestor":"ESPN","userId":"","expires":"1466208969000"}'
+def authenticate():
+    if not is_reg_code_valid():
+        raise ValueError('Registration code is invalid, please restart the authentication process')
+
+    reg_code = get_regcode()
+
+    params = urllib.urlencode({'requestor': 'ESPN'})
+
+    path = '/authenticate/' + reg_code
+    url = urlparse.urlunsplit(['https', 'api.auth.adobe.com',
+                                   'api/v1' + path,
+                                   params, ''])
+
+    message = generate_message('GET', path)
+
+    resp = get_url_response(url, message)
+    settings = load_settings()
+    settings['authenticateRegCode'] = resp
+    save_settings(settings)
+
+# Get authn token (re-auth device after it expires), getAuthnToken
+def re_authenticate():
+    params = urllib.urlencode({'requestor': 'ESPN',
+                               'deviceId' : get_device_id()})
+
+    path = '/tokens/authn'
+    url = urlparse.urlunsplit(['https', 'api.auth.adobe.com',
+                                   'api/v1' + path,
+                                   params, ''])
+
+    message = generate_message('GET', path)
+
+    resp = get_url_response(url, message)
+    settings = load_settings()
+    settings['authenticateRegCode'] = resp
+    save_settings(settings)
+
+# Sample '{"resource":"TODO resource","mvpd":"","requestor":"ESPN","expires":"1463621239000"}'
+def authorize():
+    params = urllib.urlencode({'requestor': 'ESPN',
+                               'deviceId' : get_device_id(),
+                               'resource' : 'TODO resource'})
+
+    path = '/authorize'
+    url = urlparse.urlunsplit(['https', 'api.auth.adobe.com',
+                                   'api/v1' + path,
+                                   params, ''])
+
+    message = generate_message('GET', path)
+
+    resp = get_url_response(url, message)
+    settings = load_settings()
+    settings['authorize'] = resp
+    save_settings(settings)
+
+# getShortMediaToken
+# Sample '{"mvpdId":"","expires":"1463618218000","serializedToken":"+++++++=","userId":"","requestor":"ESPN","resource":"TODO resource"}'
+def get_short_media_token():
+    if has_to_reauthenticate():
+        re_authenticate()
+        authorize()
+    params = urllib.urlencode({'requestor': 'ESPN',
+                               'deviceId' : get_device_id(),
+                               'resource' : 'TODO resource'})
+
+    path = '/mediatoken'
+    url = urlparse.urlunsplit(['https', 'api.auth.adobe.com',
+                                   'api/v1' + path,
+                                   params, ''])
+
+    message = generate_message('GET', path)
+
+    resp = get_url_response(url, message)
+    settings = load_settings()
+    settings['getShortMediaToken'] = resp
+    save_settings(settings)
+    return resp['serializedToken']
+
+def is_authenticated():
+    settings = load_settings()
+    return 'authenticateRegCode' in settings
+
+def has_to_reauthenticate():
+    settings = load_settings()
+    return not is_expired(settings['authenticateRegCode']['expires'])
+
+def is_authorized():
+    settings = load_settings()
+    if 'authorize' in settings:
+        return not is_expired(settings['authorize']['expires'])
+
+def get_expires_time(key):
+    settings = load_settings()
+    expires = settings[key]['expires']
+    expires_time = time.localtime(int(expires) / 1000)
+    return time.strftime('%Y-%m-%d %H:%M', expires_time)
+
+def get_authentication_expires():
+    return get_expires_time('authenticateRegCode')
+
+def get_authorization_expires():
+    return get_expires_time('authorize')
