@@ -1780,6 +1780,7 @@ var espn = function(a) {
             var l = "/authorize",
                 m = d + "/api/v1" + l + "?requestor=" + e + "&resource=" + encodeURIComponent(c) + "&deviceId=" + f,
                 n = k("GET", "/authorize");
+            console.log('url ' + m);
             return a.utils.qAjax({
                 url: m,
                 dataType: "json",

@@ -11,6 +11,7 @@ import time
 import json
 import gzip
 import os
+import cookielib
 from StringIO import StringIO
 
 import xbmc
@@ -19,6 +20,21 @@ from globals import ADDON_PATH_PROFILE
 SETTINGS_FILE = 'adobe.json'
 UA_ATV = 'AppleCoreMedia/1.0.0.13Y234 (Apple TV; U; CPU OS 9_2 like Mac OS X; en_us)'
 TAG = 'ESPN3-adobe-api: '
+
+# Fixes an issue with 32bit systems not supporting times after 2038
+def save_cookies(cj):
+    for cookie in cj:
+        if cookie.expires > 2000000000:
+            cookie.expires = 2000000000
+    cj.save(os.path.join(ADDON_PATH_PROFILE, 'adobe-cookies.lwp'), ignore_discard=True, ignore_expires=True)
+
+def get_cookie_jar():
+    cj = cookielib.LWPCookieJar()
+    if not os.path.isfile(os.path.join(ADDON_PATH_PROFILE, 'adobe-cookies.lwp')):
+        save_cookies(cj)
+    else:
+        cj.load(os.path.join(ADDON_PATH_PROFILE, 'adobe-cookies.lwp'), ignore_discard=True)
+    return cj
 
 def save_settings(settings):
     settings_file = os.path.join(ADDON_PATH_PROFILE, SETTINGS_FILE)
@@ -52,7 +68,9 @@ def is_expired(expiration):
     return (time.time() * 1000) >= int(expiration)
 
 def get_url_response(url, message, body = None, method = None):
-    opener = urllib2.build_opener()
+    xbmc.log(TAG + 'url %s message %s' % (url, message))
+    cj = get_cookie_jar()
+    opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
     opener.addheaders = [ ("Accept", "application/json"),
                             ("Accept-Encoding", "gzip, deflate"),
                             ("Accept-Language", "en-us"),
@@ -67,6 +85,7 @@ def get_url_response(url, message, body = None, method = None):
     else:
         resp = opener.open(url, body)
         resp = read_response(resp)
+    save_cookies(cj)
     return resp
 
 def generate_message(method, path):

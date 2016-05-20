@@ -11,7 +11,8 @@
                 SHA1: function() {}
             },
             uuid: function () {},
-            setTimeout: function() {}
+            setTimeout: function() {},
+            sessionStorage : {}
         };
     </script>
     <script src="deob-appletv.js"></script>
@@ -24,7 +25,8 @@
 // test is DEVICE_ID
 // espn.adobePassClient.generateRegCode('test')
 // espn.adobePassClient.authenticateRegCode('test')
-espn.adobePassClient.getAuthnToken('test')
+espn.adobePassClient.authorize('<xml> <test></test>', 'test device');
+//espn.adobePassClient.getAuthnToken('test')
 </script>
 </body>
 </html>

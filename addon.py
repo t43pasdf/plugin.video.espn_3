@@ -302,6 +302,7 @@ def PLAY_PROTECTED_CONTENT(args):
     try:
         adobe_activate_api.authorize(resource)
     except urllib2.HTTPError as e:
+        dialog = xbmcgui.Dialog()
         dialog.ok(translation(30037), translation(30420) % e)
         return
 
