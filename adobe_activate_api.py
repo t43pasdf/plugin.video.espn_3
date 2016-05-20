@@ -276,10 +276,13 @@ def get_authorization_expires():
 
 def clean_up_authorization_tokens():
     settings = load_settings()
+    keys_to_delete = list()
     if 'authorize' in settings:
         for key in settings['authorize']:
             if 'expires' in settings['authorize'][key]:
                 if is_expired(settings['authorize'][key]['expires']):
-                    del settings['authorize'][key]
+                    keys_to_delete.append(key)
             else:
-                del settings['authorize'][key]
+                keys_to_delete.append(key)
+    for key in keys_to_delete:
+        del settings['authorize'][key]
