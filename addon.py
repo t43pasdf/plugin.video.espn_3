@@ -299,13 +299,6 @@ def PLAY_PROTECTED_CONTENT(args):
     event_parental_rating = args.get(EVENT_PARENTAL_RATING)[0]
 
     resource = adobe_activate_api.get_resource(network_name, event_name, event_guid, event_parental_rating)
-    try:
-        adobe_activate_api.authorize(resource)
-    except urllib2.HTTPError as e:
-        dialog = xbmcgui.Dialog()
-        dialog.ok(translation(30037), translation(30420) % e)
-        return
-
     simulcastAiringId = args.get(SIMULCAST_AIRING_ID)[0]
     streamType = args.get(DESKTOP_STREAM_SOURCE)[0]
     networkId = args.get(NETWORK_ID)[0]

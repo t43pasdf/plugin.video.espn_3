@@ -68,7 +68,7 @@ def is_expired(expiration):
     return (time.time() * 1000) >= int(expiration)
 
 def get_url_response(url, message, body = None, method = None):
-    xbmc.log(TAG + 'url %s message %s' % (url, message))
+    # xbmc.log(TAG + 'url %s message %s' % (url, message))
     cj = get_cookie_jar()
     opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
     opener.addheaders = [ ("Accept", "application/json"),
@@ -176,6 +176,8 @@ def re_authenticate():
     resp = get_url_response(url, message)
     settings = load_settings()
     settings['authenticateRegCode'] = resp
+    if 'authorize' in settings:
+        del settings['authorize']
     save_settings(settings)
 
 def get_resource(channel, event_name, event_guid, event_parental_rating):
@@ -183,7 +185,8 @@ def get_resource(channel, event_name, event_guid, event_parental_rating):
 
 # Sample '{"resource":"TODO resource","mvpd":"","requestor":"ESPN","expires":"1463621239000"}'
 def authorize(resource):
-    if is_authorized():
+    if is_authorized(resource):
+        xbmc.log(TAG + 'already authorized')
         return
     params = urllib.urlencode({'requestor': 'ESPN',
                                'deviceId': get_device_id(),
@@ -198,7 +201,9 @@ def authorize(resource):
 
     resp = get_url_response(url, message)
     settings = load_settings()
-    settings['authorize'] = resp
+    if 'authorize' not in settings:
+        settings['authorize'] = dict()
+    settings['authorize'][resource] = resp
     save_settings(settings)
 
 def deauthorize():
@@ -222,8 +227,9 @@ def deauthorize():
 # Sample '{"mvpdId":"","expires":"1463618218000","serializedToken":"+++++++=","userId":"","requestor":"ESPN","resource":"TODO resource"}'
 def get_short_media_token(resource):
     if has_to_reauthenticate():
+        xbmc.log(TAG + 're-authenticating device')
         re_authenticate()
-        authorize(resource)
+    authorize(resource)
     params = urllib.urlencode({'requestor': 'ESPN',
                                'deviceId' : get_device_id(),
                                'resource' : resource})
@@ -247,12 +253,12 @@ def is_authenticated():
 
 def has_to_reauthenticate():
     settings = load_settings()
-    return not is_expired(settings['authenticateRegCode']['expires'])
+    return is_expired(settings['authenticateRegCode']['expires'])
 
-def is_authorized():
+def is_authorized(resource):
     settings = load_settings()
-    if 'authorize' in settings:
-        return not is_expired(settings['authorize']['expires'])
+    if 'authorize' in settings and resource in settings['authorize']:
+        return not is_expired(settings['authorize'][resource]['expires'])
 
 def get_expires_time(key):
     settings = load_settings()
