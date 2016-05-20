@@ -286,3 +286,4 @@ def clean_up_authorization_tokens():
                 keys_to_delete.append(key)
     for key in keys_to_delete:
         del settings['authorize'][key]
+    save_settings(settings)

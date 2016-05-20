@@ -28,3 +28,11 @@ d = POST requestor_id=ESPN, nonce=[UUID], signature_method=HMAC-SHA1, request_ti
 h = HmacSHA1(d, gB8HYdEPyezeYbR1 (g))
 h = Base64(h)
 d = d + ", public_key=yKpsHYd8TOITdTMJHmkJOVmgbb2DykNK, signature=[h]
+
+
+-Can be used for quality stream selection
+playbackScenario=HTTP_CLOUD_HIGH (8500)
+playbackScenario=HTTP_CLOUD_WIRED (4500)
+playbackScenario=HTTP_CLOUD_TABLET (2200)
+(might have to change platform as well and change url detection to select hls stream)
+(should also update to startSession v2)
