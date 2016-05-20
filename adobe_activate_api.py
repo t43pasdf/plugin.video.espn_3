@@ -271,3 +271,13 @@ def get_authentication_expires():
 
 def get_authorization_expires():
     return get_expires_time('authorize')
+
+def clean_up_authorization_tokens():
+    settings = load_settings()
+    if 'authorize' in settings:
+        for key in settings['authorize']:
+            if 'expires' in settings['authorize'][key]:
+                if is_expired(settings['authorize'][key]['expires']):
+                    del settings['authorize'][key]
+            else:
+                del settings['authorize'][key]

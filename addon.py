@@ -494,6 +494,7 @@ elif mode is not None and mode[0] == AUTHENTICATION_DETAILS_MODE:
 
 
 if mode == None:
+    adobe_activate_api.clean_up_authorization_tokens()
     xbmc.log("Generate Main Menu")
     CATEGORIES()
 elif mode[0] == LIVE_EVENTS_MODE:
