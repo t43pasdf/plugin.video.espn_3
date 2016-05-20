@@ -30,6 +30,10 @@ NETWORK_ID = 'NETWORK_ID'
 EVENT_ID = 'EVENT_ID'
 SIMULCAST_AIRING_ID = 'SIMULCAST_AIRING_ID'
 DESKTOP_STREAM_SOURCE = 'DESKTOP_STREAM_SOURCE'
+NETWORK_NAME = 'NETWORK_NAME'
+EVENT_NAME = 'EVENT_NAME'
+EVENT_GUID = 'EVENT_GUID'
+EVENT_PARENTAL_RATING = 'EVENT_PARENTAL_RATING'
 
 ESPN_URL = 'ESPN_URL'
 MODE = 'MODE'
@@ -198,6 +202,10 @@ def INDEX_EVENT(event, live, upcoming, replay, chosen_sport):
     authurl[DESKTOP_STREAM_SOURCE] = desktopStreamSource
     authurl[NETWORK_ID] = networkid
     authurl[MODE] = UPCOMING_MODE if upcoming else PLAY_MODE
+    authurl[NETWORK_NAME] = event.find('adobeResource').text
+    authurl[EVENT_NAME] = event.find('name').text.encode('utf-8')
+    authurl[EVENT_GUID] = event.find('guid').text.encode('utf-8')
+    authurl[EVENT_PARENTAL_RATING] = event.find('parentalRating').text
     addLink(ename, authurl, fanart, fanart, infoLabels=infoLabels)
 
 def INDEX(args):
@@ -285,11 +293,23 @@ def PLAY_PROTECTED_CONTENT(args):
         dialog.ok(translation(30037), translation(30410))
         return
 
+    network_name = args.get(NETWORK_NAME)[0]
+    event_name = args.get(EVENT_NAME)[0]
+    event_guid = args.get(EVENT_GUID)[0]
+    event_parental_rating = args.get(EVENT_PARENTAL_RATING)[0]
+
+    resource = adobe_activate_api.get_resource(network_name, event_name, event_guid, event_parental_rating)
+    try:
+        adobe_activate_api.authorize(resource)
+    except urllib2.HTTPError as e:
+        dialog.ok(translation(30037), translation(30420) % e)
+        return
+
     simulcastAiringId = args.get(SIMULCAST_AIRING_ID)[0]
     streamType = args.get(DESKTOP_STREAM_SOURCE)[0]
     networkId = args.get(NETWORK_ID)[0]
 
-    media_token = adobe_activate_api.get_short_media_token()
+    media_token = adobe_activate_api.get_short_media_token(resource)
 
     if media_token is None:
         return
@@ -478,15 +498,6 @@ elif mode[0] == AUTHENTICATE_MODE:
             authenticated = True
         except urllib2.HTTPError as e:
             dialog.ok(translation(30037), translation(30420) % e)
-        if authenticated:
-            authorized = False
-            try:
-                adobe_activate_api.authorize()
-                authorized = True
-            except urllib2.HTTPError as e:
-                dialog.ok(translation(30037), translation(30420) % e)
-            if authorized:
-                dialog.ok(translation(30310), translation(30370))
 elif mode[0] == AUTHENTICATION_DETAILS_MODE:
     dialog = xbmcgui.Dialog()
     dialog.ok(translation(30380),

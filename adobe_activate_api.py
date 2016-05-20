@@ -154,11 +154,14 @@ def re_authenticate():
     settings['authenticateRegCode'] = resp
     save_settings(settings)
 
+def get_resource(channel, event_name, event_guid, event_parental_rating):
+    return '<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/"><channel><title><![CDATA[' + channel + "]]></title><item><title><![CDATA[" + event_name + "]]></title><guid><![CDATA[" + event_guid + ']]></guid><media:rating scheme="urn:v-chip"><![CDATA[' + event_parental_rating + "]]></media:rating></item></channel></rss>"
+
 # Sample '{"resource":"TODO resource","mvpd":"","requestor":"ESPN","expires":"1463621239000"}'
-def authorize():
+def authorize(resource):
     params = urllib.urlencode({'requestor': 'ESPN',
                                'deviceId' : get_device_id(),
-                               'resource' : 'TODO resource'})
+                               'resource' : resource})
 
     path = '/authorize'
     url = urlparse.urlunsplit(['https', 'api.auth.adobe.com',
@@ -174,13 +177,13 @@ def authorize():
 
 # getShortMediaToken
 # Sample '{"mvpdId":"","expires":"1463618218000","serializedToken":"+++++++=","userId":"","requestor":"ESPN","resource":"TODO resource"}'
-def get_short_media_token():
+def get_short_media_token(resource):
     if has_to_reauthenticate():
         re_authenticate()
-        authorize()
+        authorize(resource)
     params = urllib.urlencode({'requestor': 'ESPN',
                                'deviceId' : get_device_id(),
-                               'resource' : 'TODO resource'})
+                               'resource' : resource})
 
     path = '/mediatoken'
     url = urlparse.urlunsplit(['https', 'api.auth.adobe.com',
