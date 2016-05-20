@@ -463,6 +463,42 @@ mode = args.get(MODE, None)
 
 xbmc.log('ESPN3: args %s' % args)
 
+# TODO: Figure out a way to reload the menu
+# without messing up the back
+if mode is not None and mode[0] == AUTHENTICATE_MODE:
+    xbmc.log('Authenticate Device')
+    regcode = adobe_activate_api.get_regcode()
+    dialog = xbmcgui.Dialog()
+    ok = dialog.yesno(translation(30310),
+                   translation(30320),
+                   translation(30330) % regcode,
+                   translation(30340),
+                   translation(30360),
+                   translation(30350))
+    if ok:
+        try:
+            adobe_activate_api.authenticate()
+            dialog.ok(translation(30310), translation(30370))
+        except urllib2.HTTPError as e:
+            dialog.ok(translation(30037), translation(30420) % e)
+    mode = None
+elif mode is not None and mode[0] == AUTHENTICATION_DETAILS_MODE:
+    dialog = xbmcgui.Dialog()
+    if adobe_activate_api.is_authorized():
+        authorized_text = translation(30400) % adobe_activate_api.get_authorization_expires()
+    else:
+        authorized_text = translation(30410)
+    ok = dialog.yesno(translation(30380),
+                   translation(30390) % adobe_activate_api.get_authentication_expires(),
+                   authorized_text,
+                    nolabel = translation(30360),
+                    yeslabel = translation(30430))
+    # TODO: Test deauthorize
+    if ok:
+        adobe_activate_api.deauthorize()
+    mode = None
+
+
 if mode == None:
     xbmc.log("Generate Main Menu")
     CATEGORIES()
@@ -481,27 +517,3 @@ elif mode[0] == UPCOMING_MODE:
     xbmc.log("Upcoming")
     dialog = xbmcgui.Dialog()
     dialog.ok(translation(30035), translation(30036))
-elif mode[0] == AUTHENTICATE_MODE:
-    xbmc.log('Authenticate Device')
-    regcode = adobe_activate_api.get_regcode()
-    dialog = xbmcgui.Dialog()
-    ok = dialog.yesno(translation(30310),
-                   translation(30320),
-                   translation(30330) % regcode,
-                   translation(30340),
-                   translation(30360),
-                   translation(30350))
-    if ok:
-        authenticated = False
-        try:
-            adobe_activate_api.authenticate()
-            authenticated = True
-        except urllib2.HTTPError as e:
-            dialog.ok(translation(30037), translation(30420) % e)
-elif mode[0] == AUTHENTICATION_DETAILS_MODE:
-    dialog = xbmcgui.Dialog()
-    dialog.ok(translation(30380),
-                   translation(30390) % adobe_activate_api.get_authentication_expires(),
-                   translation(30400) % adobe_activate_api.get_authorization_expires())
-
-

@@ -51,7 +51,7 @@ def read_response(resp):
 def is_expired(expiration):
     return (time.time() * 1000) >= int(expiration)
 
-def get_url_response(url, message, body = None):
+def get_url_response(url, message, body = None, method = None):
     opener = urllib2.build_opener()
     opener.addheaders = [ ("Accept", "application/json"),
                             ("Accept-Encoding", "gzip, deflate"),
@@ -60,8 +60,13 @@ def get_url_response(url, message, body = None):
                             ("Connection", "close"),
                             ("User-Agent", UA_ATV),
                             ("Authorization", message)]
-    resp = opener.open(url, body)
-    resp = read_response(resp)
+    if method == 'DELETE':
+        request = urllib2.Request(url)
+        request.get_method = lambda: method
+        resp = opener.open(request)
+    else:
+        resp = opener.open(url, body)
+        resp = read_response(resp)
     return resp
 
 def generate_message(method, path):
@@ -159,9 +164,11 @@ def get_resource(channel, event_name, event_guid, event_parental_rating):
 
 # Sample '{"resource":"TODO resource","mvpd":"","requestor":"ESPN","expires":"1463621239000"}'
 def authorize(resource):
+    if is_authorized():
+        return
     params = urllib.urlencode({'requestor': 'ESPN',
-                               'deviceId' : get_device_id(),
-                               'resource' : resource})
+                               'deviceId': get_device_id(),
+                               'resource': resource})
 
     path = '/authorize'
     url = urlparse.urlunsplit(['https', 'api.auth.adobe.com',
@@ -174,6 +181,23 @@ def authorize(resource):
     settings = load_settings()
     settings['authorize'] = resp
     save_settings(settings)
+
+def deauthorize():
+    params = urllib.urlencode({'deviceId': get_device_id()})
+
+
+    path = '/logout'
+    url = urlparse.urlunsplit(['https', 'api.auth.adobe.com',
+                               'api/v1' + path,
+                               params, ''])
+
+    message = generate_message('DELETE', path)
+
+    resp = get_url_response(url, message, body = None, method = 'DELETE')
+    settings = load_settings()
+    if 'authorize' in settings:
+        del settings['authorize']
+        save_settings(settings)
 
 # getShortMediaToken
 # Sample '{"mvpdId":"","expires":"1463618218000","serializedToken":"+++++++=","userId":"","requestor":"ESPN","resource":"TODO resource"}'
