@@ -216,10 +216,6 @@ def INDEX(args):
     chosen_network = args.get(NETWORK_ID, None)
     if chosen_network is not None:
         chosen_network = chosen_network[0]
-    else:
-        include_premium = selfAddon.getSetting('ShowPremiumChannels') == 'true'
-        if not include_premium:
-            chosen_network = ESPN3_ID
     live = 'action=live' in espn_url
     upcoming = 'action=upcoming' in espn_url
     replay = 'action=replay' in espn_url
