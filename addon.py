@@ -478,13 +478,8 @@ if mode is not None and mode[0] == AUTHENTICATE_MODE:
     mode = None
 elif mode is not None and mode[0] == AUTHENTICATION_DETAILS_MODE:
     dialog = xbmcgui.Dialog()
-    if adobe_activate_api.is_authorized():
-        authorized_text = translation(30400) % adobe_activate_api.get_authorization_expires()
-    else:
-        authorized_text = translation(30410)
     ok = dialog.yesno(translation(30380),
                    translation(30390) % adobe_activate_api.get_authentication_expires(),
-                   authorized_text,
                     nolabel = translation(30360),
                     yeslabel = translation(30430))
     # TODO: Test deauthorize

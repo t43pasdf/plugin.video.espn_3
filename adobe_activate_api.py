@@ -221,7 +221,9 @@ def deauthorize():
     settings = load_settings()
     if 'authorize' in settings:
         del settings['authorize']
-        save_settings(settings)
+    if 'authenticateRegCode' in settings:
+        del settings['authenticateRegCode']
+    save_settings(settings)
 
 # getShortMediaToken
 # Sample '{"mvpdId":"","expires":"1463618218000","serializedToken":"+++++++=","userId":"","requestor":"ESPN","resource":"TODO resource"}'
