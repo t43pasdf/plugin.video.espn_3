@@ -416,7 +416,7 @@ def check_user_settings():
 
 def PLAY(args):
     networkId = args.get(NETWORK_ID)[0]
-    if networkId == ESPN3_ID:
+    if networkId == ESPN3_ID or networkId == SECPLUS_ID:
         PLAY_FREE_CONTENT(args)
     else:
         PLAY_PROTECTED_CONTENT(args)
@@ -458,7 +458,7 @@ mode = args.get(MODE, None)
 xbmc.log('ESPN3: args %s' % args)
 
 # TODO: Figure out a way to reload the menu
-# without messing up the back
+# without messing up the back (...)
 if mode is not None and mode[0] == AUTHENTICATE_MODE:
     xbmc.log('Authenticate Device')
     regcode = adobe_activate_api.get_regcode()
@@ -482,7 +482,6 @@ elif mode is not None and mode[0] == AUTHENTICATION_DETAILS_MODE:
                    translation(30390) % adobe_activate_api.get_authentication_expires(),
                     nolabel = translation(30360),
                     yeslabel = translation(30430))
-    # TODO: Test deauthorize
     if ok:
         adobe_activate_api.deauthorize()
     mode = None

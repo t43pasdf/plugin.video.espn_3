@@ -226,7 +226,7 @@ def deauthorize():
     save_settings(settings)
 
 # getShortMediaToken
-# Sample '{"mvpdId":"","expires":"1463618218000","serializedToken":"+++++++=","userId":"","requestor":"ESPN","resource":"TODO resource"}'
+# Sample '{"mvpdId":"","expires":"1463618218000","serializedToken":"+++++++=","userId":"","requestor":"ESPN","resource":" resource"}'
 def get_short_media_token(resource):
     if has_to_reauthenticate():
         xbmc.log(TAG + 're-authenticating device')
