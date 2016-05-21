@@ -524,21 +524,24 @@ def PLAY_TV(args):
     event_parental_rating = args.get(EVENT_PARENTAL_RATING)[0]
     resource = adobe_activate_api.get_resource(network_name, event_name, event_guid, event_parental_rating)
 
+    requires_auth = not network_name == 'espn3'
     if network_name == 'espn3':
-        # TODO: Check if provider requires auth
         free_content_check = player_config.can_access_free_content()
         if not free_content_check:
             xbmc.log('ESPN3: User needs login to ESPN3')
-            return PLAY_PROTECTED_CONTENT(args)
-        media_token = adobe_activate_api.get_device_id()
-        token_type = 'DEVICE'
-    else:
+            requires_auth = True
+
+    if requires_auth:
         if not adobe_activate_api.is_authenticated():
             dialog = xbmcgui.Dialog()
             dialog.ok(translation(30037), translation(30410))
             return
         media_token = adobe_activate_api.get_short_media_token(resource)
         token_type = 'ADOBEPASS'
+    else:
+        media_token = adobe_activate_api.get_device_id()
+        token_type = 'DEVICE'
+
 
     # see http://api-app.espn.com/v1/watch/clients/watchespn-tvos for details
     # see http://espn.go.com/watchespn/appletv/featured for details
