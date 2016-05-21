@@ -412,16 +412,17 @@ def INDEX_EVENT(event, live, upcoming, replay, chosen_sport):
                   'mpaa':mpaa,
                   'videoaspect' : aspect_ratio}
 
+    session_url = 'http://broadband.espn.go.com/espn3/auth/watchespn/startSession?'
+    session_url += '&channel='+network
+    session_url += '&simulcastAiringId='+simulcastAiringId
+
     authurl = dict()
-    authurl[EVENT_ID] = eventid
-    authurl[SIMULCAST_AIRING_ID] = simulcastAiringId
-    authurl[DESKTOP_STREAM_SOURCE] = desktopStreamSource
-    authurl[NETWORK_ID] = networkid
     authurl[MODE] = UPCOMING_MODE if upcoming else PLAY_MODE
     authurl[NETWORK_NAME] = event.find('adobeResource').text
     authurl[EVENT_NAME] = event.find('name').text.encode('utf-8')
     authurl[EVENT_GUID] = event.find('guid').text.encode('utf-8')
     authurl[EVENT_PARENTAL_RATING] = event.find('parentalRating').text
+    authurl[SESSION_URL] = session_url
     addLink(ename, authurl, fanart, fanart, infoLabels=infoLabels)
 
 def INDEX(args):
@@ -499,186 +500,6 @@ def check_blackout(authurl):
         return (tree, True)
     return (tree, False)
 
-def PLAY_PROTECTED_CONTENT(args):
-    if not adobe_activate_api.is_authenticated():
-        dialog = xbmcgui.Dialog()
-        dialog.ok(translation(30037), translation(30410))
-        return
-
-    network_name = args.get(NETWORK_NAME)[0]
-    event_name = args.get(EVENT_NAME)[0]
-    event_guid = args.get(EVENT_GUID)[0]
-    event_parental_rating = args.get(EVENT_PARENTAL_RATING)[0]
-
-    resource = adobe_activate_api.get_resource(network_name, event_name, event_guid, event_parental_rating)
-    simulcastAiringId = args.get(SIMULCAST_AIRING_ID)[0]
-    streamType = args.get(DESKTOP_STREAM_SOURCE)[0]
-    networkId = args.get(NETWORK_ID)[0]
-
-    media_token = adobe_activate_api.get_short_media_token(resource)
-
-    if media_token is None:
-        return
-
-    # see http://api-app.espn.com/v1/watch/clients/watchespn-tvos for details
-    # see http://espn.go.com/watchespn/appletv/featured for details
-    start_session_url = 'https://broadband.espn.go.com/espn3/auth/watchespn/startSession?'
-    start_session_url += '&channel='+player_config.get_network_name(networkId)
-    start_session_url += '&partner=watchespn'
-    start_session_url += '&playbackScenario=HTTP_CLOUD_HIGH'
-    start_session_url += '&platform=tvos'
-    start_session_url += '&token='+urllib.quote(media_token)
-    start_session_url += '&simulcastAiringId='+simulcastAiringId
-    start_session_url += '&tokenType=ADOBEPASS'
-
-    xbmc.log('ESPN3: start_session_url: ' + start_session_url)
-
-    (tree, result) = check_blackout(start_session_url)
-    if result:
-        return
-
-
-    pkan = tree.find('.//' + BAM_NS + 'pkanJar').text
-    smilurl = tree.find('.//' + BAM_NS + 'url').text
-    xbmc.log('ESPN3:  smilurl: '+smilurl)
-    xbmc.log('ESPN3:  streamType: '+streamType)
-    if smilurl == ' ' or smilurl == '':
-        dialog = xbmcgui.Dialog()
-        dialog.ok(translation(30037), translation(30038),translation(30039))
-        return
-
-    finalurl = smilurl
-
-    stream_quality = str(selfAddon.getSetting('StreamQuality'))
-    xbmc.log(TAG + 'Stream Quality %s' % stream_quality)
-    m3u8_obj = m3u8.load(finalurl)
-    if m3u8_obj.is_variant:
-        stream_options = list()
-        m3u8_obj.playlists.sort(key=lambda playlist: playlist.stream_info.bandwidth, reverse=True)
-        stream_quality_index = str(selfAddon.getSetting('StreamQualityIndex'))
-        stream_index = None
-        should_ask = False
-        try:
-            stream_index = int(stream_quality_index)
-            if stream_index < 0 or stream_index >= len(m3u8_obj.playlists):
-                should_ask = True
-        except:
-            should_ask = True
-        if '0' == stream_quality: # Best
-            stream_index = 0
-            should_ask = False
-        elif '2' == stream_quality: #Ask everytime
-            should_ask = True
-        if should_ask:
-            for playlist in m3u8_obj.playlists:
-                frame_rate = '30'
-                if (playlist.stream_info.bandwidth > 2000000):
-                    frame_rate = '60'
-                playlist.stream_info.bandwidth
-                xbmc.log(str(playlist.stream_info))
-                stream_options.append(translation(30450) % (playlist.stream_info.resolution,
-                                                          frame_rate,
-                                                          playlist.stream_info.bandwidth / 1000))
-            dialog = xbmcgui.Dialog()
-            stream_index = dialog.select(translation(30440), stream_options)
-            xbmc.log('Chose stream %d' % stream_index)
-            if stream_index < 0:
-                xbmcplugin.endOfDirectory(int(sys.argv[1]), succeeded=False)
-                return
-            selfAddon.setSetting(id='StreamQualityIndex', value=str(stream_index))
-
-        item = xbmcgui.ListItem(path=m3u8_obj.playlists[stream_index].uri)
-        return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, item)
-    else:
-        item = xbmcgui.ListItem(path=finalurl)
-        return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, item)
-
-    # Not Used, check if we need cookie auth
-    ua = UA_PC
-    finalurl = finalurl + '|Connection=keep-alive&User-Agent=' + urllib.quote(ua) + '&Cookie=_mediaAuth=' + urllib.quote(base64.b64encode(pkan))
-    xbmc.log('ESPN3: finalurl %s' % finalurl)
-    item = xbmcgui.ListItem(path=finalurl)
-    return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, item)
-
-def PLAY_FREE_CONTENT(args):
-    free_content_check = player_config.can_access_free_content()
-    if not free_content_check:
-        xbmc.log('ESPN3: User needs login to ESPN3')
-        return PLAY_PROTECTED_CONTENT(args)
-
-    user_data = player_config.get_user_data()
-    affiliateid = user_data['name']
-
-    eventid = args.get(EVENT_ID)[0]
-    simulcastAiringId = args.get(SIMULCAST_AIRING_ID)[0]
-    networkId = args.get(NETWORK_ID)[0]
-
-    pk = ''.join([random.choice(string.ascii_letters + string.digits) for n in xrange(51)])
-    pkan = pk + ('%3D')
-    network = player_config.get_network(networkId)
-    playedId = network.get('playerId')
-    cdnName = network.get('defaultCdn')
-    channel = network.get('name')
-
-    authurl = player_config.get_start_session_url()
-    authurl += '&affiliate='+affiliateid
-    authurl += '&platform=tvos'
-    authurl += '&pkan='+pkan
-    authurl += '&pkanType=SWID'
-    authurl += '&simulcastAiringId='+simulcastAiringId
-    authurl += '&cdnName='+cdnName
-    authurl += '&channel='+channel
-    authurl += '&playbackScenario=HTTP_CLOUD_HIGH'
-    authurl += '&eventid='+eventid
-    authurl += '&rand='+str(random.randint(100000,999999))
-    authurl += '&playerId='+playedId
-
-    xbmc.log('ESPN3: Content URL %s' % authurl)
-
-    (tree, result) = check_blackout(authurl)
-    if result:
-        return
-
-    smilurl = tree.find('.//' + BAM_NS + 'url').text
-    xbmc.log('ESPN3:  smilurl: %s' % smilurl)
-    if smilurl is None:
-        smilurl = tree.find('.//' + BAM_NS + 'hls-backup-url').text
-        xbmc.log('ESPN3:  smilurl hls backup: %s' % smilurl)
-    if smilurl is None or smilurl == ' ' or smilurl == '':
-        dialog = xbmcgui.Dialog()
-        dialog.ok(translation(30037), translation(30038),translation(30039))
-        return
-
-    finalurl = smilurl
-    item = xbmcgui.ListItem(path=finalurl)
-    return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, item)
-
-def check_user_settings():
-    mso_provider = get_mso_provider(selfAddon.getSetting('provider'))
-    username = selfAddon.getSetting('username')
-    password = selfAddon.getSetting('password')
-    if mso_provider is None:
-        dialog = xbmcgui.Dialog()
-        dialog.ok(translation(30037), translation(30100))
-        return False
-    if username is None:
-        dialog = xbmcgui.Dialog()
-        dialog.ok(translation(30037), translation(30110))
-        return False
-    if password is None:
-        dialog = xbmcgui.Dialog()
-        dialog.ok(translation(30037), translation(30120))
-        return False
-    return True
-
-
-def PLAY(args):
-    networkId = args.get(NETWORK_ID)[0]
-    if networkId == ESPN3_ID or networkId == SECPLUS_ID:
-        PLAY_FREE_CONTENT(args)
-    else:
-        PLAY_PROTECTED_CONTENT(args)
-
 def PLAY_ITEM(args):
     url = args.get(PLAYBACK_URL)[0]
     item = xbmcgui.ListItem(path=url)
@@ -692,6 +513,9 @@ def check_error(session_json):
         return True
     return False
 
+# TODO: Unsure if cookie is needed
+#ua UA_PC
+#finalurl = finalurl + '|Connection=keep-alive&User-Agent=' + urllib.quote(ua) + '&Cookie=_mediaAuth=' + urllib.quote(base64.b64encode(pkan))
 def PLAY_TV(args):
 
     network_name = args.get(NETWORK_NAME)[0]
@@ -701,6 +525,11 @@ def PLAY_TV(args):
     resource = adobe_activate_api.get_resource(network_name, event_name, event_guid, event_parental_rating)
 
     if network_name == 'espn3':
+        # TODO: Check if provider requires auth
+        free_content_check = player_config.can_access_free_content()
+        if not free_content_check:
+            xbmc.log('ESPN3: User needs login to ESPN3')
+            return PLAY_PROTECTED_CONTENT(args)
         media_token = adobe_activate_api.get_device_id()
         token_type = 'DEVICE'
     else:
@@ -729,6 +558,7 @@ def PLAY_TV(args):
     session_json = util.get_url_as_json(start_session_url)
     if check_error(session_json):
         return
+    # TODO: Need to figure out how blackouts are represented (tree, result) = check_blackout(authurl)
     playback_url = session_json['session']['playbackUrls']['default']
     stream_quality = str(selfAddon.getSetting('StreamQuality'))
     xbmc.log(TAG + 'ESPN3: Stream Quality %s' % stream_quality)
@@ -857,7 +687,7 @@ elif mode[0] == INDEX_SPORTS_MODE:
     xbmc.log("Index by sport")
     INDEX(args)
 elif mode[0] == PLAY_MODE:
-    PLAY(args)
+    PLAY_TV(args)
 elif mode[0] == PLAY_ITEM_MODE:
     PLAY_ITEM(args)
 elif mode[0] == PLAY_TV_MODE:
