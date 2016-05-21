@@ -700,6 +700,7 @@ def PLAY_TV(args):
     if m3u8_obj.is_variant:
         stream_options = list()
         m3u8_obj.playlists.sort(key=lambda playlist: playlist.stream_info.bandwidth, reverse=True)
+        m3u8_obj.data['playlists'].sort(key=lambda playlist: int(playlist['stream_info']['average_bandwidth']), reverse=True)
         stream_quality_index = str(selfAddon.getSetting('StreamQualityIndex'))
         stream_index = None
         should_ask = False
@@ -715,15 +716,14 @@ def PLAY_TV(args):
         elif '2' == stream_quality: #Ask everytime
             should_ask = True
         if should_ask:
-            for playlist in m3u8_obj.playlists:
-                frame_rate = '30'
-                if (playlist.stream_info.bandwidth > 2000000):
-                    frame_rate = '60'
-                playlist.stream_info.bandwidth
-                xbmc.log(str(playlist.stream_info))
-                stream_options.append(translation(30450) % (playlist.stream_info.resolution,
+            for playlist in m3u8_obj.data['playlists']:
+                stream_info = playlist['stream_info']
+                resolution = stream_info['resolution']
+                frame_rate = stream_info['frame_rate']
+                average_bandwidth = stream_info['average_bandwidth']
+                stream_options.append(translation(30450) % (resolution,
                                                           frame_rate,
-                                                          playlist.stream_info.bandwidth / 1000))
+                                                          int(average_bandwidth) / 1000))
             dialog = xbmcgui.Dialog()
             stream_index = dialog.select(translation(30440), stream_options)
             if stream_index < 0:
