@@ -256,7 +256,7 @@ def INDEX_TV_SHELF(stash_json):
     authurl[SESSION_URL] = stash_json['sessionUrl']
     authurl[MODE] = PLAY_TV_MODE
     authurl[NETWORK_NAME] = stash_json['network']
-    authurl[EVENT_NAME] = ename.encode('iso-8859-1')
+    authurl[EVENT_NAME] = stash_json['name'].encode('iso-8859-1')
     authurl[EVENT_GUID] = stash_json['guid'].encode('iso-8859-1')
     authurl[EVENT_PARENTAL_RATING] = mpaa
     addLink(ename.encode('iso-8859-1'), authurl, fanart, fanart, infoLabels=infoLabels)
