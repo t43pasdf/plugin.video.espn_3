@@ -19,6 +19,7 @@ import re
 
 import adobe_activate_api
 
+OLD_LISTING_MODE = 'OLD_LISTING_MODE'
 LIVE_EVENTS_MODE = 'LIVE_EVENTS'
 PLAY_MODE = 'PLAY'
 PLAY_ITEM_MODE = 'PLAY_ITEM'
@@ -79,6 +80,17 @@ def CATEGORIES_ATV():
             addDir(title,
                    dict(SHELF_ID=name, MODE=CATEGORY_SHELF_MODE),
                    defaultlive)
+    if adobe_activate_api.is_authenticated():
+        addDir(translation(30380),
+           dict(MODE=AUTHENTICATION_DETAILS_MODE),
+           defaultreplay)
+    else:
+        addDir(translation(30300),
+               dict(MODE=AUTHENTICATE_MODE),
+               defaultreplay)
+    addDir(translation(30510),
+           dict(MODE=OLD_LISTING_MODE),
+           defaultlive)
     xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
 def CATEGORY_SHELF(args):
@@ -819,3 +831,6 @@ elif mode[0] == UPCOMING_MODE:
     dialog.ok(translation(30035), translation(30036))
 elif mode[0] == CATEGORY_SHELF_MODE:
     CATEGORY_SHELF(args)
+elif mode[0] == OLD_LISTING_MODE:
+    xbmc.log("Old listing mode")
+    CATEGORIES()
