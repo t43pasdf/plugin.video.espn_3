@@ -71,15 +71,9 @@ def CATEGORIES_ATV():
         shelf = shelfs[i]
         title = collection_divider.find('title').text
         name = shelf.get('id')
-        if name =='espn-classic-shelf':
-            url = util.parse_url_from_method(showcase.get('onPlay'))
-            addDir(title,
-                   dict(SHOWCASE_URL=url, MODE=CATEGORY_SHOWCASE_MODE),
-                   image, image)
-        else:
-            addDir(title,
-                   dict(SHELF_ID=name, MODE=CATEGORY_SHELF_MODE),
-                   defaultlive)
+        addDir(title,
+               dict(SHELF_ID=name, MODE=CATEGORY_SHELF_MODE),
+               defaultlive)
     if adobe_activate_api.is_authenticated():
         addDir(translation(30380),
            dict(MODE=AUTHENTICATION_DETAILS_MODE),
@@ -100,28 +94,40 @@ def CATEGORY_SHELF(args):
         if name == args.get(SHELF_ID)[0]:
             process_item_list(shelf.findall('.//sixteenByNinePoster'))
     xbmcplugin.setContent(pluginhandle, 'episodes')
-    xbmcplugin.endOfDirectory(int(sys.argv[1]))
+    xbmcplugin.endOfDirectory(pluginhandle)
 
 def process_item_list(item_list):
     for item in item_list:
-        stash = item.find('./stash/json').text.encode('utf-8')
-        # Some of the json is baddly formatted
-        stash = re.sub(r'\s+"', '"', stash)
-        stash_json = json.loads(stash, 'utf-8')
-        if stash_json['type'] == 'upcoming':
-            INDEX_ITEM_UPCOMING(stash_json)
-        elif 'sessionUrl' in stash_json:
-            INDEX_TV_SHELF(stash_json)
+        stash_element = item.find('./stash/json')
+        if stash_element is None:
+            # Assume goes to another onPlay with a url
+            name = item.get('accessibilityLabel')
+            image = item.find('./image').get('src')
+            url = util.parse_url_from_method(item.get('onPlay'))
+            addDir(name,
+                   dict(SHOWCASE_URL=url, MODE=CATEGORY_SHOWCASE_MODE),
+                   image, image)
         else:
-            INDEX_ITEM_SHELF(stash_json)
+            stash = stash_element.text.encode('utf-8')
+            # Some of the json is baddly formatted
+            stash = re.sub(r'\s+"', '"', stash)
+            stash_json = json.loads(stash, 'utf-8')
+            if stash_json['type'] == 'upcoming':
+                INDEX_ITEM_UPCOMING(stash_json)
+            elif 'sessionUrl' in stash_json:
+                INDEX_TV_SHELF(stash_json)
+            else:
+                INDEX_ITEM_SHELF(stash_json)
 
 
 def CATEGORIES_SHOWCASE(args):
     url = args.get(SHOWCASE_URL)[0]
     selected_nav_id = args.get(SHOWCASE_NAV_ID, None)
     et = util.get_url_as_xml_soup_cache(url)
-    if selected_nav_id is None:
-        for navigation_item in et.findall('.//navigation/navigationItem'):
+    navigation_items = et.findall('.//navigation/navigationItem')
+    xbmc.log('ESPN3 Found %s items' % len(navigation_items))
+    if selected_nav_id is None and len(navigation_items) > 0:
+        for navigation_item in navigation_items:
             name = navigation_item.find('./title').text
             nav_id = navigation_item.get('id')
             menu_item = navigation_item.find('.//twoLineMenuItem')
@@ -130,12 +136,18 @@ def CATEGORIES_SHOWCASE(args):
             if menu_item is not None and not menu_item.get('id') == 'no-event':
                 addDir(name,
                        dict(SHOWCASE_URL=url, SHOWCASE_NAV_ID=nav_id, MODE=CATEGORY_SHOWCASE_MODE), defaultfanart)
-    else:
-        for navigation_item in et.findall('.//navigation/navigationItem'):
+    elif len(navigation_items) > 0:
+        for navigation_item in navigation_items:
             if navigation_item.get('id') == selected_nav_id[0]:
                 xbmc.log('ESPN3 Found nav item %s' % selected_nav_id[0])
                 process_item_list(navigation_item.findall('.//twoLineMenuItem'))
                 process_item_list(navigation_item.findall('.//twoLineEnhancedMenuItem'))
+                xbmcplugin.setContent(pluginhandle, 'episodes')
+    else: # If there are no navigation items then just dump all of the menu entries
+        xbmc.log('ESPN3: Dumping all menu items')
+        process_item_list(et.findall('.//twoLineMenuItem'))
+        process_item_list(et.findall('.//twoLineEnhancedMenuItem'))
+        xbmcplugin.setContent(pluginhandle, 'episodes')
     xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
 def INDEX_ITEM_UPCOMING(stash_json):
@@ -201,18 +213,40 @@ def INDEX_TV_SHELF(stash_json):
     etime = time.strftime("%I:%M %p",time.localtime(float(starttime)))
     length = int(stash_json['duration'])
     if stash_json['type'] == 'replay':
-        etime = time.strftime("%m/%d %I:%M %p",time.localtime(starttime))
+        etime_local = time.localtime(starttime)
+        if etime_local.tm_hour == 0 and etime_local.tm_min == 0:
+            etime = time.strftime("%m/%d/%Y",time.localtime(starttime))
+        else:
+            etime = time.strftime("%m/%d %I:%M %p",time.localtime(starttime))
         ename = '[COLOR=FFB700EB]' + etime + '[/COLOR] ' + ename
     elif now > starttime:
         length = length - (now - starttime)
         ename += ' [COLOR=FFB700EB]' + etime + '[/COLOR]'
 
+    network = stash_json['network']
+    if network == 'longhorn':
+        channel_color = 'BF5700'
+    elif network == 'sec' or network == 'secplus':
+        channel_color = '004C8D'
+    else:
+        channel_color = 'CC0000'
+    network = network.replace('espn', 'ESPN')
+    network = network.replace('sec', 'SEC')
+    network = network.replace('longhorn', 'Longhorn')
+    if stash_json['channelType'] == 'linear':
+        ename = '[COLOR=FF%s]%s[/COLOR] %s' % (channel_color, network, ename)
+
+    if 'description' in stash_json:
+        description = stash_json['description']
+    else:
+        description = ''
 
     infoLabels = {'title': ename,
                   'genre':sport,
                   'duration':length,
                   'studio': stash_json['network'],
                   'mpaa':mpaa,
+                  'plot':description,
                   'premiered':etime}
 
     authurl = dict()
