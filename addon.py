@@ -1,21 +1,22 @@
 #!/usr/bin/python
 #
 #
-# Written by Ksosez, BlueCop, Romans I XVI, locomot1f, MetalChris
+# Written by Ksosez, BlueCop, Romans I XVI, locomot1f, MetalChris, awaters1 (https://github.com/awaters1)
 # Released under GPL(v2)
 
-import urllib, xbmcplugin, xbmcaddon, xbmcgui, os, random, string
+import urllib, xbmcplugin, xbmcaddon, xbmcgui
 import time
-from globals import *
 from datetime import datetime, timedelta
 import base64
 
+from globals import selfAddon, defaultlive, defaultreplay, defaultupcoming, defaultimage, defaultfanart, translation, pluginhandle
 import player_config
 import events
 import util
 import urlparse
 import m3u8
 import re
+import json
 
 import adobe_activate_api
 
@@ -322,7 +323,7 @@ def LISTSPORTS(args):
         image = defaultimage
     addDir(translation(30034), dict(ESPN_URL=espn_url, MODE=LIVE_EVENTS_MODE), image)
     sports = []
-    sport_elements = events.get_soup_events_cached(espn_url).findall('.//sportDisplayValue')
+    sport_elements = util.get_url_as_xml_soup_cache(espn_url).findall('.//sportDisplayValue')
     for sport in sport_elements:
         sport = sport.text.encode('utf-8')
         if sport not in sports:
@@ -439,7 +440,7 @@ def INDEX(args):
     if live:
         data = events.get_events(espn_url)
     else:
-        data = events.get_soup_events_cached(espn_url).findall(".//event")
+        data = util.get_url_as_xml_soup_cache(espn_url).findall(".//event")
     num_espn3 = 0
     num_secplus = 0
     num_events = 0

@@ -1,4 +1,3 @@
-#!/usr/bin/python2
 import urlparse
 import urllib
 import uuid
@@ -6,7 +5,6 @@ import hashlib
 import hmac
 import base64
 import urllib2
-import random
 import time
 import json
 import gzip

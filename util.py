@@ -11,6 +11,8 @@ import hashlib
 
 from globals import ADDON_PATH_PROFILE
 
+TAG = 'ESPN3 util: '
+
 def is_file_valid(cache_file, timeout):
     if os.path.isfile(cache_file):
         modified_time = os.path.getmtime(cache_file)
@@ -30,10 +32,10 @@ def get_url_as_xml_soup_cache(url, cache_file = None, timeout = 300):
         cache_file = hashlib.sha224(url).hexdigest()
         cache_file = os.path.join(ADDON_PATH_PROFILE, cache_file + '.xml')
     if not is_file_valid(cache_file, timeout):
-        xbmc.log('ESPN3: Fetching config file %s from %s' % (cache_file, url))
+        xbmc.log(TAG + 'Fetching config file %s from %s' % (cache_file, url))
         fetch_file(url, cache_file)
     else:
-        xbmc.log('ESPN3: Using cache %s for %s' % (url, cache_file))
+        xbmc.log(TAG + 'Using cache %s for %s' % (url, cache_file))
     xml_file = open(cache_file)
     xml_data = xml_file.read()
     xml_file.close()
@@ -50,7 +52,7 @@ def load_element_tree(data):
         data_tree = ET.fromstring(data, parser)
     except:
         if '<?xml version' not in data:
-            xbmc.log('EPSN3: Fixing up data because of no xml preamble')
+            xbmc.log(TAG + 'Fixing up data because of no xml preamble')
             data = '<?xml version="1.0" encoding="ISO-8859-1" ?>' + data
         data_tree = ET.fromstring(data)
 
@@ -62,10 +64,10 @@ def get_url_as_json(url):
 
 def get_url_as_json_cache(url, cache_file, timeout = 1):
     if not is_file_valid(cache_file, timeout):
-        xbmc.log('ESPN3: Fetching config file %s from %s' % (cache_file, url))
+        xbmc.log(TAG + 'Fetching config file %s from %s' % (cache_file, url))
         fetch_file(url, cache_file)
     else:
-        xbmc.log('ESPN3: Using cache %s for %s' % (url, cache_file))
+        xbmc.log(TAG + 'Using cache %s for %s' % (url, cache_file))
     json_file = open(cache_file)
     json_data = json_file.read()
     json_file.close()

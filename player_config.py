@@ -25,15 +25,8 @@ def get_config_soup():
 def get_user_data():
     return util.get_url_as_json_cache(USER_DATA_URL, USER_DATA_FILE, TIME_DIFFERENCE)
 
-def get_providers_data():
-    return util.get_url_as_xml_soup_cache(get_providers_url(), PROVIDERS_FILE, TIME_DIFFERENCE)
-
 def can_access_free_content():
     return get_user_data()['affvalid'] == 'true'
-
-def can_access_channel(network):
-    json = util.get_url_as_json(CHECK_RIGHTS_URL)
-    return (network in json['networks'], json['networks'])
 
 def get_networks():
     networks = get_config_soup().findall('.//network')
@@ -59,12 +52,6 @@ def get_replay_event_url():
 def get_upcoming_event_url():
     return select_feed_by_id('upcomingEvent')
 
-def get_start_session_url():
-    return select_feed_by_id('startSession')
-
-def get_providers_url():
-    return select_feed_by_id('adobePassProviders')
-
 def get_network_name(network_id):
     network = get_network(network_id)
     if network is None:
@@ -78,11 +65,3 @@ def get_network(network_id):
         if network.get('id') == network_id:
             return network
     return None
-
-if __name__ == '__main__':
-    networks = get_networks()
-    for network in networks:
-        print '%s - %s' % (network['id'], network['name'])
-
-    print 'live url %s: ' % get_live_event_url()
-
