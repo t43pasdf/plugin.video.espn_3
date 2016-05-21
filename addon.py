@@ -6,7 +6,6 @@
 
 import urllib, xbmcplugin, xbmcaddon, xbmcgui, os, random, string, re
 import time
-from adobe import ADOBE
 from globals import *
 from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
@@ -15,20 +14,26 @@ import base64
 import player_config
 import events
 import util
-from espn import ESPN
-from mso_provider import get_mso_provider
-from user_details import UserDetails
 import urlparse
+import m3u8
+
+import adobe_activate_api
 
 LIVE_EVENTS_MODE = 'LIVE_EVENTS'
 PLAY_MODE = 'PLAY'
 LIST_SPORTS_MODE = 'LIST_SPORTS'
 INDEX_SPORTS_MODE = 'INDEX_SPORTS'
 UPCOMING_MODE = 'UPCOMING'
+AUTHENTICATE_MODE = 'AUTHENTICATE'
+AUTHENTICATION_DETAILS_MODE = 'AUTHENTICATION_DETAILS'
 NETWORK_ID = 'NETWORK_ID'
 EVENT_ID = 'EVENT_ID'
 SIMULCAST_AIRING_ID = 'SIMULCAST_AIRING_ID'
 DESKTOP_STREAM_SOURCE = 'DESKTOP_STREAM_SOURCE'
+NETWORK_NAME = 'NETWORK_NAME'
+EVENT_NAME = 'EVENT_NAME'
+EVENT_GUID = 'EVENT_GUID'
+EVENT_PARENTAL_RATING = 'EVENT_PARENTAL_RATING'
 
 ESPN_URL = 'ESPN_URL'
 MODE = 'MODE'
@@ -41,7 +46,7 @@ ESPN3_ID = 'n360'
 SECPLUS_ID = 'n323'
 
 def CATEGORIES():
-    include_premium = selfAddon.getSetting('ShowPremiumChannels') == 'true'
+    include_premium = adobe_activate_api.is_authenticated()
     channel_list = events.get_channel_list(include_premium)
     curdate = datetime.utcnow()
     upcoming = int(selfAddon.getSetting('upcoming'))+1
@@ -81,6 +86,14 @@ def CATEGORIES():
     addDir(translation(30032),
            dict(ESPN_URL=events.get_replay_events_url(channel_list) +enddate+'&startDate='+startAll, MODE=LIST_SPORTS_MODE),
            defaultreplay)
+    if adobe_activate_api.is_authenticated():
+        addDir(translation(30380),
+           dict(MODE=AUTHENTICATION_DETAILS_MODE),
+           defaultreplay)
+    else:
+        addDir(translation(30300),
+               dict(MODE=AUTHENTICATE_MODE),
+               defaultreplay)
     xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
 def LISTSPORTS(args):
@@ -189,6 +202,10 @@ def INDEX_EVENT(event, live, upcoming, replay, chosen_sport):
     authurl[DESKTOP_STREAM_SOURCE] = desktopStreamSource
     authurl[NETWORK_ID] = networkid
     authurl[MODE] = UPCOMING_MODE if upcoming else PLAY_MODE
+    authurl[NETWORK_NAME] = event.find('adobeResource').text
+    authurl[EVENT_NAME] = event.find('name').text.encode('utf-8')
+    authurl[EVENT_GUID] = event.find('guid').text.encode('utf-8')
+    authurl[EVENT_PARENTAL_RATING] = event.find('parentalRating').text
     addLink(ename, authurl, fanart, fanart, infoLabels=infoLabels)
 
 def INDEX(args):
@@ -199,10 +216,6 @@ def INDEX(args):
     chosen_network = args.get(NETWORK_ID, None)
     if chosen_network is not None:
         chosen_network = chosen_network[0]
-    else:
-        include_premium = selfAddon.getSetting('ShowPremiumChannels') == 'true'
-        if not include_premium:
-            chosen_network = ESPN3_ID
     live = 'action=live' in espn_url
     upcoming = 'action=upcoming' in espn_url
     replay = 'action=replay' in espn_url
@@ -212,6 +225,7 @@ def INDEX(args):
         data = events.get_soup_events_cached(espn_url).findall(".//event")
     num_espn3 = 0
     num_secplus = 0
+    num_events = 0
     for event in data:
         sport = event.find('sportDisplayValue').text.encode('utf-8')
         if chosen_sport <> sport and chosen_sport is not None:
@@ -224,9 +238,17 @@ def INDEX(args):
         elif networkid == SECPLUS_ID and chosen_network is None and live :
             num_secplus = num_secplus + 1
         else:
+            num_events = num_events + 1
+            INDEX_EVENT(event, live, upcoming, replay, chosen_sport)
+    # Don't show ESPN3 folder if there are no premium events
+    if num_events == 0:
+        for event in data:
+            sport = event.find('sportDisplayValue').text.encode('utf-8')
+            if chosen_sport <> sport and chosen_sport is not None:
+                continue
             INDEX_EVENT(event, live, upcoming, replay, chosen_sport)
     # Dir for ESPN3/SECPlus
-    if chosen_network is None:
+    elif chosen_network is None:
         if num_espn3 > 0:
             translation_number = 30191 if num_espn3 == 1 else 30190
             addDir('[COLOR=FFCC0000]' + (translation(translation_number) % num_espn3) + '[/COLOR]',
@@ -262,20 +284,22 @@ def check_blackout(authurl):
     return (tree, False)
 
 def PLAY_PROTECTED_CONTENT(args):
-    if not check_user_settings():
+    if not adobe_activate_api.is_authenticated():
+        dialog = xbmcgui.Dialog()
+        dialog.ok(translation(30037), translation(30410))
         return
 
+    network_name = args.get(NETWORK_NAME)[0]
+    event_name = args.get(EVENT_NAME)[0]
+    event_guid = args.get(EVENT_GUID)[0]
+    event_parental_rating = args.get(EVENT_PARENTAL_RATING)[0]
+
+    resource = adobe_activate_api.get_resource(network_name, event_name, event_guid, event_parental_rating)
     simulcastAiringId = args.get(SIMULCAST_AIRING_ID)[0]
     streamType = args.get(DESKTOP_STREAM_SOURCE)[0]
     networkId = args.get(NETWORK_ID)[0]
 
-    requestor = ESPN()
-    mso_provider = get_mso_provider(selfAddon.getSetting('provider'))
-    user_details = UserDetails(selfAddon.getSetting('username'), selfAddon.getSetting('password'))
-
-
-    adobe = ADOBE(requestor, mso_provider, user_details)
-    media_token = adobe.GET_MEDIA_TOKEN()
+    media_token = adobe_activate_api.get_short_media_token(resource)
 
     if media_token is None:
         return
@@ -287,7 +311,7 @@ def PLAY_PROTECTED_CONTENT(args):
     start_session_url += '&partner=watchespn'
     start_session_url += '&playbackScenario=HTTP_CLOUD_HIGH'
     start_session_url += '&platform=tvos'
-    start_session_url += '&token='+urllib.quote(base64.b64encode(media_token))
+    start_session_url += '&token='+urllib.quote(media_token)
     start_session_url += '&simulcastAiringId='+simulcastAiringId
     start_session_url += '&tokenType=ADOBEPASS'
 
@@ -308,6 +332,52 @@ def PLAY_PROTECTED_CONTENT(args):
         return
 
     finalurl = smilurl
+
+    stream_quality = str(selfAddon.getSetting('StreamQuality'))
+    xbmc.log('ESPN3: Stream Quality %s' % stream_quality)
+    m3u8_obj = m3u8.load(finalurl)
+    if m3u8_obj.is_variant:
+        stream_options = list()
+        m3u8_obj.playlists.sort(key=lambda playlist: playlist.stream_info.bandwidth, reverse=True)
+        stream_quality_index = str(selfAddon.getSetting('StreamQualityIndex'))
+        stream_index = None
+        should_ask = False
+        try:
+            stream_index = int(stream_quality_index)
+            if stream_index < 0 or stream_index >= len(m3u8_obj.playlists):
+                should_ask = True
+        except:
+            should_ask = True
+        if '0' == stream_quality: # Best
+            stream_index = 0
+            should_ask = False
+        elif '2' == stream_quality: #Ask everytime
+            should_ask = True
+        if should_ask:
+            for playlist in m3u8_obj.playlists:
+                frame_rate = '30'
+                if (playlist.stream_info.bandwidth > 2000000):
+                    frame_rate = '60'
+                playlist.stream_info.bandwidth
+                xbmc.log(str(playlist.stream_info))
+                stream_options.append(translation(30450) % (playlist.stream_info.resolution,
+                                                          frame_rate,
+                                                          playlist.stream_info.bandwidth / 1000))
+            dialog = xbmcgui.Dialog()
+            stream_index = dialog.select(translation(30440), stream_options)
+            if stream_index < 0:
+                xbmcplugin.endOfDirectory(int(sys.argv[1]), succeeded=False)
+                return
+            if stream_quality == '1': # Ask once
+                selfAddon.setSetting(id='StreamQualityIndex', value=str(stream_index))
+
+        item = xbmcgui.ListItem(path=m3u8_obj.playlists[stream_index].uri)
+        return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, item)
+    else:
+        item = xbmcgui.ListItem(path=finalurl)
+        return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, item)
+
+    # Not Used, check if we need cookie auth
     ua = UA_PC
     finalurl = finalurl + '|Connection=keep-alive&User-Agent=' + urllib.quote(ua) + '&Cookie=_mediaAuth=' + urllib.quote(base64.b64encode(pkan))
     xbmc.log('ESPN3: finalurl %s' % finalurl)
@@ -388,7 +458,7 @@ def check_user_settings():
 
 def PLAY(args):
     networkId = args.get(NETWORK_ID)[0]
-    if networkId == ESPN3_ID:
+    if networkId == ESPN3_ID or networkId == SECPLUS_ID:
         PLAY_FREE_CONTENT(args)
     else:
         PLAY_PROTECTED_CONTENT(args)
@@ -429,7 +499,38 @@ mode = args.get(MODE, None)
 
 xbmc.log('ESPN3: args %s' % args)
 
+# TODO: Figure out a way to reload the menu
+# without messing up the back (...)
+if mode is not None and mode[0] == AUTHENTICATE_MODE:
+    xbmc.log('Authenticate Device')
+    regcode = adobe_activate_api.get_regcode()
+    dialog = xbmcgui.Dialog()
+    ok = dialog.yesno(translation(30310),
+                   translation(30320),
+                   translation(30330) % regcode,
+                   translation(30340),
+                   translation(30360),
+                   translation(30350))
+    if ok:
+        try:
+            adobe_activate_api.authenticate()
+            dialog.ok(translation(30310), translation(30370))
+        except urllib2.HTTPError as e:
+            dialog.ok(translation(30037), translation(30420) % e)
+    mode = None
+elif mode is not None and mode[0] == AUTHENTICATION_DETAILS_MODE:
+    dialog = xbmcgui.Dialog()
+    ok = dialog.yesno(translation(30380),
+                   translation(30390) % adobe_activate_api.get_authentication_expires(),
+                    nolabel = translation(30360),
+                    yeslabel = translation(30430))
+    if ok:
+        adobe_activate_api.deauthorize()
+    mode = None
+
+
 if mode == None:
+    adobe_activate_api.clean_up_authorization_tokens()
     xbmc.log("Generate Main Menu")
     CATEGORIES()
 elif mode[0] == LIVE_EVENTS_MODE:
@@ -447,5 +548,3 @@ elif mode[0] == UPCOMING_MODE:
     xbmc.log("Upcoming")
     dialog = xbmcgui.Dialog()
     dialog.ok(translation(30035), translation(30036))
-
-
