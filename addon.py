@@ -26,6 +26,7 @@ INDEX_SPORTS_MODE = 'INDEX_SPORTS'
 UPCOMING_MODE = 'UPCOMING'
 AUTHENTICATE_MODE = 'AUTHENTICATE'
 AUTHENTICATION_DETAILS_MODE = 'AUTHENTICATION_DETAILS'
+CATEGORY_SHELF_MODE = 'CATEGORY_SHELF'
 NETWORK_ID = 'NETWORK_ID'
 EVENT_ID = 'EVENT_ID'
 SIMULCAST_AIRING_ID = 'SIMULCAST_AIRING_ID'
@@ -34,6 +35,7 @@ NETWORK_NAME = 'NETWORK_NAME'
 EVENT_NAME = 'EVENT_NAME'
 EVENT_GUID = 'EVENT_GUID'
 EVENT_PARENTAL_RATING = 'EVENT_PARENTAL_RATING'
+SHELF_ID = 'SHELF_ID'
 
 ESPN_URL = 'ESPN_URL'
 MODE = 'MODE'
@@ -44,6 +46,28 @@ BAM_NS = '{http://services.bamnetworks.com/media/types/2.1}'
 # Taken from https://espn.go.com/watchespn/player/config
 ESPN3_ID = 'n360'
 SECPLUS_ID = 'n323'
+
+def CATEGORIES_ATV():
+    cache_file = os.path.join(ADDON_PATH_PROFILE, 'atv.xml')
+    et = util.get_url_as_xml_soup_cache('http://espn.go.com/watchespn/appletv/featured', cache_file, 3000)
+    for shelf in et.findall('.//shelf'):
+        name = shelf.get('id')
+        addDir(name,
+               dict(SHELF_ID=name, MODE=CATEGORY_SHELF_MODE),
+               defaultlive)
+    xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+def CATEGORY_SHELF(args):
+    cache_file = os.path.join(ADDON_PATH_PROFILE, 'atv.xml')
+    et = util.get_url_as_xml_soup_cache('http://espn.go.com/watchespn/appletv/featured', cache_file, 3000)
+    for shelf in et.findall('.//shelf'):
+        name = shelf.get('id')
+        if name == args.get(SHELF_ID)[0]:
+            for item in shelf.findall('.//sixteenByNinePoster'):
+                fanart = item.find('./image').get('src')
+                addLink(item.find('./title').text, '', fanart, fanart)
+    xbmcplugin.setContent(pluginhandle, 'episodes')
+    xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
 def CATEGORIES():
     include_premium = adobe_activate_api.is_authenticated()
@@ -532,7 +556,7 @@ elif mode is not None and mode[0] == AUTHENTICATION_DETAILS_MODE:
 if mode == None:
     adobe_activate_api.clean_up_authorization_tokens()
     xbmc.log("Generate Main Menu")
-    CATEGORIES()
+    CATEGORIES_ATV()
 elif mode[0] == LIVE_EVENTS_MODE:
     xbmc.log("Indexing Videos")
     INDEX(args)
@@ -548,3 +572,5 @@ elif mode[0] == UPCOMING_MODE:
     xbmc.log("Upcoming")
     dialog = xbmcgui.Dialog()
     dialog.ok(translation(30035), translation(30036))
+elif mode[0] == CATEGORY_SHELF_MODE:
+    CATEGORY_SHELF(args)
