@@ -55,6 +55,8 @@ BAM_NS = '{http://services.bamnetworks.com/media/types/2.1}'
 ESPN3_ID = 'n360'
 SECPLUS_ID = 'n323'
 
+TAG = 'ESPN3: '
+
 def CATEGORIES_ATV():
     et = util.get_url_as_xml_soup_cache('http://espn.go.com/watchespn/appletv/featured')
     for showcase in et.findall('.//showcase/items/showcasePoster'):
@@ -548,7 +550,7 @@ def PLAY_PROTECTED_CONTENT(args):
     finalurl = smilurl
 
     stream_quality = str(selfAddon.getSetting('StreamQuality'))
-    xbmc.log('ESPN3: Stream Quality %s' % stream_quality)
+    xbmc.log(TAG + 'Stream Quality %s' % stream_quality)
     m3u8_obj = m3u8.load(finalurl)
     if m3u8_obj.is_variant:
         stream_options = list()
@@ -579,11 +581,11 @@ def PLAY_PROTECTED_CONTENT(args):
                                                           playlist.stream_info.bandwidth / 1000))
             dialog = xbmcgui.Dialog()
             stream_index = dialog.select(translation(30440), stream_options)
+            xbmc.log('Chose stream %d' % stream_index)
             if stream_index < 0:
                 xbmcplugin.endOfDirectory(int(sys.argv[1]), succeeded=False)
                 return
-            if stream_quality == '1': # Ask once
-                selfAddon.setSetting(id='StreamQualityIndex', value=str(stream_index))
+            selfAddon.setSetting(id='StreamQualityIndex', value=str(stream_index))
 
         item = xbmcgui.ListItem(path=m3u8_obj.playlists[stream_index].uri)
         return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, item)
@@ -729,7 +731,7 @@ def PLAY_TV(args):
         return
     playback_url = session_json['session']['playbackUrls']['default']
     stream_quality = str(selfAddon.getSetting('StreamQuality'))
-    xbmc.log('ESPN3: Stream Quality %s' % stream_quality)
+    xbmc.log(TAG + 'ESPN3: Stream Quality %s' % stream_quality)
     m3u8_obj = m3u8.load(playback_url)
     if m3u8_obj.is_variant:
         stream_options = list()
@@ -760,11 +762,12 @@ def PLAY_TV(args):
                                                           int(average_bandwidth) / 1000))
             dialog = xbmcgui.Dialog()
             stream_index = dialog.select(translation(30440), stream_options)
+            xbmc.log(TAG + 'Chose stream %d' % stream_index)
             if stream_index < 0:
                 xbmcplugin.endOfDirectory(int(sys.argv[1]), succeeded=False)
                 return
-            if stream_quality == '1': # Ask once
-                selfAddon.setSetting(id='StreamQualityIndex', value=str(stream_index))
+
+            selfAddon.setSetting(id='StreamQualityIndex', value=str(stream_index))
 
         item = xbmcgui.ListItem(path=m3u8_obj.playlists[stream_index].uri)
         return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, item)
