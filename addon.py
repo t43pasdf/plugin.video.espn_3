@@ -151,9 +151,9 @@ def CATEGORIES_SHOWCASE(args):
     xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
 def INDEX_ITEM_UPCOMING(stash_json):
-    sport = stash_json['categoryName'].encode('utf-8')
-    ename = stash_json['name'].encode('utf-8')
-    sport2 = stash_json['subcategoryName'].encode('utf-8')
+    sport = stash_json['categoryName']
+    ename = stash_json['name']
+    sport2 = stash_json['subcategoryName']
     if sport <> sport2:
         sport += ' ('+sport2+')'
     fanart = stash_json['imageHref']
@@ -180,15 +180,15 @@ def INDEX_ITEM_UPCOMING(stash_json):
 
     authurl = dict()
     authurl[MODE] = UPCOMING_MODE
-    addLink(ename, authurl, fanart, fanart, infoLabels=infoLabels)
+    addLink(ename.encode('iso-8859-1'), authurl, fanart, fanart, infoLabels=infoLabels)
 
 # Items can play as is and do not need authentication
 def INDEX_ITEM_SHELF(stash_json):
-    sport = stash_json['sportName'].encode('utf-8')
-    ename = stash_json['name'].encode('utf-8')
+    sport = stash_json['sportName']
+    ename = stash_json['name']
     fanart = stash_json['imageHref']
     length = int(stash_json['duration'])
-    description = stash_json['description'].encode('utf-8')
+    description = stash_json['description']
 
     infoLabels = {'title': ename,
                   'genre':sport,
@@ -198,12 +198,12 @@ def INDEX_ITEM_SHELF(stash_json):
     authurl = dict()
     authurl[MODE] = PLAY_ITEM_MODE
     authurl[PLAYBACK_URL] = stash_json['playbackUrl']
-    addLink(ename, authurl, fanart, fanart, infoLabels=infoLabels)
+    addLink(ename.encode('iso-8859-1'), authurl, fanart, fanart, infoLabels=infoLabels)
 
 def INDEX_TV_SHELF(stash_json):
-    sport = stash_json['categoryName'].encode('utf-8')
-    ename = stash_json['name'].encode('utf-8')
-    sport2 = stash_json['subcategoryName'].encode('utf-8')
+    sport = stash_json['categoryName']
+    ename = stash_json['name']
+    sport2 = stash_json['subcategoryName']
     if sport <> sport2:
         sport += ' ('+sport2+')'
     fanart = stash_json['imageHref']
@@ -254,10 +254,10 @@ def INDEX_TV_SHELF(stash_json):
     authurl[SESSION_URL] = stash_json['sessionUrl']
     authurl[MODE] = PLAY_TV_MODE
     authurl[NETWORK_NAME] = stash_json['network']
-    authurl[EVENT_NAME] = ename
-    authurl[EVENT_GUID] = stash_json['guid'].encode('utf-8')
+    authurl[EVENT_NAME] = ename.encode('iso-8859-1')
+    authurl[EVENT_GUID] = stash_json['guid'].encode('iso-8859-1')
     authurl[EVENT_PARENTAL_RATING] = mpaa
-    addLink(ename, authurl, fanart, fanart, infoLabels=infoLabels)
+    addLink(ename.encode('iso-8859-1'), authurl, fanart, fanart, infoLabels=infoLabels)
 
 def CATEGORIES():
     include_premium = adobe_activate_api.is_authenticated()
