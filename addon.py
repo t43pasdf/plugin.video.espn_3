@@ -15,9 +15,9 @@ import player_config
 import events
 import util
 import urlparse
+import m3u8
 
 import adobe_activate_api
-from adobe_activate_api import is_authenticated
 
 LIVE_EVENTS_MODE = 'LIVE_EVENTS'
 PLAY_MODE = 'PLAY'
@@ -284,7 +284,7 @@ def check_blackout(authurl):
     return (tree, False)
 
 def PLAY_PROTECTED_CONTENT(args):
-    if not is_authenticated():
+    if not adobe_activate_api.is_authenticated():
         dialog = xbmcgui.Dialog()
         dialog.ok(translation(30037), translation(30410))
         return
@@ -332,6 +332,52 @@ def PLAY_PROTECTED_CONTENT(args):
         return
 
     finalurl = smilurl
+
+    stream_quality = str(selfAddon.getSetting('StreamQuality'))
+    xbmc.log('ESPN3: Stream Quality %s' % stream_quality)
+    m3u8_obj = m3u8.load(finalurl)
+    if m3u8_obj.is_variant:
+        stream_options = list()
+        m3u8_obj.playlists.sort(key=lambda playlist: playlist.stream_info.bandwidth, reverse=True)
+        stream_quality_index = str(selfAddon.getSetting('StreamQualityIndex'))
+        stream_index = None
+        should_ask = False
+        try:
+            stream_index = int(stream_quality_index)
+            if stream_index < 0 or stream_index >= len(m3u8_obj.playlists):
+                should_ask = True
+        except:
+            should_ask = True
+        if '0' == stream_quality: # Best
+            stream_index = 0
+            should_ask = False
+        elif '2' == stream_quality: #Ask everytime
+            should_ask = True
+        if should_ask:
+            for playlist in m3u8_obj.playlists:
+                frame_rate = '30'
+                if (playlist.stream_info.bandwidth > 2000000):
+                    frame_rate = '60'
+                playlist.stream_info.bandwidth
+                xbmc.log(str(playlist.stream_info))
+                stream_options.append(translation(30450) % (playlist.stream_info.resolution,
+                                                          frame_rate,
+                                                          playlist.stream_info.bandwidth / 1000))
+            dialog = xbmcgui.Dialog()
+            stream_index = dialog.select(translation(30440), stream_options)
+            if stream_index < 0:
+                xbmcplugin.endOfDirectory(int(sys.argv[1]), succeeded=False)
+                return
+            if stream_quality == '1': # Ask once
+                selfAddon.setSetting(id='StreamQualityIndex', value=str(stream_index))
+
+        item = xbmcgui.ListItem(path=m3u8_obj.playlists[stream_index].uri)
+        return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, item)
+    else:
+        item = xbmcgui.ListItem(path=finalurl)
+        return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, item)
+
+    # Not Used, check if we need cookie auth
     ua = UA_PC
     finalurl = finalurl + '|Connection=keep-alive&User-Agent=' + urllib.quote(ua) + '&Cookie=_mediaAuth=' + urllib.quote(base64.b64encode(pkan))
     xbmc.log('ESPN3: finalurl %s' % finalurl)

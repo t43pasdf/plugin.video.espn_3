@@ -59,4 +59,10 @@
 	<string id="30410">This device isn't authorized</string>
 	<string id="30420">Unable to authenticate device %s</string>
     <string id="30430">De-authorize device</string>
+    <string id="30440">Choose Stream Quality</string>
+    <string id="30450">%s @ %s %sk</string>
+    <string id="30460">Stream Quality</string>
+    <string id="30470">Best</string>
+    <string id="30480">Ask Once</string>
+    <string id="30490">Ask Every Time</string>
 </strings>
