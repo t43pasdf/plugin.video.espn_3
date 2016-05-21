@@ -4,11 +4,10 @@
 # Written by Ksosez, BlueCop, Romans I XVI, locomot1f, MetalChris
 # Released under GPL(v2)
 
-import urllib, xbmcplugin, xbmcaddon, xbmcgui, os, random, string, re
+import urllib, xbmcplugin, xbmcaddon, xbmcgui, os, random, string
 import time
 from globals import *
 from datetime import datetime, timedelta
-from bs4 import BeautifulSoup
 import base64
 
 import player_config
@@ -16,24 +15,35 @@ import events
 import util
 import urlparse
 import m3u8
+import re
 
 import adobe_activate_api
 
+OLD_LISTING_MODE = 'OLD_LISTING_MODE'
 LIVE_EVENTS_MODE = 'LIVE_EVENTS'
 PLAY_MODE = 'PLAY'
+PLAY_ITEM_MODE = 'PLAY_ITEM'
+PLAY_TV_MODE = 'PLAY_TV'
 LIST_SPORTS_MODE = 'LIST_SPORTS'
 INDEX_SPORTS_MODE = 'INDEX_SPORTS'
 UPCOMING_MODE = 'UPCOMING'
 AUTHENTICATE_MODE = 'AUTHENTICATE'
 AUTHENTICATION_DETAILS_MODE = 'AUTHENTICATION_DETAILS'
+CATEGORY_SHELF_MODE = 'CATEGORY_SHELF'
+CATEGORY_SHOWCASE_MODE = 'CATEGORY_SHOWCASE'
 NETWORK_ID = 'NETWORK_ID'
 EVENT_ID = 'EVENT_ID'
 SIMULCAST_AIRING_ID = 'SIMULCAST_AIRING_ID'
+SESSION_URL = 'SESSION_URL'
 DESKTOP_STREAM_SOURCE = 'DESKTOP_STREAM_SOURCE'
 NETWORK_NAME = 'NETWORK_NAME'
 EVENT_NAME = 'EVENT_NAME'
 EVENT_GUID = 'EVENT_GUID'
 EVENT_PARENTAL_RATING = 'EVENT_PARENTAL_RATING'
+SHELF_ID = 'SHELF_ID'
+SHOWCASE_URL = 'SHOWCASE_URL'
+SHOWCASE_NAV_ID = 'SHOWCASE_NAV_ID'
+PLAYBACK_URL = 'PLAYBACK_URL'
 
 ESPN_URL = 'ESPN_URL'
 MODE = 'MODE'
@@ -44,6 +54,212 @@ BAM_NS = '{http://services.bamnetworks.com/media/types/2.1}'
 # Taken from https://espn.go.com/watchespn/player/config
 ESPN3_ID = 'n360'
 SECPLUS_ID = 'n323'
+
+TAG = 'ESPN3: '
+
+def CATEGORIES_ATV():
+    et = util.get_url_as_xml_soup_cache('http://espn.go.com/watchespn/appletv/featured')
+    for showcase in et.findall('.//showcase/items/showcasePoster'):
+        name = showcase.get('accessibilityLabel')
+        image = showcase.find('./image').get('src')
+        url = util.parse_url_from_method(showcase.get('onPlay'))
+        addDir(name,
+               dict(SHOWCASE_URL=url, MODE=CATEGORY_SHOWCASE_MODE),
+               image, image)
+    collections = et.findall('.//collectionDivider')
+    shelfs = et.findall('.//shelf')
+    for i in range(0, len(collections)):
+        collection_divider = collections[i]
+        shelf = shelfs[i]
+        title = collection_divider.find('title').text
+        name = shelf.get('id')
+        addDir(title,
+               dict(SHELF_ID=name, MODE=CATEGORY_SHELF_MODE),
+               defaultlive)
+    if adobe_activate_api.is_authenticated():
+        addDir(translation(30380),
+           dict(MODE=AUTHENTICATION_DETAILS_MODE),
+           defaultreplay)
+    else:
+        addDir(translation(30300),
+               dict(MODE=AUTHENTICATE_MODE),
+               defaultreplay)
+    addDir(translation(30510),
+           dict(MODE=OLD_LISTING_MODE),
+           defaultlive)
+    xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+def CATEGORY_SHELF(args):
+    et = util.get_url_as_xml_soup_cache('http://espn.go.com/watchespn/appletv/featured')
+    for shelf in et.findall('.//shelf'):
+        name = shelf.get('id')
+        if name == args.get(SHELF_ID)[0]:
+            process_item_list(shelf.findall('.//sixteenByNinePoster'))
+    xbmcplugin.setContent(pluginhandle, 'episodes')
+    xbmcplugin.endOfDirectory(pluginhandle)
+
+def process_item_list(item_list):
+    for item in item_list:
+        stash_element = item.find('./stash/json')
+        if stash_element is None:
+            # Assume goes to another onPlay with a url
+            name = item.get('accessibilityLabel')
+            image = item.find('./image').get('src')
+            url = util.parse_url_from_method(item.get('onPlay'))
+            addDir(name,
+                   dict(SHOWCASE_URL=url, MODE=CATEGORY_SHOWCASE_MODE),
+                   image, image)
+        else:
+            stash = stash_element.text.encode('utf-8')
+            # Some of the json is baddly formatted
+            stash = re.sub(r'\s+"', '"', stash)
+            stash_json = json.loads(stash, 'utf-8')
+            if stash_json['type'] == 'upcoming':
+                INDEX_ITEM_UPCOMING(stash_json)
+            elif 'sessionUrl' in stash_json:
+                INDEX_TV_SHELF(stash_json)
+            else:
+                INDEX_ITEM_SHELF(stash_json)
+
+
+def CATEGORIES_SHOWCASE(args):
+    url = args.get(SHOWCASE_URL)[0]
+    selected_nav_id = args.get(SHOWCASE_NAV_ID, None)
+    et = util.get_url_as_xml_soup_cache(url)
+    navigation_items = et.findall('.//navigation/navigationItem')
+    xbmc.log('ESPN3 Found %s items' % len(navigation_items))
+    if selected_nav_id is None and len(navigation_items) > 0:
+        for navigation_item in navigation_items:
+            name = navigation_item.find('./title').text
+            nav_id = navigation_item.get('id')
+            menu_item = navigation_item.find('.//twoLineMenuItem')
+            if menu_item is None:
+                menu_item = navigation_item.find('.//twoLineEnhancedMenuItem')
+            if menu_item is not None and not menu_item.get('id') == 'no-event':
+                addDir(name,
+                       dict(SHOWCASE_URL=url, SHOWCASE_NAV_ID=nav_id, MODE=CATEGORY_SHOWCASE_MODE), defaultfanart)
+    elif len(navigation_items) > 0:
+        for navigation_item in navigation_items:
+            if navigation_item.get('id') == selected_nav_id[0]:
+                xbmc.log('ESPN3 Found nav item %s' % selected_nav_id[0])
+                process_item_list(navigation_item.findall('.//twoLineMenuItem'))
+                process_item_list(navigation_item.findall('.//twoLineEnhancedMenuItem'))
+                xbmcplugin.setContent(pluginhandle, 'episodes')
+    else: # If there are no navigation items then just dump all of the menu entries
+        xbmc.log('ESPN3: Dumping all menu items')
+        process_item_list(et.findall('.//twoLineMenuItem'))
+        process_item_list(et.findall('.//twoLineEnhancedMenuItem'))
+        xbmcplugin.setContent(pluginhandle, 'episodes')
+    xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+def INDEX_ITEM_UPCOMING(stash_json):
+    sport = stash_json['categoryName']
+    ename = stash_json['name']
+    sport2 = stash_json['subcategoryName']
+    if sport <> sport2:
+        sport += ' ('+sport2+')'
+    fanart = stash_json['imageHref']
+    mpaa = stash_json['parentalRating']
+    starttime = int(stash_json['startTime'])/1000
+    now = time.time()
+    etime = time.strftime("%I:%M %p",time.localtime(float(starttime)))
+    length = int(stash_json['duration'])
+    if now > starttime:
+        length = length - (now - starttime)
+        ename += ' [COLOR=FFB700EB]' + etime + '[/COLOR]'
+    if now < starttime:
+        etime = time.strftime("%m/%d %I:%M %p",time.localtime(starttime))
+        ename = '[COLOR=FFB700EB]' + etime + '[/COLOR] ' + ename
+
+
+
+    infoLabels = {'title': ename,
+                  'genre':sport,
+                  'duration':length,
+                  'studio': stash_json['network'],
+                  'mpaa':mpaa,
+                  'premiered':etime}
+
+    authurl = dict()
+    authurl[MODE] = UPCOMING_MODE
+    addLink(ename.encode('iso-8859-1'), authurl, fanart, fanart, infoLabels=infoLabels)
+
+# Items can play as is and do not need authentication
+def INDEX_ITEM_SHELF(stash_json):
+    sport = stash_json['sportName']
+    ename = stash_json['name']
+    fanart = stash_json['imageHref']
+    length = int(stash_json['duration'])
+    description = stash_json['description']
+
+    infoLabels = {'title': ename,
+                  'genre':sport,
+                  'duration':length,
+                  'plot':description}
+
+    authurl = dict()
+    authurl[MODE] = PLAY_ITEM_MODE
+    authurl[PLAYBACK_URL] = stash_json['playbackUrl']
+    addLink(ename.encode('iso-8859-1'), authurl, fanart, fanart, infoLabels=infoLabels)
+
+def INDEX_TV_SHELF(stash_json):
+    sport = stash_json['categoryName']
+    ename = stash_json['name']
+    sport2 = stash_json['subcategoryName']
+    if sport <> sport2:
+        sport += ' ('+sport2+')'
+    fanart = stash_json['imageHref']
+    mpaa = stash_json['parentalRating']
+    starttime = int(stash_json['startTime'])/1000
+    now = time.time()
+    etime = time.strftime("%I:%M %p",time.localtime(float(starttime)))
+    length = int(stash_json['duration'])
+    if stash_json['type'] == 'replay':
+        etime_local = time.localtime(starttime)
+        if etime_local.tm_hour == 0 and etime_local.tm_min == 0:
+            etime = time.strftime("%m/%d/%Y",time.localtime(starttime))
+        else:
+            etime = time.strftime("%m/%d %I:%M %p",time.localtime(starttime))
+        ename = '[COLOR=FFB700EB]' + etime + '[/COLOR] ' + ename
+    elif now > starttime:
+        length = length - (now - starttime)
+        ename += ' [COLOR=FFB700EB]' + etime + '[/COLOR]'
+
+    network = stash_json['network']
+    if network == 'longhorn':
+        channel_color = 'BF5700'
+    elif network == 'sec' or network == 'secplus':
+        channel_color = '004C8D'
+    else:
+        channel_color = 'CC0000'
+    network = network.replace('espn', 'ESPN')
+    network = network.replace('sec', 'SEC')
+    network = network.replace('longhorn', 'Longhorn')
+    if stash_json['channelType'] == 'linear':
+        ename = '[COLOR=FF%s]%s[/COLOR] %s' % (channel_color, network, ename)
+
+    if 'description' in stash_json:
+        description = stash_json['description']
+    else:
+        description = ''
+
+    infoLabels = {'title': ename,
+                  'genre':sport,
+                  'duration':length,
+                  'studio': stash_json['network'],
+                  'mpaa':mpaa,
+                  'plot':description,
+                  'premiered':etime}
+
+    authurl = dict()
+    authurl[EVENT_ID] = stash_json['eventId']
+    authurl[SESSION_URL] = stash_json['sessionUrl']
+    authurl[MODE] = PLAY_TV_MODE
+    authurl[NETWORK_NAME] = stash_json['network']
+    authurl[EVENT_NAME] = stash_json['name'].encode('iso-8859-1')
+    authurl[EVENT_GUID] = stash_json['guid'].encode('iso-8859-1')
+    authurl[EVENT_PARENTAL_RATING] = mpaa
+    addLink(ename.encode('iso-8859-1'), authurl, fanart, fanart, infoLabels=infoLabels)
 
 def CATEGORIES():
     include_premium = adobe_activate_api.is_authenticated()
@@ -196,16 +412,17 @@ def INDEX_EVENT(event, live, upcoming, replay, chosen_sport):
                   'mpaa':mpaa,
                   'videoaspect' : aspect_ratio}
 
+    session_url = 'http://broadband.espn.go.com/espn3/auth/watchespn/startSession?'
+    session_url += '&channel='+network
+    session_url += '&simulcastAiringId='+simulcastAiringId
+
     authurl = dict()
-    authurl[EVENT_ID] = eventid
-    authurl[SIMULCAST_AIRING_ID] = simulcastAiringId
-    authurl[DESKTOP_STREAM_SOURCE] = desktopStreamSource
-    authurl[NETWORK_ID] = networkid
     authurl[MODE] = UPCOMING_MODE if upcoming else PLAY_MODE
     authurl[NETWORK_NAME] = event.find('adobeResource').text
     authurl[EVENT_NAME] = event.find('name').text.encode('utf-8')
     authurl[EVENT_GUID] = event.find('guid').text.encode('utf-8')
     authurl[EVENT_PARENTAL_RATING] = event.find('parentalRating').text
+    authurl[SESSION_URL] = session_url
     addLink(ename, authurl, fanart, fanart, infoLabels=infoLabels)
 
 def INDEX(args):
@@ -283,62 +500,76 @@ def check_blackout(authurl):
         return (tree, True)
     return (tree, False)
 
-def PLAY_PROTECTED_CONTENT(args):
-    if not adobe_activate_api.is_authenticated():
+def PLAY_ITEM(args):
+    url = args.get(PLAYBACK_URL)[0]
+    item = xbmcgui.ListItem(path=url)
+    return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, item)
+
+def check_error(session_json):
+    status = session_json['status']
+    if not status == 'success':
         dialog = xbmcgui.Dialog()
-        dialog.ok(translation(30037), translation(30410))
-        return
+        dialog.ok(translation(30037), translation(30500) % session_json['message'])
+        return True
+    return False
+
+# TODO: Unsure if cookie is needed
+#ua UA_PC
+#finalurl = finalurl + '|Connection=keep-alive&User-Agent=' + urllib.quote(ua) + '&Cookie=_mediaAuth=' + urllib.quote(base64.b64encode(pkan))
+def PLAY_TV(args):
 
     network_name = args.get(NETWORK_NAME)[0]
     event_name = args.get(EVENT_NAME)[0]
     event_guid = args.get(EVENT_GUID)[0]
     event_parental_rating = args.get(EVENT_PARENTAL_RATING)[0]
-
     resource = adobe_activate_api.get_resource(network_name, event_name, event_guid, event_parental_rating)
-    simulcastAiringId = args.get(SIMULCAST_AIRING_ID)[0]
-    streamType = args.get(DESKTOP_STREAM_SOURCE)[0]
-    networkId = args.get(NETWORK_ID)[0]
 
-    media_token = adobe_activate_api.get_short_media_token(resource)
+    requires_auth = not network_name == 'espn3'
+    if network_name == 'espn3':
+        free_content_check = player_config.can_access_free_content()
+        if not free_content_check:
+            xbmc.log('ESPN3: User needs login to ESPN3')
+            requires_auth = True
 
-    if media_token is None:
-        return
+    if requires_auth:
+        if not adobe_activate_api.is_authenticated():
+            dialog = xbmcgui.Dialog()
+            dialog.ok(translation(30037), translation(30410))
+            return
+        media_token = adobe_activate_api.get_short_media_token(resource)
+        token_type = 'ADOBEPASS'
+    else:
+        media_token = adobe_activate_api.get_device_id()
+        token_type = 'DEVICE'
+
 
     # see http://api-app.espn.com/v1/watch/clients/watchespn-tvos for details
     # see http://espn.go.com/watchespn/appletv/featured for details
-    start_session_url = 'https://broadband.espn.go.com/espn3/auth/watchespn/startSession?'
-    start_session_url += '&channel='+player_config.get_network_name(networkId)
-    start_session_url += '&partner=watchespn'
-    start_session_url += '&playbackScenario=HTTP_CLOUD_HIGH'
-    start_session_url += '&platform=tvos'
-    start_session_url += '&token='+urllib.quote(media_token)
-    start_session_url += '&simulcastAiringId='+simulcastAiringId
-    start_session_url += '&tokenType=ADOBEPASS'
+    start_session_url = args.get(SESSION_URL)[0]
+    params = urllib.urlencode({'partner':'watchespn',
+                               'playbackScenario':'HTTP_CLOUD_HIGH',
+                               'platform':'tvos',
+                               'token':media_token,
+                               'tokenType':token_type,
+                               'resource':base64.b64encode(resource),
+                               'v': '2.0.0'
+                               })
+    start_session_url += '&' + params
 
     xbmc.log('ESPN3: start_session_url: ' + start_session_url)
 
-    (tree, result) = check_blackout(start_session_url)
-    if result:
+    session_json = util.get_url_as_json(start_session_url)
+    if check_error(session_json):
         return
-
-
-    pkan = tree.find('.//' + BAM_NS + 'pkanJar').text
-    smilurl = tree.find('.//' + BAM_NS + 'url').text
-    xbmc.log('ESPN3:  smilurl: '+smilurl)
-    xbmc.log('ESPN3:  streamType: '+streamType)
-    if smilurl == ' ' or smilurl == '':
-        dialog = xbmcgui.Dialog()
-        dialog.ok(translation(30037), translation(30038),translation(30039))
-        return
-
-    finalurl = smilurl
-
+    # TODO: Need to figure out how blackouts are represented (tree, result) = check_blackout(authurl)
+    playback_url = session_json['session']['playbackUrls']['default']
     stream_quality = str(selfAddon.getSetting('StreamQuality'))
-    xbmc.log('ESPN3: Stream Quality %s' % stream_quality)
-    m3u8_obj = m3u8.load(finalurl)
+    xbmc.log(TAG + 'ESPN3: Stream Quality %s' % stream_quality)
+    m3u8_obj = m3u8.load(playback_url)
     if m3u8_obj.is_variant:
         stream_options = list()
         m3u8_obj.playlists.sort(key=lambda playlist: playlist.stream_info.bandwidth, reverse=True)
+        m3u8_obj.data['playlists'].sort(key=lambda playlist: int(playlist['stream_info']['average_bandwidth']), reverse=True)
         stream_quality_index = str(selfAddon.getSetting('StreamQualityIndex'))
         stream_index = None
         should_ask = False
@@ -354,114 +585,28 @@ def PLAY_PROTECTED_CONTENT(args):
         elif '2' == stream_quality: #Ask everytime
             should_ask = True
         if should_ask:
-            for playlist in m3u8_obj.playlists:
-                frame_rate = '30'
-                if (playlist.stream_info.bandwidth > 2000000):
-                    frame_rate = '60'
-                playlist.stream_info.bandwidth
-                xbmc.log(str(playlist.stream_info))
-                stream_options.append(translation(30450) % (playlist.stream_info.resolution,
+            for playlist in m3u8_obj.data['playlists']:
+                stream_info = playlist['stream_info']
+                resolution = stream_info['resolution']
+                frame_rate = stream_info['frame_rate']
+                average_bandwidth = stream_info['average_bandwidth']
+                stream_options.append(translation(30450) % (resolution,
                                                           frame_rate,
-                                                          playlist.stream_info.bandwidth / 1000))
+                                                          int(average_bandwidth) / 1000))
             dialog = xbmcgui.Dialog()
             stream_index = dialog.select(translation(30440), stream_options)
+            xbmc.log(TAG + 'Chose stream %d' % stream_index)
             if stream_index < 0:
                 xbmcplugin.endOfDirectory(int(sys.argv[1]), succeeded=False)
                 return
-            if stream_quality == '1': # Ask once
-                selfAddon.setSetting(id='StreamQualityIndex', value=str(stream_index))
+
+            selfAddon.setSetting(id='StreamQualityIndex', value=str(stream_index))
 
         item = xbmcgui.ListItem(path=m3u8_obj.playlists[stream_index].uri)
         return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, item)
     else:
         item = xbmcgui.ListItem(path=finalurl)
         return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, item)
-
-    # Not Used, check if we need cookie auth
-    ua = UA_PC
-    finalurl = finalurl + '|Connection=keep-alive&User-Agent=' + urllib.quote(ua) + '&Cookie=_mediaAuth=' + urllib.quote(base64.b64encode(pkan))
-    xbmc.log('ESPN3: finalurl %s' % finalurl)
-    item = xbmcgui.ListItem(path=finalurl)
-    return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, item)
-
-def PLAY_FREE_CONTENT(args):
-    free_content_check = player_config.can_access_free_content()
-    if not free_content_check:
-        xbmc.log('ESPN3: User needs login to ESPN3')
-        return PLAY_PROTECTED_CONTENT(args)
-
-    user_data = player_config.get_user_data()
-    affiliateid = user_data['name']
-
-    eventid = args.get(EVENT_ID)[0]
-    simulcastAiringId = args.get(SIMULCAST_AIRING_ID)[0]
-    networkId = args.get(NETWORK_ID)[0]
-
-    pk = ''.join([random.choice(string.ascii_letters + string.digits) for n in xrange(51)])
-    pkan = pk + ('%3D')
-    network = player_config.get_network(networkId)
-    playedId = network.get('playerId')
-    cdnName = network.get('defaultCdn')
-    channel = network.get('name')
-
-    authurl = player_config.get_start_session_url()
-    authurl += '&affiliate='+affiliateid
-    authurl += '&platform=tvos'
-    authurl += '&pkan='+pkan
-    authurl += '&pkanType=SWID'
-    authurl += '&simulcastAiringId='+simulcastAiringId
-    authurl += '&cdnName='+cdnName
-    authurl += '&channel='+channel
-    authurl += '&playbackScenario=HTTP_CLOUD_HIGH'
-    authurl += '&eventid='+eventid
-    authurl += '&rand='+str(random.randint(100000,999999))
-    authurl += '&playerId='+playedId
-
-    xbmc.log('ESPN3: Content URL %s' % authurl)
-
-    (tree, result) = check_blackout(authurl)
-    if result:
-        return
-
-    smilurl = tree.find('.//' + BAM_NS + 'url').text
-    xbmc.log('ESPN3:  smilurl: %s' % smilurl)
-    if smilurl is None:
-        smilurl = tree.find('.//' + BAM_NS + 'hls-backup-url').text
-        xbmc.log('ESPN3:  smilurl hls backup: %s' % smilurl)
-    if smilurl is None or smilurl == ' ' or smilurl == '':
-        dialog = xbmcgui.Dialog()
-        dialog.ok(translation(30037), translation(30038),translation(30039))
-        return
-
-    finalurl = smilurl
-    item = xbmcgui.ListItem(path=finalurl)
-    return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, item)
-
-def check_user_settings():
-    mso_provider = get_mso_provider(selfAddon.getSetting('provider'))
-    username = selfAddon.getSetting('username')
-    password = selfAddon.getSetting('password')
-    if mso_provider is None:
-        dialog = xbmcgui.Dialog()
-        dialog.ok(translation(30037), translation(30100))
-        return False
-    if username is None:
-        dialog = xbmcgui.Dialog()
-        dialog.ok(translation(30037), translation(30110))
-        return False
-    if password is None:
-        dialog = xbmcgui.Dialog()
-        dialog.ok(translation(30037), translation(30120))
-        return False
-    return True
-
-
-def PLAY(args):
-    networkId = args.get(NETWORK_ID)[0]
-    if networkId == ESPN3_ID or networkId == SECPLUS_ID:
-        PLAY_FREE_CONTENT(args)
-    else:
-        PLAY_PROTECTED_CONTENT(args)
 
 def addLink(name, url, iconimage, fanart=False, infoLabels=False):
     u = sys.argv[0] + '?' + urllib.urlencode(url)
@@ -532,7 +677,9 @@ elif mode is not None and mode[0] == AUTHENTICATION_DETAILS_MODE:
 if mode == None:
     adobe_activate_api.clean_up_authorization_tokens()
     xbmc.log("Generate Main Menu")
-    CATEGORIES()
+    CATEGORIES_ATV()
+elif mode[0] == CATEGORY_SHOWCASE_MODE:
+    CATEGORIES_SHOWCASE(args)
 elif mode[0] == LIVE_EVENTS_MODE:
     xbmc.log("Indexing Videos")
     INDEX(args)
@@ -543,8 +690,17 @@ elif mode[0] == INDEX_SPORTS_MODE:
     xbmc.log("Index by sport")
     INDEX(args)
 elif mode[0] == PLAY_MODE:
-    PLAY(args)
+    PLAY_TV(args)
+elif mode[0] == PLAY_ITEM_MODE:
+    PLAY_ITEM(args)
+elif mode[0] == PLAY_TV_MODE:
+    PLAY_TV(args)
 elif mode[0] == UPCOMING_MODE:
     xbmc.log("Upcoming")
     dialog = xbmcgui.Dialog()
     dialog.ok(translation(30035), translation(30036))
+elif mode[0] == CATEGORY_SHELF_MODE:
+    CATEGORY_SHELF(args)
+elif mode[0] == OLD_LISTING_MODE:
+    xbmc.log("Old listing mode")
+    CATEGORIES()

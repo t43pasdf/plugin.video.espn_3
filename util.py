@@ -7,6 +7,9 @@ import urllib
 import urllib2
 import json
 import xml.etree.ElementTree as ET
+import hashlib
+
+from globals import ADDON_PATH_PROFILE
 
 def is_file_valid(cache_file, timeout):
     if os.path.isfile(cache_file):
@@ -22,7 +25,10 @@ def fetch_file(url, cache_file):
 def load_file(cache_file):
     return open(cache_file, mode='r')
 
-def get_url_as_xml_soup_cache(url, cache_file, timeout = 1):
+def get_url_as_xml_soup_cache(url, cache_file = None, timeout = 300):
+    if cache_file is None:
+        cache_file = hashlib.sha224(url).hexdigest()
+        cache_file = os.path.join(ADDON_PATH_PROFILE, cache_file + '.xml')
     if not is_file_valid(cache_file, timeout):
         xbmc.log('ESPN3: Fetching config file %s from %s' % (cache_file, url))
         fetch_file(url, cache_file)
@@ -67,3 +73,11 @@ def get_url_as_json_cache(url, cache_file, timeout = 1):
     json_data = json_data.replace('\'', '"')
     xbmc.log('json: %s' % json_data)
     return json.loads(json_data)
+
+# espn.page.loadSportPage('http://espn.go.com/watchespn/appletv/league?abbreviation=nba');
+# -> http://espn.go.com/watchespn/appletv/league?abbreviation=nba
+def parse_url_from_method(method):
+    http_start = method.find('http')
+    end = method.find('\');')
+    return method[http_start:end]
+

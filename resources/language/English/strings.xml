@@ -65,4 +65,7 @@
     <string id="30470">Best</string>
     <string id="30480">Ask Once</string>
     <string id="30490">Ask Every Time</string>
+    <string id="30500">Error playing channel, %s</string>
+    <string id="30510">Old Style Menu</string>
+    <string id="30520">Index of stream to choose in the playlist</string>
 </strings>

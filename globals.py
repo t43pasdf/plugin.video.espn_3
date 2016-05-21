@@ -69,10 +69,6 @@ def CLEAR_SAVED_DATA():
     except:
         pass
     try:
-        os.remove(ADDON_PATH_PROFILE+'/adobe.json')
-    except:
-        pass
-    try:
         for root, dirs, files in os.walk(ADDON_PATH_PROFILE):
             for currentFile in files:
                 if currentFile.lower().endswith('.xml') and not currentFile.lower() == 'settings.xml':
