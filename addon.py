@@ -578,9 +578,7 @@ def PLAY_TV(args):
     m3u8_obj = m3u8.load(playback_url)
     if m3u8_obj.is_variant:
         stream_options = list()
-        bandwidth_key = 'average_bandwidth'
-        if bandwidth_key not in m3u8_obj.data['playlists'][0]['stream_info']:
-            bandwidth_key = 'bandwidth'
+        bandwidth_key = 'bandwidth'
         m3u8_obj.playlists.sort(key=lambda playlist: playlist.stream_info.bandwidth, reverse=True)
         m3u8_obj.data['playlists'].sort(key=lambda playlist: int(playlist['stream_info'][bandwidth_key]), reverse=True)
         stream_quality_index = str(selfAddon.getSetting('StreamQualityIndex'))
@@ -595,6 +593,12 @@ def PLAY_TV(args):
         if '0' == stream_quality: # Best
             stream_index = 0
             should_ask = False
+            for playlist in m3u8_obj.data['playlists']:
+                stream_info = playlist['stream_info']
+                bandwidth = int(stream_info[bandwidth_key]) / 1000
+                if bandwidth <= bitrate_limit:
+                    break
+                stream_index = stream_index + 1
         elif '2' == stream_quality: #Ask everytime
             should_ask = True
         if should_ask:
@@ -602,24 +606,19 @@ def PLAY_TV(args):
                 stream_info = playlist['stream_info']
                 resolution = stream_info['resolution']
                 frame_rate = stream_info['frame_rate']
-                average_bandwidth = int(stream_info[bandwidth_key]) / 1000
-                if average_bandwidth > bitrate_limit:
-                    stream_options.append(translation(30450) % (resolution,
-                                                          int(float(frame_rate)),
-                                                          '[COLOR=FFFF0000]' + str(average_bandwidth) + '[/COLOR]'))
-                else:
-                    stream_options.append(translation(30450) % (resolution,
-                                                          frame_rate,
-                                                          average_bandwidth))
+                bandwidth = int(stream_info[bandwidth_key]) / 1000
+                stream_options.append(translation(30450) % (resolution,
+                                                      frame_rate,
+                                                      bandwidth))
             dialog = xbmcgui.Dialog()
             stream_index = dialog.select(translation(30440), stream_options)
-            xbmc.log(TAG + 'Chose stream %d' % stream_index)
             if stream_index < 0:
                 xbmcplugin.endOfDirectory(int(sys.argv[1]), succeeded=False)
                 return
 
             selfAddon.setSetting(id='StreamQualityIndex', value=str(stream_index))
 
+        xbmc.log(TAG + 'Chose stream %d' % stream_index)
         item = xbmcgui.ListItem(path=m3u8_obj.playlists[stream_index].uri)
         return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, item)
     else:
