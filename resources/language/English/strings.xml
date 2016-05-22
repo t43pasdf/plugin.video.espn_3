@@ -56,7 +56,7 @@
 	<string id="30380">Authentication Details</string>
 	<string id="30390">Authentication Expires: %s</string>
 	<string id="30400">Authorization Expires: %s</string>
-	<string id="30410">This device isn't authorized</string>
+	<string id="30410">This device isn't authorized, choose to authenticate from the main menu</string>
 	<string id="30420">Unable to authenticate device %s</string>
     <string id="30430">De-authorize device</string>
     <string id="30440">Choose Stream Quality</string>

@@ -84,11 +84,11 @@ def CATEGORIES_ATV():
     if selfAddon.getSetting('ShowLegacyMenu') == 'true':
         addDir('[COLOR=FF0000FF]' + translation(30510) + '[/COLOR]',
                dict(MODE=OLD_LISTING_MODE),
-               defaultlive)
+               defaultfanart)
     if adobe_activate_api.is_authenticated():
         addDir('[COLOR=FF00FF00]' + translation(30380) + '[/COLOR]',
            dict(MODE=AUTHENTICATION_DETAILS_MODE),
-           defaultreplay)
+           defaultfanart)
     xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
 def CATEGORY_SHELF(args):
@@ -243,6 +243,10 @@ def INDEX_TV_SHELF(stash_json):
         description = stash_json['description']
     else:
         description = ''
+
+    requires_auth = does_requires_auth(stash_json['network'])
+    if requires_auth and not adobe_activate_api.is_authenticated():
+        ename = '*' + ename
 
     infoLabels = {'title': ename,
                   'genre':sport,
@@ -514,6 +518,15 @@ def check_error(session_json):
         return True
     return False
 
+def does_requires_auth(network_name):
+    requires_auth = not network_name == 'espn3'
+    if network_name == 'espn3':
+        free_content_check = player_config.can_access_free_content()
+        if not free_content_check:
+            xbmc.log('ESPN3: User needs login to ESPN3')
+            requires_auth = True
+    return requires_auth
+
 # TODO: Unsure if cookie is needed
 #ua UA_PC
 #finalurl = finalurl + '|Connection=keep-alive&User-Agent=' + urllib.quote(ua) + '&Cookie=_mediaAuth=' + urllib.quote(base64.b64encode(pkan))
@@ -525,12 +538,7 @@ def PLAY_TV(args):
     event_parental_rating = args.get(EVENT_PARENTAL_RATING)[0]
     resource = adobe_activate_api.get_resource(network_name, event_name, event_guid, event_parental_rating)
 
-    requires_auth = not network_name == 'espn3'
-    if network_name == 'espn3':
-        free_content_check = player_config.can_access_free_content()
-        if not free_content_check:
-            xbmc.log('ESPN3: User needs login to ESPN3')
-            requires_auth = True
+    requires_auth = does_requires_auth(network_name)
 
     if requires_auth:
         if not adobe_activate_api.is_authenticated():
@@ -609,29 +617,29 @@ def PLAY_TV(args):
         item = xbmcgui.ListItem(path=finalurl)
         return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, item)
 
-def addLink(name, url, iconimage, fanart=False, infoLabels=False):
+def addLink(name, url, iconimage, fanart=None, infoLabels=None):
     u = sys.argv[0] + '?' + urllib.urlencode(url)
     liz = xbmcgui.ListItem(name, iconImage="DefaultVideo.png", thumbnailImage=iconimage)
 
-    if not infoLabels:
+    if infoLabels is None:
         infoLabels={"Title": name}
     liz.setInfo(type="Video", infoLabels=infoLabels)
     liz.setProperty('IsPlayable', 'true')
     liz.setIconImage(iconimage)
-    if not fanart:
+    if fanart is None:
         fanart=defaultfanart
     liz.setProperty('fanart_image',fanart)
     ok = xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]), url=u, listitem=liz)
     return ok
 
 
-def addDir(name, url, iconimage, fanart=False, infoLabels=False):
+def addDir(name, url, iconimage, fanart=None, infoLabels=None):
     u = sys.argv[0] + '?' + urllib.urlencode(url)
     liz = xbmcgui.ListItem(name, iconImage="DefaultFolder.png", thumbnailImage=iconimage)
-    if not infoLabels:
+    if infoLabels is None:
         infoLabels={"Title": name}
     liz.setInfo(type="Video", infoLabels=infoLabels)
-    if not fanart:
+    if fanart is None:
         fanart=defaultfanart
     liz.setProperty('fanart_image',fanart)
     ok = xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]), url=u, listitem=liz, isFolder=True)
