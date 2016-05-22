@@ -16,6 +16,7 @@
       <setting id="ShowLegacyMenu" type="bool" label="30530" default="false" />
   	  <setting id="ClearData" type="bool" label="30170" default="false" />
   	  <setting id="DisableSSL" type="bool" label="30180" default="false" />
+  	  <setting id="BitrateLimit" type="number" label="30540" default="10000" />
   	  <setting id="StreamQualityIndex" type="number" default="-1" label="30520" />
   </category>
 
