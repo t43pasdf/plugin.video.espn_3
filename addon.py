@@ -89,7 +89,7 @@ def CATEGORIES_ATV(refresh = False):
         addDir('[COLOR=FF00FF00]' + translation(30380) + '[/COLOR]',
            dict(MODE=AUTHENTICATION_DETAILS_MODE),
            defaultfanart)
-    xbmcplugin.endOfDirectory(int(sys.argv[1]), updateListing = refresh)
+    xbmcplugin.endOfDirectory(int(sys.argv[1]), updateListing=refresh)
 
 def CATEGORY_SHELF(args):
     et = util.get_url_as_xml_soup_cache('http://espn.go.com/watchespn/appletv/featured')
@@ -576,6 +576,7 @@ def PLAY_TV(args):
     bitrate_limit = int(selfAddon.getSetting('BitrateLimit'))
     xbmc.log(TAG + 'ESPN3: Stream Quality %s' % stream_quality)
     m3u8_obj = m3u8.load(playback_url)
+    success = True
     if m3u8_obj.is_variant:
         stream_options = list()
         bandwidth_key = 'bandwidth'
@@ -613,17 +614,16 @@ def PLAY_TV(args):
             dialog = xbmcgui.Dialog()
             stream_index = dialog.select(translation(30440), stream_options)
             if stream_index < 0:
-                xbmcplugin.endOfDirectory(int(sys.argv[1]), succeeded=False)
-                return
-
-            selfAddon.setSetting(id='StreamQualityIndex', value=str(stream_index))
+                success = False
+            else:
+                selfAddon.setSetting(id='StreamQualityIndex', value=str(stream_index))
 
         xbmc.log(TAG + 'Chose stream %d' % stream_index)
         item = xbmcgui.ListItem(path=m3u8_obj.playlists[stream_index].uri)
-        return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, item)
+        return xbmcplugin.setResolvedUrl(int(sys.argv[1]), success, item)
     else:
         item = xbmcgui.ListItem(path=finalurl)
-        return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, item)
+        return xbmcplugin.setResolvedUrl(int(sys.argv[1]), success, item)
 
 def addLink(name, url, iconimage, fanart=None, infoLabels=None):
     u = sys.argv[0] + '?' + urllib.urlencode(url)
@@ -717,6 +717,7 @@ elif mode[0] == UPCOMING_MODE:
     xbmc.log("Upcoming")
     dialog = xbmcgui.Dialog()
     dialog.ok(translation(30035), translation(30036))
+    xbmcplugin.endOfDirectory(pluginhandle, succeeded=False,updateListing=True)
 elif mode[0] == CATEGORY_SHELF_MODE:
     CATEGORY_SHELF(args)
 elif mode[0] == OLD_LISTING_MODE:
