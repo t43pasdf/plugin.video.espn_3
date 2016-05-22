@@ -60,7 +60,7 @@
 	<string id="30420">Unable to authenticate device %s</string>
     <string id="30430">De-authorize device</string>
     <string id="30440">Choose Stream Quality</string>
-    <string id="30450">%s @ %s %sk</string>
+    <string id="30450">[B]%s[/B] @ %s %sk</string>
     <string id="30460">Stream Quality</string>
     <string id="30470">Best</string>
     <string id="30480">Ask Once</string>
@@ -69,4 +69,5 @@
     <string id="30510">Old Style Menu</string>
     <string id="30520">Index of stream to choose in the playlist</string>
     <string id="30530">Show the Old Style Menu (Legacy)</string>
+    <string id="30540">Bit rate limit in kbps (e.x. 10000 kbps)</string>
 </strings>

@@ -58,7 +58,7 @@ SECPLUS_ID = 'n323'
 
 TAG = 'ESPN3: '
 
-def CATEGORIES_ATV():
+def CATEGORIES_ATV(refresh = False):
     if not adobe_activate_api.is_authenticated():
         addDir('[COLOR=FFFF0000]' + translation(30300) + '[/COLOR]',
                dict(MODE=AUTHENTICATE_MODE),
@@ -89,7 +89,7 @@ def CATEGORIES_ATV():
         addDir('[COLOR=FF00FF00]' + translation(30380) + '[/COLOR]',
            dict(MODE=AUTHENTICATION_DETAILS_MODE),
            defaultfanart)
-    xbmcplugin.endOfDirectory(int(sys.argv[1]))
+    xbmcplugin.endOfDirectory(int(sys.argv[1]), updateListing = refresh)
 
 def CATEGORY_SHELF(args):
     et = util.get_url_as_xml_soup_cache('http://espn.go.com/watchespn/appletv/featured')
@@ -573,14 +573,12 @@ def PLAY_TV(args):
     # TODO: Need to figure out how blackouts are represented (tree, result) = check_blackout(authurl)
     playback_url = session_json['session']['playbackUrls']['default']
     stream_quality = str(selfAddon.getSetting('StreamQuality'))
+    bitrate_limit = int(selfAddon.getSetting('BitrateLimit'))
     xbmc.log(TAG + 'ESPN3: Stream Quality %s' % stream_quality)
     m3u8_obj = m3u8.load(playback_url)
     if m3u8_obj.is_variant:
         stream_options = list()
-        xbmc.log(TAG + str(m3u8_obj.data))
-        bandwidth_key = 'average_bandwidth'
-        if bandwidth_key not in m3u8_obj.data['playlists'][0]['stream_info']:
-            bandwidth_key = 'bandwidth'
+        bandwidth_key = 'bandwidth'
         m3u8_obj.playlists.sort(key=lambda playlist: playlist.stream_info.bandwidth, reverse=True)
         m3u8_obj.data['playlists'].sort(key=lambda playlist: int(playlist['stream_info'][bandwidth_key]), reverse=True)
         stream_quality_index = str(selfAddon.getSetting('StreamQualityIndex'))
@@ -595,6 +593,12 @@ def PLAY_TV(args):
         if '0' == stream_quality: # Best
             stream_index = 0
             should_ask = False
+            for playlist in m3u8_obj.data['playlists']:
+                stream_info = playlist['stream_info']
+                bandwidth = int(stream_info[bandwidth_key]) / 1000
+                if bandwidth <= bitrate_limit:
+                    break
+                stream_index = stream_index + 1
         elif '2' == stream_quality: #Ask everytime
             should_ask = True
         if should_ask:
@@ -602,19 +606,19 @@ def PLAY_TV(args):
                 stream_info = playlist['stream_info']
                 resolution = stream_info['resolution']
                 frame_rate = stream_info['frame_rate']
-                average_bandwidth = stream_info[bandwidth_key]
+                bandwidth = int(stream_info[bandwidth_key]) / 1000
                 stream_options.append(translation(30450) % (resolution,
-                                                          frame_rate,
-                                                          int(average_bandwidth) / 1000))
+                                                      frame_rate,
+                                                      bandwidth))
             dialog = xbmcgui.Dialog()
             stream_index = dialog.select(translation(30440), stream_options)
-            xbmc.log(TAG + 'Chose stream %d' % stream_index)
             if stream_index < 0:
                 xbmcplugin.endOfDirectory(int(sys.argv[1]), succeeded=False)
                 return
 
             selfAddon.setSetting(id='StreamQualityIndex', value=str(stream_index))
 
+        xbmc.log(TAG + 'Chose stream %d' % stream_index)
         item = xbmcgui.ListItem(path=m3u8_obj.playlists[stream_index].uri)
         return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, item)
     else:
@@ -657,8 +661,7 @@ mode = args.get(MODE, None)
 
 xbmc.log('ESPN3: args %s' % args)
 
-# TODO: Figure out a way to reload the menu
-# without messing up the back (...)
+refresh = False
 if mode is not None and mode[0] == AUTHENTICATE_MODE:
     xbmc.log('Authenticate Device')
     regcode = adobe_activate_api.get_regcode()
@@ -676,6 +679,7 @@ if mode is not None and mode[0] == AUTHENTICATE_MODE:
         except urllib2.HTTPError as e:
             dialog.ok(translation(30037), translation(30420) % e)
     mode = None
+    refresh = True
 elif mode is not None and mode[0] == AUTHENTICATION_DETAILS_MODE:
     dialog = xbmcgui.Dialog()
     ok = dialog.yesno(translation(30380),
@@ -685,12 +689,13 @@ elif mode is not None and mode[0] == AUTHENTICATION_DETAILS_MODE:
     if ok:
         adobe_activate_api.deauthorize()
     mode = None
+    refresh = True
 
 
 if mode == None:
     adobe_activate_api.clean_up_authorization_tokens()
     xbmc.log("Generate Main Menu")
-    CATEGORIES_ATV()
+    CATEGORIES_ATV(refresh)
 elif mode[0] == CATEGORY_SHOWCASE_MODE:
     CATEGORIES_SHOWCASE(args)
 elif mode[0] == LIVE_EVENTS_MODE:
