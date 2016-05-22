@@ -235,8 +235,7 @@ def INDEX_TV_SHELF(stash_json):
     network = network.replace('espn', 'ESPN')
     network = network.replace('sec', 'SEC')
     network = network.replace('longhorn', 'Longhorn')
-    if stash_json['channelType'] == 'linear':
-        ename = '[COLOR=FF%s]%s[/COLOR] %s' % (channel_color, network, ename)
+    ename = '[COLOR=FF%s]%s[/COLOR] %s' % (channel_color, network, ename)
 
     if 'description' in stash_json:
         description = stash_json['description']
