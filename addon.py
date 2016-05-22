@@ -59,6 +59,10 @@ SECPLUS_ID = 'n323'
 TAG = 'ESPN3: '
 
 def CATEGORIES_ATV():
+    if not adobe_activate_api.is_authenticated():
+        addDir('[COLOR=FFFF0000]' + translation(30300) + '[/COLOR]',
+               dict(MODE=AUTHENTICATE_MODE),
+               defaultreplay)
     et = util.get_url_as_xml_soup_cache('http://espn.go.com/watchespn/appletv/featured')
     for showcase in et.findall('.//showcase/items/showcasePoster'):
         name = showcase.get('accessibilityLabel')
@@ -77,17 +81,14 @@ def CATEGORIES_ATV():
         addDir(title,
                dict(SHELF_ID=name, MODE=CATEGORY_SHELF_MODE),
                defaultlive)
+    if selfAddon.getSetting('ShowLegacyMenu') == 'true':
+        addDir('[COLOR=FF0000FF]' + translation(30510) + '[/COLOR]',
+               dict(MODE=OLD_LISTING_MODE),
+               defaultlive)
     if adobe_activate_api.is_authenticated():
-        addDir(translation(30380),
+        addDir('[COLOR=FF00FF00]' + translation(30380) + '[/COLOR]',
            dict(MODE=AUTHENTICATION_DETAILS_MODE),
            defaultreplay)
-    else:
-        addDir(translation(30300),
-               dict(MODE=AUTHENTICATE_MODE),
-               defaultreplay)
-    addDir(translation(30510),
-           dict(MODE=OLD_LISTING_MODE),
-           defaultlive)
     xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
 def CATEGORY_SHELF(args):

@@ -68,4 +68,5 @@
     <string id="30500">Error playing channel, %s</string>
     <string id="30510">Old Style Menu</string>
     <string id="30520">Index of stream to choose in the playlist</string>
+    <string id="30530">Show the Old Style Menu (Legacy)</string>
 </strings>
