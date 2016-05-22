@@ -577,8 +577,12 @@ def PLAY_TV(args):
     m3u8_obj = m3u8.load(playback_url)
     if m3u8_obj.is_variant:
         stream_options = list()
+        xbmc.log(TAG + str(m3u8_obj.data))
+        bandwidth_key = 'average_bandwidth'
+        if bandwidth_key not in m3u8_obj.data['playlists'][0]['stream_info']:
+            bandwidth_key = 'bandwidth'
         m3u8_obj.playlists.sort(key=lambda playlist: playlist.stream_info.bandwidth, reverse=True)
-        m3u8_obj.data['playlists'].sort(key=lambda playlist: int(playlist['stream_info']['average_bandwidth']), reverse=True)
+        m3u8_obj.data['playlists'].sort(key=lambda playlist: int(playlist['stream_info'][bandwidth_key]), reverse=True)
         stream_quality_index = str(selfAddon.getSetting('StreamQualityIndex'))
         stream_index = None
         should_ask = False
@@ -598,7 +602,7 @@ def PLAY_TV(args):
                 stream_info = playlist['stream_info']
                 resolution = stream_info['resolution']
                 frame_rate = stream_info['frame_rate']
-                average_bandwidth = stream_info['average_bandwidth']
+                average_bandwidth = stream_info[bandwidth_key]
                 stream_options.append(translation(30450) % (resolution,
                                                           frame_rate,
                                                           int(average_bandwidth) / 1000))
