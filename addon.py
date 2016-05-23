@@ -121,7 +121,7 @@ def process_item_list(item_list):
             elif 'sessionUrl' in stash_json:
                 INDEX_TV_SHELF(stash_json)
             else:
-                INDEX_ITEM_SHELF(stash_json)
+                INDEX_ITEM_SHELF(stash_json, item)
 
 
 def CATEGORIES_SHOWCASE(args):
@@ -180,19 +180,31 @@ def INDEX_ITEM_UPCOMING(stash_json):
                   'duration':length,
                   'studio': stash_json['network'],
                   'mpaa':mpaa,
-                  'premiered':etime}
+                  'aired':starttime}
 
     authurl = dict()
     authurl[MODE] = UPCOMING_MODE
     addLink(ename.encode('iso-8859-1'), authurl, fanart, fanart, infoLabels=infoLabels)
 
+def get_metadata(item):
+    metadataKeysElement = item.find('.//metadataKeys')
+    metadataValuesElement = item.find('.//metadataValues')
+    description = ''
+    if metadataKeysElement is not None and metadataValuesElement is not None:
+        keyLabels = metadataKeysElement.findall('.//label')
+        valueLabels = metadataValuesElement.findall('.//label')
+        for i in range(0, min(len(keyLabels), len(valueLabels))):
+            description = description + '%s: %s\n' % (keyLabels[i].text, valueLabels[i].text)
+    return description
+
 # Items can play as is and do not need authentication
-def INDEX_ITEM_SHELF(stash_json):
+def INDEX_ITEM_SHELF(stash_json, item):
     sport = stash_json['sportName']
     ename = stash_json['name']
     fanart = stash_json['imageHref']
     length = int(stash_json['duration'])
     description = stash_json['description']
+    description = description + '\n\n' + get_metadata(item)
 
     infoLabels = {'title': ename,
                   'genre':sport,
@@ -225,7 +237,9 @@ def INDEX_TV_SHELF(stash_json):
         ename = '[COLOR=FFB700EB]' + etime + '[/COLOR] ' + ename
     elif now > starttime:
         length = length - (now - starttime)
+        xbmc.log(TAG + ' Setting length to %s' % length)
         ename += ' [COLOR=FFB700EB]' + etime + '[/COLOR]'
+    aired = time.strftime("%Y-%m-%d",time.localtime(starttime))
 
     network = stash_json['network']
     if network == 'longhorn':
@@ -254,7 +268,8 @@ def INDEX_TV_SHELF(stash_json):
                   'studio': stash_json['network'],
                   'mpaa':mpaa,
                   'plot':description,
-                  'premiered':etime}
+                  'aired':aired,
+                  'premiered':aired}
 
     authurl = dict()
     authurl[EVENT_ID] = stash_json['eventId']
