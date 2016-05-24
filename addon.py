@@ -60,12 +60,20 @@ SECPLUS_ID = 'n323'
 
 TAG = 'ESPN3: '
 
+def get_url(url):
+    tz = player_config.get_timezone()
+    if '?' in url:
+        sep = '&'
+    else:
+        sep = '?'
+    return url + sep + 'tz=' + urllib.quote_plus(tz)
+
 def CATEGORIES_ATV(refresh = False):
     if not adobe_activate_api.is_authenticated():
         addDir('[COLOR=FFFF0000]' + translation(30300) + '[/COLOR]',
                dict(MODE=AUTHENTICATE_MODE),
                defaultreplay)
-    et = util.get_url_as_xml_soup_cache('http://espn.go.com/watchespn/appletv/featured')
+    et = util.get_url_as_xml_soup_cache(get_url('http://espn.go.com/watchespn/appletv/featured'))
     for showcase in et.findall('.//showcase/items/showcasePoster'):
         name = showcase.get('accessibilityLabel')
         image = showcase.find('./image').get('src')
@@ -100,7 +108,7 @@ def CATEGORIES_ATV(refresh = False):
     xbmcplugin.endOfDirectory(int(sys.argv[1]), updateListing=refresh)
 
 def CATEGORY_SHELF(args):
-    et = util.get_url_as_xml_soup_cache('http://espn.go.com/watchespn/appletv/featured')
+    et = util.get_url_as_xml_soup_cache(get_url('http://espn.go.com/watchespn/appletv/featured'))
     for shelf in et.findall('.//shelf'):
         name = shelf.get('id')
         if name == args.get(SHELF_ID)[0]:
@@ -109,7 +117,7 @@ def CATEGORY_SHELF(args):
     xbmcplugin.endOfDirectory(pluginhandle)
 
 def CATEGORY_SPORTS(args):
-    et = util.get_url_as_xml_soup_cache('http://espn.go.com/watchespn/appletv/sports')
+    et = util.get_url_as_xml_soup_cache(get_url('http://espn.go.com/watchespn/appletv/sports'))
     images = et.findall('.//image')
     sports = et.findall('.//oneLineMenuItem')
     for i in range(0, min(len(images), len(sports))):
@@ -124,7 +132,7 @@ def CATEGORY_SPORTS(args):
     xbmcplugin.endOfDirectory(int(sys.argv[1]), updateListing=False)
 
 def CATEGORY_CHANNELS(args):
-    et = util.get_url_as_xml_soup_cache('http://espn.go.com/watchespn/appletv/channels')
+    et = util.get_url_as_xml_soup_cache(get_url('http://espn.go.com/watchespn/appletv/channels'))
     for channel in et.findall('.//oneLineMenuItem'):
         name = channel.get('accessibilityLabel')
         image = channel.find('.//image').text
@@ -162,7 +170,7 @@ def process_item_list(item_list):
 def CATEGORIES_SHOWCASE(args):
     url = args.get(SHOWCASE_URL)[0]
     selected_nav_id = args.get(SHOWCASE_NAV_ID, None)
-    et = util.get_url_as_xml_soup_cache(url)
+    et = util.get_url_as_xml_soup_cache(get_url(url))
     navigation_items = et.findall('.//navigation/navigationItem')
     xbmc.log('ESPN3 Found %s items' % len(navigation_items))
     if selected_nav_id is None and len(navigation_items) > 0:

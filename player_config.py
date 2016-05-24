@@ -28,6 +28,9 @@ def get_user_data():
 def can_access_free_content():
     return get_user_data()['affvalid'] == 'true'
 
+def get_timezone():
+    return get_user_data()['timezone']
+
 def get_networks():
     networks = get_config_soup().findall('.//network')
     return networks
