@@ -33,6 +33,7 @@ AUTHENTICATION_DETAILS_MODE = 'AUTHENTICATION_DETAILS'
 CATEGORY_SHELF_MODE = 'CATEGORY_SHELF'
 CATEGORY_SHOWCASE_MODE = 'CATEGORY_SHOWCASE'
 CATEGORY_SPORTS_MODE = 'CATEGORY_SPORTS'
+CATEGORY_CHANNELS_MODE = 'CATEGORY_CHANNELS'
 NETWORK_ID = 'NETWORK_ID'
 EVENT_ID = 'EVENT_ID'
 SIMULCAST_AIRING_ID = 'SIMULCAST_AIRING_ID'
@@ -85,6 +86,9 @@ def CATEGORIES_ATV(refresh = False):
     addDir(translation(30550),
            dict(MODE=CATEGORY_SPORTS_MODE),
            defaultlive)
+    addDir(translation(30560),
+           dict(MODE=CATEGORY_CHANNELS_MODE),
+           defaultlive)
     if selfAddon.getSetting('ShowLegacyMenu') == 'true':
         addDir('[COLOR=FF0000FF]' + translation(30510) + '[/COLOR]',
                dict(MODE=OLD_LISTING_MODE),
@@ -114,6 +118,17 @@ def CATEGORY_SPORTS(args):
         name = sport.get('accessibilityLabel')
         image = image.text
         url = util.parse_url_from_method(sport.get('onSelect'))
+        addDir(name,
+               dict(SHOWCASE_URL=url, MODE=CATEGORY_SHOWCASE_MODE),
+               image, image)
+    xbmcplugin.endOfDirectory(int(sys.argv[1]), updateListing=False)
+
+def CATEGORY_CHANNELS(args):
+    et = util.get_url_as_xml_soup_cache('http://espn.go.com/watchespn/appletv/channels')
+    for channel in et.findall('.//oneLineMenuItem'):
+        name = channel.get('accessibilityLabel')
+        image = channel.find('.//image').text
+        url = util.parse_url_from_method(channel.get('onSelect'))
         addDir(name,
                dict(SHOWCASE_URL=url, MODE=CATEGORY_SHOWCASE_MODE),
                image, image)
@@ -765,3 +780,5 @@ elif mode[0] == OLD_LISTING_MODE:
     CATEGORIES()
 elif mode[0] == CATEGORY_SPORTS_MODE:
     CATEGORY_SPORTS(args)
+elif mode[0] == CATEGORY_CHANNELS_MODE:
+    CATEGORY_CHANNELS(args)
