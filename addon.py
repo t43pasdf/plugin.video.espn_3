@@ -146,7 +146,13 @@ def CATEGORY_CHANNELS(args):
 def process_item_list(item_list):
     for item in item_list:
         stash_element = item.find('./stash/json')
-        if not item.get('id') == 'no-event':
+        if item.get('id') == 'loadMoreReplays':
+            # TODO: Handle load more properly
+            url = util.parse_url_from_method(item.get('onSelect'))
+            addDir(translation(30570),
+                   dict(SHOWCASE_URL=url, MODE=CATEGORY_SHOWCASE_MODE),
+                   defaultimage)
+        elif not item.get('id') == 'no-event':
             if stash_element is None:
                 # Assume goes to another onPlay with a url
                 name = item.get('accessibilityLabel')
