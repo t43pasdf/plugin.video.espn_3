@@ -73,7 +73,6 @@ def get_url_as_json_cache(url, cache_file, timeout = 1):
     json_file.close()
     json_data = json_data.replace('ud=', '')
     json_data = json_data.replace('\'', '"')
-    xbmc.log('json: %s' % json_data)
     return json.loads(json_data)
 
 # espn.page.loadSportPage('http://espn.go.com/watchespn/appletv/league?abbreviation=nba');

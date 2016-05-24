@@ -32,6 +32,8 @@ AUTHENTICATE_MODE = 'AUTHENTICATE'
 AUTHENTICATION_DETAILS_MODE = 'AUTHENTICATION_DETAILS'
 CATEGORY_SHELF_MODE = 'CATEGORY_SHELF'
 CATEGORY_SHOWCASE_MODE = 'CATEGORY_SHOWCASE'
+CATEGORY_SPORTS_MODE = 'CATEGORY_SPORTS'
+CATEGORY_CHANNELS_MODE = 'CATEGORY_CHANNELS'
 NETWORK_ID = 'NETWORK_ID'
 EVENT_ID = 'EVENT_ID'
 SIMULCAST_AIRING_ID = 'SIMULCAST_AIRING_ID'
@@ -58,12 +60,20 @@ SECPLUS_ID = 'n323'
 
 TAG = 'ESPN3: '
 
+def get_url(url):
+    tz = player_config.get_timezone()
+    if '?' in url:
+        sep = '&'
+    else:
+        sep = '?'
+    return url + sep + 'tz=' + urllib.quote_plus(tz)
+
 def CATEGORIES_ATV(refresh = False):
     if not adobe_activate_api.is_authenticated():
         addDir('[COLOR=FFFF0000]' + translation(30300) + '[/COLOR]',
                dict(MODE=AUTHENTICATE_MODE),
                defaultreplay)
-    et = util.get_url_as_xml_soup_cache('http://espn.go.com/watchespn/appletv/featured')
+    et = util.get_url_as_xml_soup_cache(get_url('http://espn.go.com/watchespn/appletv/featured'))
     for showcase in et.findall('.//showcase/items/showcasePoster'):
         name = showcase.get('accessibilityLabel')
         image = showcase.find('./image').get('src')
@@ -81,6 +91,12 @@ def CATEGORIES_ATV(refresh = False):
         addDir(title,
                dict(SHELF_ID=name, MODE=CATEGORY_SHELF_MODE),
                defaultlive)
+    addDir(translation(30550),
+           dict(MODE=CATEGORY_SPORTS_MODE),
+           defaultlive)
+    addDir(translation(30560),
+           dict(MODE=CATEGORY_CHANNELS_MODE),
+           defaultlive)
     if selfAddon.getSetting('ShowLegacyMenu') == 'true':
         addDir('[COLOR=FF0000FF]' + translation(30510) + '[/COLOR]',
                dict(MODE=OLD_LISTING_MODE),
@@ -89,16 +105,43 @@ def CATEGORIES_ATV(refresh = False):
         addDir('[COLOR=FF00FF00]' + translation(30380) + '[/COLOR]',
            dict(MODE=AUTHENTICATION_DETAILS_MODE),
            defaultfanart)
-    xbmcplugin.endOfDirectory(int(sys.argv[1]), updateListing = refresh)
+    xbmcplugin.endOfDirectory(int(sys.argv[1]), updateListing=refresh)
 
 def CATEGORY_SHELF(args):
-    et = util.get_url_as_xml_soup_cache('http://espn.go.com/watchespn/appletv/featured')
+    et = util.get_url_as_xml_soup_cache(get_url('http://espn.go.com/watchespn/appletv/featured'))
     for shelf in et.findall('.//shelf'):
         name = shelf.get('id')
         if name == args.get(SHELF_ID)[0]:
             process_item_list(shelf.findall('.//sixteenByNinePoster'))
     xbmcplugin.setContent(pluginhandle, 'episodes')
     xbmcplugin.endOfDirectory(pluginhandle)
+
+def CATEGORY_SPORTS(args):
+    et = util.get_url_as_xml_soup_cache(get_url('http://espn.go.com/watchespn/appletv/sports'))
+    images = et.findall('.//image')
+    sports = et.findall('.//oneLineMenuItem')
+    for i in range(0, min(len(images), len(sports))):
+        sport = sports[i]
+        image = images[i]
+        name = sport.get('accessibilityLabel')
+        image = image.text
+        url = util.parse_url_from_method(sport.get('onSelect'))
+        addDir(name,
+               dict(SHOWCASE_URL=url, MODE=CATEGORY_SHOWCASE_MODE),
+               image, image)
+    xbmcplugin.endOfDirectory(int(sys.argv[1]), updateListing=False)
+
+def CATEGORY_CHANNELS(args):
+    et = util.get_url_as_xml_soup_cache(get_url('http://espn.go.com/watchespn/appletv/channels'))
+    for channel in et.findall('.//oneLineMenuItem'):
+        name = channel.get('accessibilityLabel')
+        image = channel.find('.//image').text
+        url = util.parse_url_from_method(channel.get('onSelect'))
+        addDir(name,
+               dict(SHOWCASE_URL=url, MODE=CATEGORY_SHOWCASE_MODE),
+               image, image)
+    xbmcplugin.endOfDirectory(int(sys.argv[1]), updateListing=False)
+
 
 def process_item_list(item_list):
     for item in item_list:
@@ -117,17 +160,17 @@ def process_item_list(item_list):
             stash = re.sub(r'\s+"', '"', stash)
             stash_json = json.loads(stash, 'utf-8')
             if stash_json['type'] == 'upcoming':
-                INDEX_ITEM_UPCOMING(stash_json)
+                INDEX_ITEM_UPCOMING(stash_json, item)
             elif 'sessionUrl' in stash_json:
-                INDEX_TV_SHELF(stash_json)
+                INDEX_TV_SHELF(stash_json, item)
             else:
-                INDEX_ITEM_SHELF(stash_json)
+                INDEX_ITEM_SHELF(stash_json, item)
 
 
 def CATEGORIES_SHOWCASE(args):
     url = args.get(SHOWCASE_URL)[0]
     selected_nav_id = args.get(SHOWCASE_NAV_ID, None)
-    et = util.get_url_as_xml_soup_cache(url)
+    et = util.get_url_as_xml_soup_cache(get_url(url))
     navigation_items = et.findall('.//navigation/navigationItem')
     xbmc.log('ESPN3 Found %s items' % len(navigation_items))
     if selected_nav_id is None and len(navigation_items) > 0:
@@ -154,7 +197,7 @@ def CATEGORIES_SHOWCASE(args):
         xbmcplugin.setContent(pluginhandle, 'episodes')
     xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
-def INDEX_ITEM_UPCOMING(stash_json):
+def INDEX_ITEM_UPCOMING(stash_json, item):
     sport = stash_json['categoryName']
     ename = stash_json['name']
     sport2 = stash_json['subcategoryName']
@@ -172,7 +215,9 @@ def INDEX_ITEM_UPCOMING(stash_json):
     if now < starttime:
         etime = time.strftime("%m/%d %I:%M %p",time.localtime(starttime))
         ename = '[COLOR=FFB700EB]' + etime + '[/COLOR] ' + ename
+    aired = time.strftime("%Y-%m-%d", time.localtime(starttime))
 
+    description = get_metadata(item)
 
 
     infoLabels = {'title': ename,
@@ -180,19 +225,33 @@ def INDEX_ITEM_UPCOMING(stash_json):
                   'duration':length,
                   'studio': stash_json['network'],
                   'mpaa':mpaa,
-                  'premiered':etime}
+                  'aired':aired,
+                  'plot': description}
 
     authurl = dict()
     authurl[MODE] = UPCOMING_MODE
     addLink(ename.encode('iso-8859-1'), authurl, fanart, fanart, infoLabels=infoLabels)
 
+def get_metadata(item):
+    metadataKeysElement = item.find('.//metadataKeys')
+    metadataValuesElement = item.find('.//metadataValues')
+    description = ''
+    if metadataKeysElement is not None and metadataValuesElement is not None:
+        keyLabels = metadataKeysElement.findall('.//label')
+        valueLabels = metadataValuesElement.findall('.//label')
+        for i in range(0, min(len(keyLabels), len(valueLabels))):
+            if valueLabels[i].text is not None:
+                description = description + '%s: %s\n' % (keyLabels[i].text, valueLabels[i].text)
+    return description
+
 # Items can play as is and do not need authentication
-def INDEX_ITEM_SHELF(stash_json):
+def INDEX_ITEM_SHELF(stash_json, item):
     sport = stash_json['sportName']
     ename = stash_json['name']
     fanart = stash_json['imageHref']
     length = int(stash_json['duration'])
     description = stash_json['description']
+    description = description + '\n\n' + get_metadata(item)
 
     infoLabels = {'title': ename,
                   'genre':sport,
@@ -204,7 +263,7 @@ def INDEX_ITEM_SHELF(stash_json):
     authurl[PLAYBACK_URL] = stash_json['playbackUrl']
     addLink(ename.encode('iso-8859-1'), authurl, fanart, fanart, infoLabels=infoLabels)
 
-def INDEX_TV_SHELF(stash_json):
+def INDEX_TV_SHELF(stash_json, item):
     sport = stash_json['categoryName']
     ename = stash_json['name']
     sport2 = stash_json['subcategoryName']
@@ -225,7 +284,9 @@ def INDEX_TV_SHELF(stash_json):
         ename = '[COLOR=FFB700EB]' + etime + '[/COLOR] ' + ename
     elif now > starttime:
         length = length - (now - starttime)
+        xbmc.log(TAG + ' Setting length to %s' % length)
         ename += ' [COLOR=FFB700EB]' + etime + '[/COLOR]'
+    aired = time.strftime("%Y-%m-%d",time.localtime(starttime))
 
     network = stash_json['network']
     if network == 'longhorn':
@@ -243,6 +304,7 @@ def INDEX_TV_SHELF(stash_json):
         description = stash_json['description']
     else:
         description = ''
+    description = description + '\n\n' + get_metadata(item)
 
     requires_auth = does_requires_auth(stash_json['network'])
     if requires_auth and not adobe_activate_api.is_authenticated():
@@ -254,7 +316,8 @@ def INDEX_TV_SHELF(stash_json):
                   'studio': stash_json['network'],
                   'mpaa':mpaa,
                   'plot':description,
-                  'premiered':etime}
+                  'aired':aired,
+                  'premiered':aired}
 
     authurl = dict()
     authurl[EVENT_ID] = stash_json['eventId']
@@ -576,6 +639,7 @@ def PLAY_TV(args):
     bitrate_limit = int(selfAddon.getSetting('BitrateLimit'))
     xbmc.log(TAG + 'ESPN3: Stream Quality %s' % stream_quality)
     m3u8_obj = m3u8.load(playback_url)
+    success = True
     if m3u8_obj.is_variant:
         stream_options = list()
         bandwidth_key = 'bandwidth'
@@ -613,17 +677,16 @@ def PLAY_TV(args):
             dialog = xbmcgui.Dialog()
             stream_index = dialog.select(translation(30440), stream_options)
             if stream_index < 0:
-                xbmcplugin.endOfDirectory(int(sys.argv[1]), succeeded=False)
-                return
-
-            selfAddon.setSetting(id='StreamQualityIndex', value=str(stream_index))
+                success = False
+            else:
+                selfAddon.setSetting(id='StreamQualityIndex', value=str(stream_index))
 
         xbmc.log(TAG + 'Chose stream %d' % stream_index)
         item = xbmcgui.ListItem(path=m3u8_obj.playlists[stream_index].uri)
-        return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, item)
+        return xbmcplugin.setResolvedUrl(int(sys.argv[1]), success, item)
     else:
         item = xbmcgui.ListItem(path=finalurl)
-        return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, item)
+        return xbmcplugin.setResolvedUrl(int(sys.argv[1]), success, item)
 
 def addLink(name, url, iconimage, fanart=None, infoLabels=None):
     u = sys.argv[0] + '?' + urllib.urlencode(url)
@@ -717,8 +780,13 @@ elif mode[0] == UPCOMING_MODE:
     xbmc.log("Upcoming")
     dialog = xbmcgui.Dialog()
     dialog.ok(translation(30035), translation(30036))
+    xbmcplugin.endOfDirectory(pluginhandle, succeeded=False,updateListing=True)
 elif mode[0] == CATEGORY_SHELF_MODE:
     CATEGORY_SHELF(args)
 elif mode[0] == OLD_LISTING_MODE:
     xbmc.log("Old listing mode")
     CATEGORIES()
+elif mode[0] == CATEGORY_SPORTS_MODE:
+    CATEGORY_SPORTS(args)
+elif mode[0] == CATEGORY_CHANNELS_MODE:
+    CATEGORY_CHANNELS(args)

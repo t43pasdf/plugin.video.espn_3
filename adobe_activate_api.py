@@ -181,7 +181,7 @@ def re_authenticate():
 def get_resource(channel, event_name, event_guid, event_parental_rating):
     return '<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/"><channel><title><![CDATA[' + channel + "]]></title><item><title><![CDATA[" + event_name + "]]></title><guid><![CDATA[" + event_guid + ']]></guid><media:rating scheme="urn:v-chip"><![CDATA[' + event_parental_rating + "]]></media:rating></item></channel></rss>"
 
-# Sample '{"resource":"TODO resource","mvpd":"","requestor":"ESPN","expires":"1463621239000"}'
+# Sample '{"resource":"resource","mvpd":"","requestor":"ESPN","expires":"1463621239000"}'
 def authorize(resource):
     if is_authorized(resource):
         xbmc.log(TAG + 'already authorized')
