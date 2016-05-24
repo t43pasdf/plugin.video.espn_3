@@ -117,9 +117,9 @@ def process_item_list(item_list):
             stash = re.sub(r'\s+"', '"', stash)
             stash_json = json.loads(stash, 'utf-8')
             if stash_json['type'] == 'upcoming':
-                INDEX_ITEM_UPCOMING(stash_json)
+                INDEX_ITEM_UPCOMING(stash_json, item)
             elif 'sessionUrl' in stash_json:
-                INDEX_TV_SHELF(stash_json)
+                INDEX_TV_SHELF(stash_json, item)
             else:
                 INDEX_ITEM_SHELF(stash_json, item)
 
@@ -154,7 +154,7 @@ def CATEGORIES_SHOWCASE(args):
         xbmcplugin.setContent(pluginhandle, 'episodes')
     xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
-def INDEX_ITEM_UPCOMING(stash_json):
+def INDEX_ITEM_UPCOMING(stash_json, item):
     sport = stash_json['categoryName']
     ename = stash_json['name']
     sport2 = stash_json['subcategoryName']
@@ -172,7 +172,9 @@ def INDEX_ITEM_UPCOMING(stash_json):
     if now < starttime:
         etime = time.strftime("%m/%d %I:%M %p",time.localtime(starttime))
         ename = '[COLOR=FFB700EB]' + etime + '[/COLOR] ' + ename
+    aired = time.strftime("%Y-%m-%d", time.localtime(starttime))
 
+    description = get_metadata(item)
 
 
     infoLabels = {'title': ename,
@@ -180,7 +182,8 @@ def INDEX_ITEM_UPCOMING(stash_json):
                   'duration':length,
                   'studio': stash_json['network'],
                   'mpaa':mpaa,
-                  'aired':starttime}
+                  'aired':aired,
+                  'plot': description}
 
     authurl = dict()
     authurl[MODE] = UPCOMING_MODE
@@ -194,7 +197,8 @@ def get_metadata(item):
         keyLabels = metadataKeysElement.findall('.//label')
         valueLabels = metadataValuesElement.findall('.//label')
         for i in range(0, min(len(keyLabels), len(valueLabels))):
-            description = description + '%s: %s\n' % (keyLabels[i].text, valueLabels[i].text)
+            if valueLabels[i].text is not None:
+                description = description + '%s: %s\n' % (keyLabels[i].text, valueLabels[i].text)
     return description
 
 # Items can play as is and do not need authentication
@@ -216,7 +220,7 @@ def INDEX_ITEM_SHELF(stash_json, item):
     authurl[PLAYBACK_URL] = stash_json['playbackUrl']
     addLink(ename.encode('iso-8859-1'), authurl, fanart, fanart, infoLabels=infoLabels)
 
-def INDEX_TV_SHELF(stash_json):
+def INDEX_TV_SHELF(stash_json, item):
     sport = stash_json['categoryName']
     ename = stash_json['name']
     sport2 = stash_json['subcategoryName']
@@ -257,6 +261,7 @@ def INDEX_TV_SHELF(stash_json):
         description = stash_json['description']
     else:
         description = ''
+    description = description + '\n\n' + get_metadata(item)
 
     requires_auth = does_requires_auth(stash_json['network'])
     if requires_auth and not adobe_activate_api.is_authenticated():
