@@ -146,25 +146,26 @@ def CATEGORY_CHANNELS(args):
 def process_item_list(item_list):
     for item in item_list:
         stash_element = item.find('./stash/json')
-        if stash_element is None:
-            # Assume goes to another onPlay with a url
-            name = item.get('accessibilityLabel')
-            image = item.find('./image').get('src')
-            url = util.parse_url_from_method(item.get('onPlay'))
-            addDir(name,
-                   dict(SHOWCASE_URL=url, MODE=CATEGORY_SHOWCASE_MODE),
-                   image, image)
-        else:
-            stash = stash_element.text.encode('utf-8')
-            # Some of the json is baddly formatted
-            stash = re.sub(r'\s+"', '"', stash)
-            stash_json = json.loads(stash, 'utf-8')
-            if stash_json['type'] == 'upcoming':
-                INDEX_ITEM_UPCOMING(stash_json, item)
-            elif 'sessionUrl' in stash_json:
-                INDEX_TV_SHELF(stash_json, item)
+        if not item.get('id') == 'no-event':
+            if stash_element is None:
+                # Assume goes to another onPlay with a url
+                name = item.get('accessibilityLabel')
+                image = item.find('./image').get('src')
+                url = util.parse_url_from_method(item.get('onPlay'))
+                addDir(name,
+                       dict(SHOWCASE_URL=url, MODE=CATEGORY_SHOWCASE_MODE),
+                       image, image)
             else:
-                INDEX_ITEM_SHELF(stash_json, item)
+                stash = stash_element.text.encode('utf-8')
+                # Some of the json is baddly formatted
+                stash = re.sub(r'\s+"', '"', stash)
+                stash_json = json.loads(stash, 'utf-8')
+                if stash_json['type'] == 'upcoming':
+                    INDEX_ITEM_UPCOMING(stash_json, item)
+                elif 'sessionUrl' in stash_json:
+                    INDEX_TV_SHELF(stash_json, item)
+                else:
+                    INDEX_ITEM_SHELF(stash_json, item)
 
 
 def CATEGORIES_SHOWCASE(args):
