@@ -644,7 +644,7 @@ def PLAY_TV(args):
     playback_url = session_json['session']['playbackUrls']['default']
     stream_quality = str(selfAddon.getSetting('StreamQuality'))
     bitrate_limit = int(selfAddon.getSetting('BitrateLimit'))
-    xbmc.log(TAG + 'ESPN3: Stream Quality %s' % stream_quality)
+    xbmc.log(TAG + 'Stream Quality %s' % stream_quality)
     m3u8_obj = m3u8.load(playback_url)
     success = True
     if m3u8_obj.is_variant:
@@ -678,6 +678,9 @@ def PLAY_TV(args):
                 resolution = stream_info['resolution']
                 frame_rate = stream_info['frame_rate']
                 bandwidth = int(stream_info[bandwidth_key]) / 1000
+                if 'average_bandwidth' in stream_info:
+                    xbmc.log(TAG + 'bandwidth: %s average bandwidth: %s' %
+                             (stream_info['bandwidth'], stream_info['average_bandwidth']))
                 stream_options.append(translation(30450) % (resolution,
                                                       frame_rate,
                                                       bandwidth))
