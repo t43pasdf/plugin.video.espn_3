@@ -2,7 +2,9 @@
 <settings>
   <category label="Playback">
   	 <setting id="StreamQuality" type="enum" label="30460" default="0" lvalues="30470|30480|30490" />
-  	 <setting id="BitrateLimit" type="number" label="30540" default="10000" />
+  	 <setting id="BitrateLimit" type="number" label="30540" default="10000" subsetting="true"
+              enable="eq(-1,0)"
+     />
   </category>
   <category label="Days (Legacy)">
     <setting type="sep" />

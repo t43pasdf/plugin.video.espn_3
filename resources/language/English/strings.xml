@@ -69,7 +69,7 @@
     <string id="30510">Old Style Menu</string>
     <string id="30520">Index of stream to choose in the playlist</string>
     <string id="30530">Show the Old Style Menu (Legacy)</string>
-    <string id="30540">Bit rate limit in kbps (e.x. 10000 kbps)</string>
+    <string id="30540">Bit rate limit (e.x. 10000k)</string>
     <string id="30550">Sports</string>
     <string id="30560">Channels</string>
     <string id="30570">Load More</string>
