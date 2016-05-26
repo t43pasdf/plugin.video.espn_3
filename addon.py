@@ -8,6 +8,7 @@ import urllib, xbmcplugin, xbmcaddon, xbmcgui
 import time
 from datetime import datetime, timedelta
 import base64
+import urlparse
 
 from globals import selfAddon, defaultlive, defaultreplay, defaultupcoming, defaultimage, defaultfanart, translation, pluginhandle
 import player_config
@@ -146,12 +147,25 @@ def CATEGORY_CHANNELS(args):
 def process_item_list(item_list):
     for item in item_list:
         stash_element = item.find('./stash/json')
-        if item.get('id') == 'loadMoreReplays':
-            # TODO: Handle load more properly
-            url = util.parse_url_from_method(item.get('onSelect'))
-            addDir(translation(30570),
-                   dict(SHOWCASE_URL=url, MODE=CATEGORY_SHOWCASE_MODE),
-                   defaultimage)
+        if item.get('id').startswith('loadMore'):
+            method_info = util.parse_method_call(item.get('onSelect'))
+            if method_info[0] == 'espn.page.loadMore':
+                label = item.find('./label')
+                label2 = item.find('./label2')
+                menu_label = ''
+                if label is not None:
+                    menu_label = label.text
+                if label2 is not None:
+                    menu_label = menu_label + ' ' + label2.text
+                if label is None and label2 is None:
+                    menu_label = translation(30570)
+                url = method_info[3]
+                nav_id = method_info[2]
+                url = url + '&navigationItemId=' + nav_id
+                xbmc.log(TAG + 'Load more url %s' % url)
+                addDir(menu_label,
+                       dict(SHOWCASE_URL=url, MODE=CATEGORY_SHOWCASE_MODE),
+                       defaultimage)
         elif not item.get('id') == 'no-event':
             if stash_element is None:
                 # Assume goes to another onPlay with a url

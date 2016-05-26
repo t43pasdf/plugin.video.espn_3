@@ -8,6 +8,7 @@ import urllib2
 import json
 import xml.etree.ElementTree as ET
 import hashlib
+import re
 
 from globals import ADDON_PATH_PROFILE
 
@@ -79,6 +80,13 @@ def get_url_as_json_cache(url, cache_file, timeout = 1):
 # -> http://espn.go.com/watchespn/appletv/league?abbreviation=nba
 def parse_url_from_method(method):
     http_start = method.find('http')
-    end = method.find('\');')
+    end = method.find('\')')
     return method[http_start:end]
+
+
+# espn.page.loadMore('loadMoreLiveAndUpcoming', 'nav-0', 'http://espn.go.com/watchespn/appletv/loadMore?url=http%3A%2F%2Fapi-app.espn.com%2Fv1%2Fwatch%2Flistings%3Fconference%3Dacc&types=live,upcoming&offset=20&limit=20')
+def parse_method_call(method):
+    p = re.compile('([\\w\\.:/&\\?=%,-]{2,})')
+    return p.findall(method)
+
 
