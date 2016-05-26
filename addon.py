@@ -675,7 +675,7 @@ def PLAY_TV(args):
             should_ask = False
             for playlist in m3u8_obj.data['playlists']:
                 stream_info = playlist['stream_info']
-                bandwidth = int(stream_info[bandwidth_key]) / 1000
+                bandwidth = int(stream_info[bandwidth_key]) / 1024
                 if bandwidth <= bitrate_limit:
                     break
                 stream_index = stream_index + 1
@@ -686,7 +686,7 @@ def PLAY_TV(args):
                 stream_info = playlist['stream_info']
                 resolution = stream_info['resolution']
                 frame_rate = stream_info['frame_rate']
-                bandwidth = int(stream_info[bandwidth_key]) / 1000
+                bandwidth = int(stream_info[bandwidth_key]) / 1024
                 if 'average_bandwidth' in stream_info:
                     xbmc.log(TAG + 'bandwidth: %s average bandwidth: %s' %
                              (stream_info['bandwidth'], stream_info['average_bandwidth']))
