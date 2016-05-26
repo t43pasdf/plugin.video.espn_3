@@ -395,14 +395,6 @@ def CATEGORIES():
     addDir(translation(30032),
            dict(ESPN_URL=events.get_replay_events_url(channel_list) +enddate+'&startDate='+startAll, MODE=LIST_SPORTS_MODE),
            defaultreplay)
-    if adobe_activate_api.is_authenticated():
-        addDir(translation(30380),
-           dict(MODE=AUTHENTICATION_DETAILS_MODE),
-           defaultreplay)
-    else:
-        addDir(translation(30300),
-               dict(MODE=AUTHENTICATE_MODE),
-               defaultreplay)
     xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
 def LISTSPORTS(args):
