@@ -218,41 +218,6 @@ def CATEGORIES_SHOWCASE(args):
         xbmcplugin.setContent(pluginhandle, 'episodes')
     xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
-def INDEX_ITEM_UPCOMING(stash_json, item):
-    sport = stash_json['categoryName']
-    ename = stash_json['name']
-    sport2 = stash_json['subcategoryName']
-    if sport <> sport2:
-        sport += ' ('+sport2+')'
-    fanart = stash_json['imageHref']
-    mpaa = stash_json['parentalRating']
-    starttime = int(stash_json['startTime'])/1000
-    now = time.time()
-    etime = time.strftime("%I:%M %p",time.localtime(float(starttime)))
-    length = int(stash_json['duration'])
-    if now > starttime:
-        length = length - (now - starttime)
-        ename += ' [COLOR=FFB700EB]' + etime + '[/COLOR]'
-    if now < starttime:
-        etime = time.strftime("%m/%d %I:%M %p",time.localtime(starttime))
-        ename = '[COLOR=FFB700EB]' + etime + '[/COLOR] ' + ename
-    aired = time.strftime("%Y-%m-%d", time.localtime(starttime))
-
-    description = get_metadata(item)
-
-
-    infoLabels = {'title': ename,
-                  'genre':sport,
-                  'duration':length,
-                  'studio': stash_json['network'],
-                  'mpaa':mpaa,
-                  'aired':aired,
-                  'plot': description}
-
-    authurl = dict()
-    authurl[MODE] = UPCOMING_MODE
-    addLink(ename.encode('iso-8859-1'), authurl, fanart, fanart, infoLabels=infoLabels)
-
 def get_metadata(item):
     metadataKeysElement = item.find('.//metadataKeys')
     metadataValuesElement = item.find('.//metadataValues')
@@ -283,6 +248,41 @@ def INDEX_ITEM_SHELF(stash_json, item):
     authurl[MODE] = PLAY_ITEM_MODE
     authurl[PLAYBACK_URL] = stash_json['playbackUrl']
     addLink(ename.encode('iso-8859-1'), authurl, fanart, fanart, infoLabels=infoLabels)
+
+def INDEX_ITEM_UPCOMING(stash_json, item):
+    sport = stash_json['categoryName']
+    ename = stash_json['name']
+    sport2 = stash_json['subcategoryName']
+    if sport <> sport2:
+        sport += ' ('+sport2+')'
+    fanart = stash_json['imageHref']
+    mpaa = stash_json['parentalRating']
+    starttime = int(stash_json['startTime'])/1000
+    now = time.time()
+    etime = time.strftime("%I:%M %p",time.localtime(float(starttime)))
+    length = int(stash_json['duration'])
+    if now > starttime:
+        length = length - (now - starttime)
+        ename += ' [COLOR=FFB700EB]' + etime + '[/COLOR]'
+    if now < starttime:
+        etime = time.strftime("%m/%d %I:%M %p",time.localtime(starttime))
+        ename = '[COLOR=FFB700EB]' + etime + '[/COLOR] ' + ename
+    aired = time.strftime("%Y-%m-%d", time.localtime(starttime))
+
+    description = get_metadata(item)
+
+    infoLabels = {'title': ename,
+                  'genre':sport,
+                  'duration':length,
+                  'studio': stash_json['network'],
+                  'mpaa':mpaa,
+                  'aired':aired,
+                  'plot': description}
+
+    authurl = dict()
+    authurl[MODE] = UPCOMING_MODE
+    addLink(ename.encode('iso-8859-1'), authurl, fanart, fanart, infoLabels=infoLabels)
+
 
 def INDEX_TV_SHELF(stash_json, item):
     sport = stash_json['categoryName']
@@ -319,7 +319,11 @@ def INDEX_TV_SHELF(stash_json, item):
     network = network.replace('espn', 'ESPN')
     network = network.replace('sec', 'SEC')
     network = network.replace('longhorn', 'Longhorn')
-    ename = '[COLOR=FF%s]%s[/COLOR] %s' % (channel_color, network, ename)
+    blackout = check_blackout(item)
+    blackout_text = ''
+    if blackout:
+        blackout_text = '[BLACKOUT]'
+    ename = '[COLOR=FF%s]%s[/COLOR] %s %s' % (channel_color, network, blackout_text, ename)
 
     if 'description' in stash_json:
         description = stash_json['description']
@@ -568,26 +572,17 @@ def INDEX(args):
     xbmcplugin.setContent(pluginhandle, 'episodes')
     xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
-def check_blackout(authurl):
-    tree = util.get_url_as_xml_soup(authurl)
-    authstatus = tree.find('.//' + BAM_NS + 'auth-status')
-    blackoutstatus = tree.find('.//' + BAM_NS + 'blackout-status')
-    if blackoutstatus.find('.//' + BAM_NS + 'errorCode') is not None:
-        if blackoutstatus.find('.//' + BAM_NS + 'errorMessage') is not None:
-            dialog = xbmcgui.Dialog()
-            dialog.ok(translation(30040), blackoutstatus.find('.//' + BAM_NS + 'errorMessage').text)
-            return (tree, True)
-    if authstatus.find('.//' + BAM_NS + 'errorCode') is not None or authstatus.find('.//' + BAM_NS + 'errorMessage') is not None:
-        dialog = xbmcgui.Dialog()
-        import textwrap
-        errormessage = '%s - %s' % (authstatus.find('.//' + BAM_NS + 'errorCode').text,  authstatus.find('.//' + BAM_NS + 'errorMessage').text)
-        try:
-            errormessage = textwrap.fill(errormessage, width=50).split('\n')
-            dialog.ok(translation(30037), errormessage[0],errormessage[1],errormessage[2])
-        except:
-            dialog.ok(translation(30037), errormessage[0])
-        return (tree, True)
-    return (tree, False)
+def check_blackout(item):
+    blackouts = item.findall('.//blackouts/blackoutsItem/detail/detailItem')
+    blackout_type = item.find('.//blackouts/blackoutsItem/type')
+    if blackout_type is not None and not blackout_type.text == 'dma':
+        return False
+    user_dma = player_config.get_dma()
+    if blackouts is not None:
+        for blackout in blackouts:
+            if blackout.text == user_dma:
+                return True
+    return False
 
 def PLAY_ITEM(args):
     url = args.get(PLAYBACK_URL)[0]
