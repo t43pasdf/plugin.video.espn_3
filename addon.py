@@ -649,7 +649,7 @@ def PLAY_TV(args):
     session_json = util.get_url_as_json(start_session_url)
     if check_error(session_json):
         return
-    # TODO: Need to figure out how blackouts are represented (tree, result) = check_blackout(authurl)
+
     playback_url = session_json['session']['playbackUrls']['default']
     stream_quality = str(selfAddon.getSetting('StreamQuality'))
     bitrate_limit = int(selfAddon.getSetting('BitrateLimit'))
