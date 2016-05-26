@@ -31,6 +31,9 @@ def can_access_free_content():
 def get_timezone():
     return get_user_data()['timezone']
 
+def get_dma():
+    return get_user_data()['dma']
+
 def get_networks():
     networks = get_config_soup().findall('.//network')
     return networks
