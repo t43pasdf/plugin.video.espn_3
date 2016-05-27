@@ -502,6 +502,7 @@ def INDEX_EVENT(event, live, upcoming, replay, chosen_sport):
     session_url += '&simulcastAiringId='+simulcastAiringId
 
     authurl = dict()
+    authurl[EVENT_ID] = eventid
     authurl[MODE] = UPCOMING_MODE if upcoming else PLAY_MODE
     authurl[NETWORK_NAME] = event.find('adobeResource').text
     authurl[EVENT_NAME] = event.find('name').text.encode('utf-8')
@@ -597,6 +598,22 @@ def does_requires_auth(network_name):
             xbmc.log('ESPN3: User needs login to ESPN3')
             requires_auth = True
     return requires_auth
+
+
+def PLAY_LEGACY_TV(args):
+    # check blackout differently for legacy shows
+    event_id = args.get(EVENT_ID)[0]
+    network_name = args.get(NETWORK_NAME)[0]
+    blackout_data = util.get_url_as_json('http://broadband.espn.go.com/espn3/auth/watchespn/util/isUserBlackedOut?eventId=' + event_id)
+    if network_name == 'espn3':
+        blackout = blackout_data['E3BlackOut']
+    else:
+        blackout = blackout_data['LinearBlackOut']
+    if blackout == 'true':
+        dialog = xbmcgui.Dialog()
+        dialog.ok(translation(30037), translation(30040))
+        return
+    PLAY_TV(args)
 
 # TODO: Unsure if cookie is needed
 #ua UA_PC
@@ -782,7 +799,7 @@ elif mode[0] == INDEX_SPORTS_MODE:
     xbmc.log("Index by sport")
     INDEX(args)
 elif mode[0] == PLAY_MODE:
-    PLAY_TV(args)
+    PLAY_LEGACY_TV(args)
 elif mode[0] == PLAY_ITEM_MODE:
     PLAY_ITEM(args)
 elif mode[0] == PLAY_TV_MODE:
