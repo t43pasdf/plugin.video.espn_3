@@ -4,21 +4,24 @@
 # Written by Ksosez, BlueCop, Romans I XVI, locomot1f, MetalChris, awaters1 (https://github.com/awaters1)
 # Released under GPL(v2)
 
-import urllib, xbmcplugin, xbmcaddon, xbmcgui
-import time
-from datetime import datetime, timedelta
 import base64
-
-from globals import selfAddon, defaultlive, defaultreplay, defaultupcoming, defaultimage, defaultfanart, translation, pluginhandle
-import player_config
-import events
-import util
-import urlparse
-import m3u8
-import re
 import json
+import re
+import time
+import urllib
+import urlparse
+from datetime import datetime, timedelta
 
-import adobe_activate_api
+import m3u8
+
+import xbmcgui
+import xbmcplugin
+
+from resources.lib import util
+from resources.lib import player_config
+from resources.lib import events
+from resources.lib import adobe_activate_api
+from resources.lib.globals import selfAddon, defaultlive, defaultreplay, defaultupcoming, defaultimage, defaultfanart, translation, pluginhandle
 
 OLD_LISTING_MODE = 'OLD_LISTING_MODE'
 LIVE_EVENTS_MODE = 'LIVE_EVENTS'
@@ -341,7 +344,7 @@ def CATEGORIES():
            dict(ESPN_URL=events.get_live_events_url(channel_list), MODE=LIVE_EVENTS_MODE),
            defaultlive)
     addDir(translation(30030),
-           dict(ESPN_URL=events.get_upcoming_events_url(channel_list) + '&endDate='+days+'&startDate='+curdate.strftime("%Y%m%d"), MODE=LIST_SPORTS_MODE),
+           dict(ESPN_URL=events.get_upcoming_events_url(channel_list) + '&endDate=' + days + '&startDate=' + curdate.strftime("%Y%m%d"), MODE=LIST_SPORTS_MODE),
            defaultupcoming)
     enddate = '&endDate='+ (curdate+timedelta(days=1)).strftime("%Y%m%d")
     replays1 = [5,10,15,20,25]
@@ -357,20 +360,20 @@ def CATEGORIES():
     replays4 = replays4[int(selfAddon.getSetting('replays4'))]
     start4 = (curdate-timedelta(days=replays4)).strftime("%Y%m%d")
     startAll = (curdate-timedelta(days=365)).strftime("%Y%m%d")
-    addDir(translation(30031)+str(replays1)+' Days',
-           dict(ESPN_URL=events.get_replay_events_url(channel_list) +enddate+'&startDate='+start1, MODE=LIST_SPORTS_MODE),
+    addDir(translation(30031) + str(replays1) +' Days',
+           dict(ESPN_URL=events.get_replay_events_url(channel_list) + enddate + '&startDate=' + start1, MODE=LIST_SPORTS_MODE),
            defaultreplay)
-    addDir(translation(30031)+str(replays2)+' Days',
-           dict(ESPN_URL=events.get_replay_events_url(channel_list) +enddate+'&startDate='+start2, MODE=LIST_SPORTS_MODE),
+    addDir(translation(30031) + str(replays2) +' Days',
+           dict(ESPN_URL=events.get_replay_events_url(channel_list) + enddate + '&startDate=' + start2, MODE=LIST_SPORTS_MODE),
            defaultreplay)
-    addDir(translation(30031)+str(replays3)+' Days',
-           dict(ESPN_URL=events.get_replay_events_url(channel_list) +enddate+'&startDate='+start3, MODE=LIST_SPORTS_MODE),
+    addDir(translation(30031) + str(replays3) +' Days',
+           dict(ESPN_URL=events.get_replay_events_url(channel_list) + enddate + '&startDate=' + start3, MODE=LIST_SPORTS_MODE),
            defaultreplay)
-    addDir(translation(30031)+str(replays3)+'-'+str(replays4)+' Days',
-           dict(ESPN_URL=events.get_replay_events_url(channel_list) +'&endDate='+start3+'&startDate='+start4, MODE=LIST_SPORTS_MODE),
+    addDir(translation(30031) + str(replays3) +'-' + str(replays4) +' Days',
+           dict(ESPN_URL=events.get_replay_events_url(channel_list) + '&endDate=' + start3 + '&startDate=' + start4, MODE=LIST_SPORTS_MODE),
            defaultreplay)
     addDir(translation(30032),
-           dict(ESPN_URL=events.get_replay_events_url(channel_list) +enddate+'&startDate='+startAll, MODE=LIST_SPORTS_MODE),
+           dict(ESPN_URL=events.get_replay_events_url(channel_list) + enddate + '&startDate=' + startAll, MODE=LIST_SPORTS_MODE),
            defaultreplay)
     xbmcplugin.endOfDirectory(pluginhandle)
 
@@ -750,9 +753,9 @@ if mode is not None and mode[0] == AUTHENTICATE_MODE:
 elif mode is not None and mode[0] == AUTHENTICATION_DETAILS_MODE:
     dialog = xbmcgui.Dialog()
     ok = dialog.yesno(translation(30380),
-                   translation(30390) % adobe_activate_api.get_authentication_expires(),
-                    nolabel = translation(30360),
-                    yeslabel = translation(30430))
+                      translation(30390) % adobe_activate_api.get_authentication_expires(),
+                      nolabel = translation(30360),
+                      yeslabel = translation(30430))
     if ok:
         adobe_activate_api.deauthorize()
     mode = None

@@ -2,13 +2,13 @@ import os, sys
 import xbmc, xbmcplugin, xbmcgui, xbmcaddon
 
 selfAddon = xbmcaddon.Addon()
-addon_data_path = xbmc.translatePath(selfAddon.getAddonInfo('path')).decode('utf-8') + '/'
+addon_data_path = xbmc.translatePath(selfAddon.getAddonInfo('path')).decode('utf-8')
 translation = selfAddon.getLocalizedString
-defaultimage = addon_data_path + 'icon.png'
-defaultfanart = addon_data_path + 'fanart.jpg'
-defaultlive = addon_data_path + 'resources/media/new_live.png'
-defaultreplay = addon_data_path + 'resources/media/new_replay.png'
-defaultupcoming = addon_data_path + 'resources/media/new_upcoming.png'
+defaultimage = os.path.join(addon_data_path, 'icon.png')
+defaultfanart = os.path.join(addon_data_path, 'fanart.jpg')
+defaultlive = os.path.join(addon_data_path, 'resources/media/new_live.png')
+defaultreplay = os.path.join(addon_data_path, 'resources/media/new_replay.png')
+defaultupcoming =os.path.join( addon_data_path, 'resources/media/new_upcoming.png')
 pluginhandle = int(sys.argv[1])
 
 ADDON_PATH_PROFILE = xbmc.translatePath(selfAddon.getAddonInfo('profile')).decode('utf-8')
@@ -21,19 +21,11 @@ UA_ATV = 'AppleCoreMedia/1.0.0.13Y234 (Apple TV; U; CPU OS 9_2 like Mac OS X; en
 
 def CLEAR_SAVED_DATA():
     try:
-        os.remove(ADDON_PATH_PROFILE+'/device.id')
+        os.remove(os.path.join(ADDON_PATH_PROFILE, 'adobe-cookies.lwp'))
     except:
         pass
     try:
-        os.remove(ADDON_PATH_PROFILE+'/provider.info')
-    except:
-        pass
-    try:
-        os.remove(ADDON_PATH_PROFILE+'/cookies.lwp')
-    except:
-        pass
-    try:
-        os.remove(ADDON_PATH_PROFILE+'/auth.token')
+        os.remove(os.path.join(ADDON_PATH_PROFILE, 'user_data.json'))
     except:
         pass
     try:

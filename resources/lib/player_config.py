@@ -1,7 +1,7 @@
 import os
-from globals import ADDON_PATH_PROFILE
 
 import util
+from globals import ADDON_PATH_PROFILE
 
 # 1 hour
 TIME_DIFFERENCE = 60 * 60;
