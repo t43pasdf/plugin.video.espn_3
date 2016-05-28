@@ -8,7 +8,6 @@ import urllib, xbmcplugin, xbmcaddon, xbmcgui
 import time
 from datetime import datetime, timedelta
 import base64
-import urlparse
 
 from globals import selfAddon, defaultlive, defaultreplay, defaultupcoming, defaultimage, defaultfanart, translation, pluginhandle
 import player_config
@@ -724,7 +723,6 @@ def addDir(name, url, iconimage, fanart=None, infoLabels=None):
 
 
 base_url = sys.argv[0]
-addon_handle = int(sys.argv[1])int(sys.argv[1])
 args = urlparse.parse_qs(sys.argv[2][1:])
 mode = args.get(MODE, None)
 
@@ -759,7 +757,6 @@ elif mode is not None and mode[0] == AUTHENTICATION_DETAILS_MODE:
         adobe_activate_api.deauthorize()
     mode = None
     refresh = True
-
 
 if mode == None:
     adobe_activate_api.clean_up_authorization_tokens()
