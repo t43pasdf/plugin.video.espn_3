@@ -10,7 +10,7 @@ import xml.etree.ElementTree as ET
 import hashlib
 import re
 
-from globals import ADDON_PATH_PROFILE
+from globals import ADDON_PATH_PROFILE, LOG_LEVEL
 
 TAG = 'ESPN3 util: '
 
@@ -33,10 +33,10 @@ def get_url_as_xml_soup_cache(url, cache_file = None, timeout = 300):
         cache_file = hashlib.sha224(url).hexdigest()
         cache_file = os.path.join(ADDON_PATH_PROFILE, cache_file + '.xml')
     if not is_file_valid(cache_file, timeout):
-        xbmc.log(TAG + 'Fetching config file %s from %s' % (cache_file, url))
+        xbmc.log(TAG + 'Fetching config file %s from %s' % (cache_file, url), LOG_LEVEL)
         fetch_file(url, cache_file)
     else:
-        xbmc.log(TAG + 'Using cache %s for %s' % (cache_file, url))
+        xbmc.log(TAG + 'Using cache %s for %s' % (cache_file, url), LOG_LEVEL)
     xml_file = open(cache_file)
     xml_data = xml_file.read()
     xml_file.close()
@@ -53,7 +53,7 @@ def load_element_tree(data):
         data_tree = ET.fromstring(data, parser)
     except:
         if '<?xml version' not in data:
-            xbmc.log(TAG + 'Fixing up data because of no xml preamble')
+            xbmc.log(TAG + 'Fixing up data because of no xml preamble', LOG_LEVEL)
             data = '<?xml version="1.0" encoding="ISO-8859-1" ?>' + data
         data_tree = ET.fromstring(data)
 
@@ -65,10 +65,10 @@ def get_url_as_json(url):
 
 def get_url_as_json_cache(url, cache_file, timeout = 1):
     if not is_file_valid(cache_file, timeout):
-        xbmc.log(TAG + 'Fetching config file %s from %s' % (cache_file, url))
+        xbmc.log(TAG + 'Fetching config file %s from %s' % (cache_file, url), LOG_LEVEL)
         fetch_file(url, cache_file)
     else:
-        xbmc.log(TAG + 'Using cache %s for %s' % (cache_file, url))
+        xbmc.log(TAG + 'Using cache %s for %s' % (cache_file, url), LOG_LEVEL)
     json_file = open(cache_file)
     json_data = json_file.read()
     json_file.close()

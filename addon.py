@@ -21,7 +21,7 @@ from resources.lib import util
 from resources.lib import player_config
 from resources.lib import events
 from resources.lib import adobe_activate_api
-from resources.lib.globals import selfAddon, defaultlive, defaultreplay, defaultupcoming, defaultimage, defaultfanart, translation, pluginhandle
+from resources.lib.globals import selfAddon, defaultlive, defaultreplay, defaultupcoming, defaultimage, defaultfanart, translation, pluginhandle, LOG_LEVEL
 
 OLD_LISTING_MODE = 'OLD_LISTING_MODE'
 LIVE_EVENTS_MODE = 'LIVE_EVENTS'
@@ -164,7 +164,7 @@ def process_item_list(item_list):
                 url = method_info[3]
                 nav_id = method_info[2]
                 url = url + '&navigationItemId=' + nav_id
-                xbmc.log(TAG + 'Load more url %s' % url)
+                xbmc.log(TAG + 'Load more url %s' % url, LOG_LEVEL)
                 addDir(menu_label,
                        dict(SHOWCASE_URL=url, MODE=CATEGORY_SHOWCASE_MODE),
                        defaultimage)
@@ -195,7 +195,7 @@ def CATEGORIES_SHOWCASE(args):
     selected_nav_id = args.get(SHOWCASE_NAV_ID, None)
     et = util.get_url_as_xml_soup_cache(get_url(url))
     navigation_items = et.findall('.//navigation/navigationItem')
-    xbmc.log('ESPN3 Found %s items' % len(navigation_items))
+    xbmc.log('ESPN3 Found %s items' % len(navigation_items), LOG_LEVEL)
     if selected_nav_id is None and len(navigation_items) > 0:
         for navigation_item in navigation_items:
             name = navigation_item.find('./title').text
@@ -209,12 +209,12 @@ def CATEGORIES_SHOWCASE(args):
     elif len(navigation_items) > 0:
         for navigation_item in navigation_items:
             if navigation_item.get('id') == selected_nav_id[0]:
-                xbmc.log('ESPN3 Found nav item %s' % selected_nav_id[0])
+                xbmc.log('ESPN3 Found nav item %s' % selected_nav_id[0], LOG_LEVEL)
                 process_item_list(navigation_item.findall('.//twoLineMenuItem'))
                 process_item_list(navigation_item.findall('.//twoLineEnhancedMenuItem'))
                 xbmcplugin.setContent(pluginhandle, 'episodes')
     else: # If there are no navigation items then just dump all of the menu entries
-        xbmc.log('ESPN3: Dumping all menu items')
+        xbmc.log('ESPN3: Dumping all menu items', LOG_LEVEL)
         process_item_list(et.findall('.//twoLineMenuItem'))
         process_item_list(et.findall('.//twoLineEnhancedMenuItem'))
         xbmcplugin.setContent(pluginhandle, 'episodes')
@@ -272,7 +272,7 @@ def INDEX_TV_SHELF(stash_json, item, upcoming):
         ename = '[COLOR=FFB700EB]' + etime + '[/COLOR] ' + ename
     elif now > starttime:
         length = length - (now - starttime)
-        xbmc.log(TAG + ' Setting length to %s' % length)
+        xbmc.log(TAG + ' Setting length to %s' % length, LOG_LEVEL)
         ename += ' [COLOR=FFB700EB]' + etime + '[/COLOR]'
     else:
         now_time = time.localtime(now)
@@ -575,7 +575,7 @@ def does_requires_auth(network_name):
     if network_name == 'espn3':
         free_content_check = player_config.can_access_free_content()
         if not free_content_check:
-            xbmc.log('ESPN3: User needs login to ESPN3')
+            xbmc.log('ESPN3: User needs login to ESPN3', LOG_LEVEL)
             requires_auth = True
     return requires_auth
 
@@ -584,7 +584,7 @@ def PLAY_LEGACY_TV(args):
     # check blackout differently for legacy shows
     event_id = args.get(EVENT_ID)[0]
     url = 'http://broadband.espn.go.com/espn3/auth/watchespn/util/isUserBlackedOut?eventId=' + event_id
-    xbmc.log(TAG + 'Blackout url %s' % url)
+    xbmc.log(TAG + 'Blackout url %s' % url, LOG_LEVEL)
     blackout_data = util.get_url_as_json(url)
     blackout = blackout_data['E3BlackOut']
     if not blackout == 'true':
@@ -633,7 +633,7 @@ def PLAY_TV(args):
                                })
     start_session_url += '&' + params
 
-    xbmc.log('ESPN3: start_session_url: ' + start_session_url)
+    xbmc.log('ESPN3: start_session_url: ' + start_session_url, LOG_LEVEL)
 
     session_json = util.get_url_as_json(start_session_url)
     if check_error(session_json):
@@ -642,7 +642,7 @@ def PLAY_TV(args):
     playback_url = session_json['session']['playbackUrls']['default']
     stream_quality = str(selfAddon.getSetting('StreamQuality'))
     bitrate_limit = int(selfAddon.getSetting('BitrateLimit'))
-    xbmc.log(TAG + 'Stream Quality %s' % stream_quality)
+    xbmc.log(TAG + 'Stream Quality %s' % stream_quality, LOG_LEVEL)
     m3u8_obj = m3u8.load(playback_url)
     success = True
     if m3u8_obj.is_variant:
@@ -678,7 +678,7 @@ def PLAY_TV(args):
                 bandwidth = int(stream_info[bandwidth_key]) / 1024
                 if 'average_bandwidth' in stream_info:
                     xbmc.log(TAG + 'bandwidth: %s average bandwidth: %s' %
-                             (stream_info['bandwidth'], stream_info['average_bandwidth']))
+                             (stream_info['bandwidth'], stream_info['average_bandwidth']), LOG_LEVEL)
                 stream_options.append(translation(30450) % (resolution,
                                                       frame_rate,
                                                       bandwidth))
@@ -689,7 +689,7 @@ def PLAY_TV(args):
             else:
                 selfAddon.setSetting(id='StreamQualityIndex', value=str(stream_index))
 
-        xbmc.log(TAG + 'Chose stream %d' % stream_index)
+        xbmc.log(TAG + 'Chose stream %d' % stream_index, LOG_LEVEL)
         item = xbmcgui.ListItem(path=m3u8_obj.playlists[stream_index].uri)
         return xbmcplugin.setResolvedUrl(pluginhandle, success, item)
     else:
@@ -729,11 +729,11 @@ base_url = sys.argv[0]
 args = urlparse.parse_qs(sys.argv[2][1:])
 mode = args.get(MODE, None)
 
-xbmc.log('ESPN3: args %s' % args)
+xbmc.log('ESPN3: args %s' % args, LOG_LEVEL)
 
 refresh = False
 if mode is not None and mode[0] == AUTHENTICATE_MODE:
-    xbmc.log('Authenticate Device')
+    xbmc.log('Authenticate Device', LOG_LEVEL)
     regcode = adobe_activate_api.get_regcode()
     dialog = xbmcgui.Dialog()
     ok = dialog.yesno(translation(30310),
@@ -763,18 +763,18 @@ elif mode is not None and mode[0] == AUTHENTICATION_DETAILS_MODE:
 
 if mode == None:
     adobe_activate_api.clean_up_authorization_tokens()
-    xbmc.log("Generate Main Menu")
+    xbmc.log("Generate Main Menu", LOG_LEVEL)
     CATEGORIES_ATV(refresh)
 elif mode[0] == CATEGORY_SHOWCASE_MODE:
     CATEGORIES_SHOWCASE(args)
 elif mode[0] == LIVE_EVENTS_MODE:
-    xbmc.log("Indexing Videos")
+    xbmc.log("Indexing Videos", LOG_LEVEL)
     INDEX(args)
 elif mode[0] == LIST_SPORTS_MODE:
-    xbmc.log("List sports")
+    xbmc.log("List sports", LOG_LEVEL)
     LISTSPORTS(args)
 elif mode[0] == INDEX_SPORTS_MODE:
-    xbmc.log("Index by sport")
+    xbmc.log("Index by sport", LOG_LEVEL)
     INDEX(args)
 elif mode[0] == PLAY_MODE:
     PLAY_LEGACY_TV(args)
@@ -783,14 +783,14 @@ elif mode[0] == PLAY_ITEM_MODE:
 elif mode[0] == PLAY_TV_MODE:
     PLAY_TV(args)
 elif mode[0] == UPCOMING_MODE:
-    xbmc.log("Upcoming")
+    xbmc.log("Upcoming", LOG_LEVEL)
     dialog = xbmcgui.Dialog()
     dialog.ok(translation(30035), translation(30036))
     xbmcplugin.endOfDirectory(pluginhandle, succeeded=False,updateListing=True)
 elif mode[0] == CATEGORY_SHELF_MODE:
     CATEGORY_SHELF(args)
 elif mode[0] == OLD_LISTING_MODE:
-    xbmc.log("Old listing mode")
+    xbmc.log("Old listing mode", LOG_LEVEL)
     CATEGORIES()
 elif mode[0] == CATEGORY_SPORTS_MODE:
     CATEGORY_SPORTS(args)
