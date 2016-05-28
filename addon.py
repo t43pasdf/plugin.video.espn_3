@@ -603,13 +603,11 @@ def does_requires_auth(network_name):
 def PLAY_LEGACY_TV(args):
     # check blackout differently for legacy shows
     event_id = args.get(EVENT_ID)[0]
-    network_name = args.get(NETWORK_NAME)[0]
     url = 'http://broadband.espn.go.com/espn3/auth/watchespn/util/isUserBlackedOut?eventId=' + event_id
     xbmc.log(TAG + 'Blackout url %s' % url)
     blackout_data = util.get_url_as_json(url)
-    if network_name == 'espn3':
-        blackout = blackout_data['E3BlackOut']
-    else:
+    blackout = blackout_data['E3BlackOut']
+    if not blackout == 'true':
         blackout = blackout_data['LinearBlackOut']
     if blackout == 'true':
         dialog = xbmcgui.Dialog()
