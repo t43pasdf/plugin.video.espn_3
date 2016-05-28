@@ -36,7 +36,7 @@ def get_url_as_xml_soup_cache(url, cache_file = None, timeout = 300):
         xbmc.log(TAG + 'Fetching config file %s from %s' % (cache_file, url))
         fetch_file(url, cache_file)
     else:
-        xbmc.log(TAG + 'Using cache %s for %s' % (url, cache_file))
+        xbmc.log(TAG + 'Using cache %s for %s' % (cache_file, url))
     xml_file = open(cache_file)
     xml_data = xml_file.read()
     xml_file.close()
@@ -68,7 +68,7 @@ def get_url_as_json_cache(url, cache_file, timeout = 1):
         xbmc.log(TAG + 'Fetching config file %s from %s' % (cache_file, url))
         fetch_file(url, cache_file)
     else:
-        xbmc.log(TAG + 'Using cache %s for %s' % (url, cache_file))
+        xbmc.log(TAG + 'Using cache %s for %s' % (cache_file, url))
     json_file = open(cache_file)
     json_data = json_file.read()
     json_file.close()
