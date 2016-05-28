@@ -106,7 +106,7 @@ def CATEGORIES_ATV(refresh = False):
         addDir('[COLOR=FF00FF00]' + translation(30380) + '[/COLOR]',
            dict(MODE=AUTHENTICATION_DETAILS_MODE),
            defaultfanart)
-    xbmcplugin.endOfDirectory(int(sys.argv[1]), updateListing=refresh)
+    xbmcplugin.endOfDirectory(pluginhandle, updateListing=refresh)
 
 def CATEGORY_SHELF(args):
     et = util.get_url_as_xml_soup_cache(get_url('http://espn.go.com/watchespn/appletv/featured'))
@@ -130,7 +130,7 @@ def CATEGORY_SPORTS(args):
         addDir(name,
                dict(SHOWCASE_URL=url, MODE=CATEGORY_SHOWCASE_MODE),
                image, image)
-    xbmcplugin.endOfDirectory(int(sys.argv[1]), updateListing=False)
+    xbmcplugin.endOfDirectory(pluginhandle, updateListing=False)
 
 def CATEGORY_CHANNELS(args):
     et = util.get_url_as_xml_soup_cache(get_url('http://espn.go.com/watchespn/appletv/channels'))
@@ -141,7 +141,7 @@ def CATEGORY_CHANNELS(args):
         addDir(name,
                dict(SHOWCASE_URL=url, MODE=CATEGORY_SHOWCASE_MODE),
                image, image)
-    xbmcplugin.endOfDirectory(int(sys.argv[1]), updateListing=False)
+    xbmcplugin.endOfDirectory(pluginhandle, updateListing=False)
 
 
 def process_item_list(item_list):
@@ -181,7 +181,6 @@ def process_item_list(item_list):
                 stash = re.sub(r'\s+"', '"', stash)
                 stash_json = json.loads(stash, 'utf-8')
                 if stash_json['type'] == 'upcoming':
-                    #INDEX_ITEM_UPCOMING(stash_json, item)
                     INDEX_TV_SHELF(stash_json, item, True)
                 elif 'sessionUrl' in stash_json:
                     INDEX_TV_SHELF(stash_json, item, False)
@@ -217,7 +216,7 @@ def CATEGORIES_SHOWCASE(args):
         process_item_list(et.findall('.//twoLineMenuItem'))
         process_item_list(et.findall('.//twoLineEnhancedMenuItem'))
         xbmcplugin.setContent(pluginhandle, 'episodes')
-    xbmcplugin.endOfDirectory(int(sys.argv[1]))
+    xbmcplugin.endOfDirectory(pluginhandle)
 
 def get_metadata(item):
     metadataKeysElement = item.find('.//metadataKeys')
@@ -292,13 +291,13 @@ def INDEX_TV_SHELF(stash_json, item, upcoming):
         channel_color = '004C8D'
     else:
         channel_color = 'CC0000'
-    network = network.replace('espn', 'ESPN')
-    network = network.replace('sec', 'SEC')
-    network = network.replace('longhorn', 'Longhorn')
+    network = network.replace('espn', translation(30590))
+    network = network.replace('sec', translation(30600))
+    network = network.replace('longhorn', translation(30610))
     blackout = check_blackout(item)
     blackout_text = ''
     if blackout:
-        blackout_text = '[BLACKOUT]'
+        blackout_text = translation(30580)
     ename = '[COLOR=FF%s]%s[/COLOR] %s %s' % (channel_color, network, blackout_text, ename)
 
     if 'description' in stash_json:
@@ -374,7 +373,7 @@ def CATEGORIES():
     addDir(translation(30032),
            dict(ESPN_URL=events.get_replay_events_url(channel_list) +enddate+'&startDate='+startAll, MODE=LIST_SPORTS_MODE),
            defaultreplay)
-    xbmcplugin.endOfDirectory(int(sys.argv[1]))
+    xbmcplugin.endOfDirectory(pluginhandle)
 
 def LISTSPORTS(args):
     espn_url = args.get(ESPN_URL)[0]
@@ -393,8 +392,8 @@ def LISTSPORTS(args):
             sports.append(sport)
     for sport in sports:
         addDir(sport, dict(ESPN_URL=espn_url, MODE=INDEX_SPORTS_MODE, SPORT=sport), image)
-    xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_VIDEO_SORT_TITLE)
-    xbmcplugin.endOfDirectory(int(sys.argv[1]))
+    xbmcplugin.addSortMethod(pluginhandle, xbmcplugin.SORT_METHOD_VIDEO_SORT_TITLE)
+    xbmcplugin.endOfDirectory(pluginhandle)
 
 def INDEX_EVENT(event, live, upcoming, replay, chosen_sport):
     sport = event.find('sportDisplayValue').text.encode('utf-8')
@@ -454,17 +453,17 @@ def INDEX_EVENT(event, live, upcoming, replay, chosen_sport):
 
     plot = ''
     if sport <> None and sport <> ' ':
-        plot += 'Sport: '+sport+'\n'
+        plot += translation(30620) % sport + '\n'
     if league <> None and league <> ' ':
-        plot += 'League: '+league+'\n'
+        plot += translation(30630) % league+'\n'
     if location <> None and location <> ' ':
-        plot += 'Location: '+location+'\n'
+        plot += translation(30640) % location+'\n'
     if start <> None and start <> ' ':
-        plot += 'Air Date: '+start+'\n'
+        plot += translation(30650) % start+'\n'
     if length <> None and length <> ' ' and live:
-        plot += 'Duration: Approximately '+ str(length_minutes)+' minutes remaining'+'\n'
+        plot += translation(30660) % str(length_minutes) + '\n'
     elif length <> None and length <> ' ' and (replay or upcoming):
-        plot += 'Duration: '+ str(length_minutes) +' minutes'+'\n'
+        plot += translation(30670) % str(length_minutes) +'\n'
     plot += end
     infoLabels = {'title': ename,
                   'genre':sport,
@@ -542,7 +541,7 @@ def INDEX(args):
                dict(ESPN_URL=espn_url, MODE=LIVE_EVENTS_MODE, NETWORK_ID=SECPLUS_ID),
                defaultlive)
     xbmcplugin.setContent(pluginhandle, 'episodes')
-    xbmcplugin.endOfDirectory(int(sys.argv[1]))
+    xbmcplugin.endOfDirectory(pluginhandle)
 
 def check_blackout(item):
     blackouts = item.findall('.//blackouts/blackoutsItem/detail/detailItem')
@@ -559,7 +558,7 @@ def check_blackout(item):
 def PLAY_ITEM(args):
     url = args.get(PLAYBACK_URL)[0]
     item = xbmcgui.ListItem(path=url)
-    return xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, item)
+    return xbmcplugin.setResolvedUrl(pluginhandle, True, item)
 
 def check_error(session_json):
     status = session_json['status']
@@ -690,10 +689,10 @@ def PLAY_TV(args):
 
         xbmc.log(TAG + 'Chose stream %d' % stream_index)
         item = xbmcgui.ListItem(path=m3u8_obj.playlists[stream_index].uri)
-        return xbmcplugin.setResolvedUrl(int(sys.argv[1]), success, item)
+        return xbmcplugin.setResolvedUrl(pluginhandle, success, item)
     else:
         item = xbmcgui.ListItem(path=finalurl)
-        return xbmcplugin.setResolvedUrl(int(sys.argv[1]), success, item)
+        return xbmcplugin.setResolvedUrl(pluginhandle, success, item)
 
 def addLink(name, url, iconimage, fanart=None, infoLabels=None):
     u = sys.argv[0] + '?' + urllib.urlencode(url)
@@ -707,7 +706,7 @@ def addLink(name, url, iconimage, fanart=None, infoLabels=None):
     if fanart is None:
         fanart=defaultfanart
     liz.setProperty('fanart_image',fanart)
-    ok = xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]), url=u, listitem=liz)
+    ok = xbmcplugin.addDirectoryItem(handle=pluginhandle, url=u, listitem=liz)
     return ok
 
 
@@ -720,12 +719,12 @@ def addDir(name, url, iconimage, fanart=None, infoLabels=None):
     if fanart is None:
         fanart=defaultfanart
     liz.setProperty('fanart_image',fanart)
-    ok = xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]), url=u, listitem=liz, isFolder=True)
+    ok = xbmcplugin.addDirectoryItem(handle=pluginhandle, url=u, listitem=liz, isFolder=True)
     return ok
 
 
 base_url = sys.argv[0]
-addon_handle = int(sys.argv[1])
+addon_handle = int(sys.argv[1])int(sys.argv[1])
 args = urlparse.parse_qs(sys.argv[2][1:])
 mode = args.get(MODE, None)
 
