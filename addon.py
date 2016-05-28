@@ -181,9 +181,10 @@ def process_item_list(item_list):
                 stash = re.sub(r'\s+"', '"', stash)
                 stash_json = json.loads(stash, 'utf-8')
                 if stash_json['type'] == 'upcoming':
-                    INDEX_ITEM_UPCOMING(stash_json, item)
+                    #INDEX_ITEM_UPCOMING(stash_json, item)
+                    INDEX_TV_SHELF(stash_json, item, True)
                 elif 'sessionUrl' in stash_json:
-                    INDEX_TV_SHELF(stash_json, item)
+                    INDEX_TV_SHELF(stash_json, item, False)
                 else:
                     INDEX_ITEM_SHELF(stash_json, item)
 
@@ -249,42 +250,7 @@ def INDEX_ITEM_SHELF(stash_json, item):
     authurl[PLAYBACK_URL] = stash_json['playbackUrl']
     addLink(ename.encode('iso-8859-1'), authurl, fanart, fanart, infoLabels=infoLabels)
 
-def INDEX_ITEM_UPCOMING(stash_json, item):
-    sport = stash_json['categoryName']
-    ename = stash_json['name']
-    sport2 = stash_json['subcategoryName']
-    if sport <> sport2:
-        sport += ' ('+sport2+')'
-    fanart = stash_json['imageHref']
-    mpaa = stash_json['parentalRating']
-    starttime = int(stash_json['startTime'])/1000
-    now = time.time()
-    etime = time.strftime("%I:%M %p",time.localtime(float(starttime)))
-    length = int(stash_json['duration'])
-    if now > starttime:
-        length = length - (now - starttime)
-        ename += ' [COLOR=FFB700EB]' + etime + '[/COLOR]'
-    if now < starttime:
-        etime = time.strftime("%m/%d %I:%M %p",time.localtime(starttime))
-        ename = '[COLOR=FFB700EB]' + etime + '[/COLOR] ' + ename
-    aired = time.strftime("%Y-%m-%d", time.localtime(starttime))
-
-    description = get_metadata(item)
-
-    infoLabels = {'title': ename,
-                  'genre':sport,
-                  'duration':length,
-                  'studio': stash_json['network'],
-                  'mpaa':mpaa,
-                  'aired':aired,
-                  'plot': description}
-
-    authurl = dict()
-    authurl[MODE] = UPCOMING_MODE
-    addLink(ename.encode('iso-8859-1'), authurl, fanart, fanart, infoLabels=infoLabels)
-
-
-def INDEX_TV_SHELF(stash_json, item):
+def INDEX_TV_SHELF(stash_json, item, upcoming):
     sport = stash_json['categoryName']
     ename = stash_json['name']
     sport2 = stash_json['subcategoryName']
@@ -307,6 +273,16 @@ def INDEX_TV_SHELF(stash_json, item):
         length = length - (now - starttime)
         xbmc.log(TAG + ' Setting length to %s' % length)
         ename += ' [COLOR=FFB700EB]' + etime + '[/COLOR]'
+    else:
+        now_time = time.localtime(now)
+        start_time = time.localtime(starttime)
+        if now_time.tm_year == start_time.tm_year and \
+            now_time.tm_mon == start_time.tm_mon and \
+                now_time.tm_mday == start_time.tm_mday:
+            etime = time.strftime("%I:%M %p", time.localtime(starttime))
+        else:
+            etime = time.strftime("%m/%d %I:%M %p", time.localtime(starttime))
+        ename = '[COLOR=FFB700EB]' + etime + '[/COLOR] ' + ename
     aired = time.strftime("%Y-%m-%d",time.localtime(starttime))
 
     network = stash_json['network']
@@ -345,13 +321,16 @@ def INDEX_TV_SHELF(stash_json, item):
                   'premiered':aired}
 
     authurl = dict()
-    authurl[EVENT_ID] = stash_json['eventId']
-    authurl[SESSION_URL] = stash_json['sessionUrl']
-    authurl[MODE] = PLAY_TV_MODE
-    authurl[NETWORK_NAME] = stash_json['network']
-    authurl[EVENT_NAME] = stash_json['name'].encode('iso-8859-1')
-    authurl[EVENT_GUID] = stash_json['guid'].encode('iso-8859-1')
-    authurl[EVENT_PARENTAL_RATING] = mpaa
+    if upcoming:
+        authurl[MODE] = UPCOMING_MODE
+    else:
+        authurl[EVENT_ID] = stash_json['eventId']
+        authurl[SESSION_URL] = stash_json['sessionUrl']
+        authurl[MODE] = PLAY_TV_MODE
+        authurl[NETWORK_NAME] = stash_json['network']
+        authurl[EVENT_NAME] = stash_json['name'].encode('iso-8859-1')
+        authurl[EVENT_GUID] = stash_json['guid'].encode('iso-8859-1')
+        authurl[EVENT_PARENTAL_RATING] = mpaa
     addLink(ename.encode('iso-8859-1'), authurl, fanart, fanart, infoLabels=infoLabels)
 
 def CATEGORIES():
