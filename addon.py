@@ -426,7 +426,7 @@ def INDEX_EVENT(event, live, upcoming, replay, chosen_sport):
     length = str(int(round((endtime - time.time()))))
     title_time = etime
     if live and now > etime24:
-        color = str(selfAddon.getSetting('color'))
+        color = 'FFFFFF'
     elif live:
         color = '999999'
     else:
