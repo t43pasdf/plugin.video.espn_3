@@ -708,6 +708,8 @@ def addLink(name, url, iconimage, fanart=None, infoLabels=None):
     if fanart is None:
         fanart=defaultfanart
     liz.setProperty('fanart_image',fanart)
+    video_streaminfo = dict()
+    liz.addStreamInfo('video', video_streaminfo)
     ok = xbmcplugin.addDirectoryItem(handle=pluginhandle, url=u, listitem=liz)
     return ok
 
