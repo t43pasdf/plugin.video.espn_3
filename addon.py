@@ -25,6 +25,7 @@ from resources.lib.addon_util import *
 
 from resources.lib import legacy
 from resources.lib import appletv
+from resources.lib import tvos
 
 TAG = 'ESPN3: '
 
@@ -34,6 +35,9 @@ def ROOT_ITEM(refresh):
            defaultlive)
     addDir('Legacy',
            dict(MODE='/legacy/'),
+           defaultlive)
+    addDir('TV OS',
+           dict(MODE='/tvos/'),
            defaultlive)
     if not adobe_activate_api.is_authenticated():
         addDir('[COLOR=FFFF0000]' + translation(30300) + '[/COLOR]',
@@ -55,11 +59,15 @@ def PLAY_ITEM(args):
 #finalurl = finalurl + '|Connection=keep-alive&User-Agent=' + urllib.quote(ua) + '&Cookie=_mediaAuth=' + urllib.quote(base64.b64encode(pkan))
 def PLAY_TV(args):
 
-    network_name = args.get(NETWORK_NAME)[0]
-    event_name = args.get(EVENT_NAME)[0]
-    event_guid = args.get(EVENT_GUID)[0]
-    event_parental_rating = args.get(EVENT_PARENTAL_RATING)[0]
-    resource = adobe_activate_api.get_resource(network_name, event_name, event_guid, event_parental_rating)
+    resource = args.get(ADOBE_RSS, None)
+    if resource is None:
+        network_name = args.get(NETWORK_NAME)[0]
+        event_name = args.get(EVENT_NAME)[0]
+        event_guid = args.get(EVENT_GUID)[0]
+        event_parental_rating = args.get(EVENT_PARENTAL_RATING)[0]
+        resource = adobe_activate_api.get_resource(network_name, event_name, event_guid, event_parental_rating)
+    else:
+        resource = resource[0]
 
     requires_auth = does_requires_auth(network_name)
 
@@ -211,7 +219,7 @@ if mode is not None:
         root = paths[1]
         path = paths[2]
         xbmc.log(TAG + 'root: %s path: %s' % (root, path))
-        for class_def in (appletv.AppleTV, legacy.Legacy):
+        for class_def in (appletv.AppleTV, legacy.Legacy, tvos.TVOS):
             class_root = getattr(getattr(class_def, '__init__'), 'mode')
             xbmc.log(TAG + 'class root: %s' % class_root)
             if root == class_root:

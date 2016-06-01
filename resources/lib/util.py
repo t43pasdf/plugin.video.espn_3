@@ -63,7 +63,10 @@ def get_url_as_json(url):
     response = urllib2.urlopen(url)
     return json.load(response)
 
-def get_url_as_json_cache(url, cache_file, timeout = 1):
+def get_url_as_json_cache(url, cache_file = None, timeout = 300):
+    if cache_file is None:
+        cache_file = hashlib.sha224(url).hexdigest()
+        cache_file = os.path.join(ADDON_PATH_PROFILE, cache_file + '.json')
     if not is_file_valid(cache_file, timeout):
         xbmc.log(TAG + 'Fetching config file %s from %s' % (cache_file, url), LOG_LEVEL)
         fetch_file(url, cache_file)
@@ -72,8 +75,9 @@ def get_url_as_json_cache(url, cache_file, timeout = 1):
     json_file = open(cache_file)
     json_data = json_file.read()
     json_file.close()
-    json_data = json_data.replace('ud=', '')
-    json_data = json_data.replace('\'', '"')
+    if json_data.startswith('ud='):
+        json_data = json_data.replace('ud=', '')
+        json_data = json_data.replace('\'', '"')
     return json.loads(json_data)
 
 # espn.page.loadSportPage('http://espn.go.com/watchespn/appletv/league?abbreviation=nba');
