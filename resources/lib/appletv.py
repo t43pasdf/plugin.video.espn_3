@@ -11,7 +11,6 @@ import util
 import player_config
 import adobe_activate_api
 from globals import selfAddon, defaultlive, defaultreplay, defaultupcoming, defaultimage, defaultfanart, translation, pluginhandle, LOG_LEVEL
-from constants import *
 from addon_util import *
 from register_mode import RegisterMode
 
@@ -23,7 +22,6 @@ CATEGORY_SHELF_MODE = 'CATEGORY_SHELF'
 CATEGORY_SPORTS_MODE = 'CATEGORY_SPORTS'
 CATEGORY_CHANNELS_MODE = 'CATEGORY_CHANNELS'
 
-# TODO: Use this to organize the directory listing
 class AppleTV:
     @RegisterMode(PLACE)
     def __init__(self):
