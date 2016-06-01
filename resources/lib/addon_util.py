@@ -62,6 +62,14 @@ def does_requires_auth(network_name):
             requires_auth = True
     return requires_auth
 
+def get_url(url):
+    tz = player_config.get_timezone()
+    if '?' in url:
+        sep = '&'
+    else:
+        sep = '?'
+    return url + sep + 'tz=' + urllib.quote_plus(tz)
+
 # TODO: Unsure if cookie is needed
 #ua UA_PC
 #finalurl = finalurl + '|Connection=keep-alive&User-Agent=' + urllib.quote(ua) + '&Cookie=_mediaAuth=' + urllib.quote(base64.b64encode(pkan))
