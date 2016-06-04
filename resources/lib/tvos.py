@@ -63,7 +63,7 @@ class TVOS:
 
     def process_buckets(self, url, buckets, selected_buckets, current_bucket_path):
         selected_bucket = None if selected_buckets is None or len(selected_buckets) == 0 else selected_buckets[0]
-        xbmc.log(TAG + 'Selected buckets: %s Current Path: %s' % (selected_buckets, current_bucket_path))
+        xbmc.log(TAG + 'Selected buckets: %s Current Path: %s' % (selected_buckets, current_bucket_path), LOG_LEVEL)
         original_bucket_path = current_bucket_path
         for bucket in buckets:
             current_bucket_path = list(original_bucket_path)
@@ -98,7 +98,7 @@ class TVOS:
         selected_bucket = args.get(BUCKET, None)
         if selected_bucket is not None:
             selected_bucket = selected_bucket[0].split('/')
-            xbmc.log(TAG + 'Looking at bucket %s' % selected_bucket)
+            xbmc.log(TAG + 'Looking at bucket %s' % selected_bucket, LOG_LEVEL)
         json_data = util.get_url_as_json_cache(get_url(url))
         if 'buckets' in json_data['page']:
             buckets = json_data['page']['buckets']
@@ -120,7 +120,9 @@ class TVOS:
 
         starttime = None
         if 'date' in content and 'time' in content:
-            starttime = time.strptime(content['date'] + ' ' + content['time'], '%A, %B %d %I:%M %p')
+            now_time = time.localtime(time.time())
+            year = time.strftime('%Y', now_time)
+            starttime = time.strptime(year + ' ' + content['date'] + ' ' + content['time'], '%Y %A, %B %d %I:%M %p')
         if starttime is not None:
             now = time.time()
             etime = time.strftime("%I:%M %p", starttime)
@@ -132,6 +134,8 @@ class TVOS:
                     etime = time.strftime("%m/%d %I:%M %p", starttime)
                 ename = '[COLOR=FFB700EB]' + etime + '[/COLOR] ' + ename
             elif status == 'live':
+                starttime_time = time.mktime(starttime)
+                duration = duration - (time.time() - starttime_time)
                 ename += ' [COLOR=FFB700EB]' + etime + '[/COLOR]'
             else:
                 now_time = time.localtime(now)
@@ -187,9 +191,11 @@ class TVOS:
             authurl[MODE] = UPCOMING_MODE
         else:
             authurl[EVENT_ID] = content['id']
-            authurl[SESSION_URL] = content['airings'][0]['videoHref']
             authurl[MODE] = PLAY_TV_MODE if 'adobeRSS' in content else PLAY_ITEM_MODE
             if 'adobeRSS' in content:
                 authurl[ADOBE_RSS] = content['adobeRSS'].encode('iso-8859-1')
                 authurl[NETWORK_NAME] = content['tracking']['network']
+                authurl[SESSION_URL] = content['airings'][0]['videoHref']
+            else:
+                authurl[PLAYBACK_URL] = content['airings'][0]['videoHref']
         addLink(ename.encode('iso-8859-1'), authurl, fanart, fanart, infoLabels=infoLabels)

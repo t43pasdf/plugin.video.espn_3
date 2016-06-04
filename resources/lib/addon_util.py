@@ -35,7 +35,7 @@ def addLink(name, url, iconimage, fanart=None, infoLabels=None):
 
 def addDir(name, url, iconimage, fanart=None, infoLabels=None):
     u = sys.argv[0] + '?' + urllib.urlencode(url)
-    xbmc.log(TAG + 'Made url to %s' % u)
+    xbmc.log(TAG + 'Made url to %s' % u, LOG_LEVEL)
     liz = xbmcgui.ListItem(name, iconImage="DefaultFolder.png", thumbnailImage=iconimage)
     if infoLabels is None:
         infoLabels={"Title": name}

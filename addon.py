@@ -177,7 +177,7 @@ def PLAY_LEGACY_TV(args):
 
 
 base_url = sys.argv[0]
-xbmc.log(TAG + 'QS: %s' % sys.argv[2])
+xbmc.log(TAG + 'QS: %s' % sys.argv[2], LOG_LEVEL)
 args = urlparse.parse_qs(sys.argv[2][1:])
 xbmc.log('ESPN3: args %s' % args, LOG_LEVEL)
 mode = args.get(MODE, None)
