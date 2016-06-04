@@ -1,1 +1,5 @@
 Hook up TVOS api links
+1. Fix up the now > starttime to work
+2. Fix up extra space when there is no network name
+3. test more
+4. Handle when no starttime better

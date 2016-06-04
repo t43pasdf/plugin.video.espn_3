@@ -17,6 +17,7 @@ from register_mode import RegisterMode
 TAG = 'AppleTV: '
 PLACE = 'appletv'
 ROOT = ''
+FEATURED = 'featured'
 CATEGORY_SHOWCASE_MODE = 'CATEGORY_SHOWCASE'
 CATEGORY_SHELF_MODE = 'CATEGORY_SHELF'
 CATEGORY_SPORTS_MODE = 'CATEGORY_SPORTS'
@@ -32,7 +33,21 @@ class AppleTV:
 
     @RegisterMode(ROOT)
     def root_menu(self, args):
-        et = util.get_url_as_xml_soup_cache(get_url('http://espn.go.com/watchespn/appletv/featured'))
+        addDir(translation(30680),
+               dict(MODE=self.make_mode(FEATURED)),
+               defaultlive)
+        addDir(translation(30550),
+               dict(MODE=self.make_mode(CATEGORY_SPORTS_MODE)),
+               defaultlive)
+        addDir(translation(30560),
+               dict(MODE=self.make_mode(CATEGORY_CHANNELS_MODE)),
+               defaultlive)
+        xbmcplugin.endOfDirectory(pluginhandle)
+
+    @RegisterMode(FEATURED)
+    def featured_menu(self, args):
+        featured_url = base64.b64decode('aHR0cDovL2VzcG4uZ28uY29tL3dhdGNoZXNwbi9hcHBsZXR2L2ZlYXR1cmVk')
+        et = util.get_url_as_xml_soup_cache(get_url(featured_url))
         for showcase in et.findall('.//showcase/items/showcasePoster'):
             name = showcase.get('accessibilityLabel')
             image = showcase.find('./image').get('src')
@@ -50,12 +65,6 @@ class AppleTV:
             addDir(title,
                    dict(SHELF_ID=name, MODE=self.make_mode(CATEGORY_SHELF_MODE)),
                    defaultlive)
-        addDir(translation(30550),
-               dict(MODE=self.make_mode(CATEGORY_SPORTS_MODE)),
-               defaultlive)
-        addDir(translation(30560),
-               dict(MODE=self.make_mode(CATEGORY_CHANNELS_MODE)),
-               defaultlive)
         xbmcplugin.endOfDirectory(pluginhandle)
 
     @RegisterMode(CATEGORY_SHOWCASE_MODE)
@@ -91,7 +100,8 @@ class AppleTV:
 
     @RegisterMode(CATEGORY_SHELF_MODE)
     def category_shelf(self, args):
-        et = util.get_url_as_xml_soup_cache(get_url('http://espn.go.com/watchespn/appletv/featured'))
+        featured_url = base64.b64decode('aHR0cDovL2VzcG4uZ28uY29tL3dhdGNoZXNwbi9hcHBsZXR2L2ZlYXR1cmVk')
+        et = util.get_url_as_xml_soup_cache(get_url(featured_url))
         for shelf in et.findall('.//shelf'):
             name = shelf.get('id')
             if name == args.get(SHELF_ID)[0]:
@@ -101,7 +111,8 @@ class AppleTV:
 
     @RegisterMode(CATEGORY_SPORTS_MODE)
     def category_sports(self, args):
-        et = util.get_url_as_xml_soup_cache(get_url('http://espn.go.com/watchespn/appletv/sports'))
+        sports_url = base64.b64decode('aHR0cDovL2VzcG4uZ28uY29tL3dhdGNoZXNwbi9hcHBsZXR2L3Nwb3J0cw==')
+        et = util.get_url_as_xml_soup_cache(get_url(sports_url))
         images = et.findall('.//image')
         sports = et.findall('.//oneLineMenuItem')
         for i in range(0, min(len(images), len(sports))):
@@ -117,7 +128,8 @@ class AppleTV:
 
     @RegisterMode(CATEGORY_CHANNELS_MODE)
     def category_channels(self, args):
-        et = util.get_url_as_xml_soup_cache(get_url('http://espn.go.com/watchespn/appletv/channels'))
+        channels_url = base64.b64decode('aHR0cDovL2VzcG4uZ28uY29tL3dhdGNoZXNwbi9hcHBsZXR2L2NoYW5uZWxz')
+        et = util.get_url_as_xml_soup_cache(get_url(channels_url))
         for channel in et.findall('.//oneLineMenuItem'):
             name = channel.get('accessibilityLabel')
             image = channel.find('.//image').text

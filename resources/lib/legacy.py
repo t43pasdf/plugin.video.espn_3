@@ -231,7 +231,7 @@ class Legacy:
                       'mpaa': mpaa,
                       'videoaspect': aspect_ratio}
 
-        session_url = 'http://broadband.espn.go.com/espn3/auth/watchespn/startSession?'
+        session_url = base64.b64decode('aHR0cDovL2Jyb2FkYmFuZC5lc3BuLmdvLmNvbS9lc3BuMy9hdXRoL3dhdGNoZXNwbi9zdGFydFNlc3Npb24/')
         session_url += '&channel=' + network
         session_url += '&simulcastAiringId=' + simulcastAiringId
 

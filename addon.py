@@ -60,8 +60,8 @@ def PLAY_ITEM(args):
 def PLAY_TV(args):
 
     resource = args.get(ADOBE_RSS, None)
+    network_name = args.get(NETWORK_NAME)[0]
     if resource is None:
-        network_name = args.get(NETWORK_NAME)[0]
         event_name = args.get(EVENT_NAME)[0]
         event_guid = args.get(EVENT_GUID)[0]
         event_parental_rating = args.get(EVENT_PARENTAL_RATING)[0]
@@ -83,8 +83,8 @@ def PLAY_TV(args):
         token_type = 'DEVICE'
 
 
-    # see http://api-app.espn.com/v1/watch/clients/watchespn-tvos for details
-    # see http://espn.go.com/watchespn/appletv/featured for details
+    # see aHR0cDovL2FwaS1hcHAuZXNwbi5jb20vdjEvd2F0Y2gvY2xpZW50cy93YXRjaGVzcG4tdHZvcw== for details
+    # see aHR0cDovL2VzcG4uZ28uY29tL3dhdGNoZXNwbi9hcHBsZXR2L2ZlYXR1cmVk for details
     start_session_url = args.get(SESSION_URL)[0]
     params = urllib.urlencode({'partner':'watchespn',
                                'playbackScenario':'HTTP_CLOUD_HIGH',
@@ -163,7 +163,7 @@ def PLAY_TV(args):
 def PLAY_LEGACY_TV(args):
     # check blackout differently for legacy shows
     event_id = args.get(EVENT_ID)[0]
-    url = 'http://broadband.espn.go.com/espn3/auth/watchespn/util/isUserBlackedOut?eventId=' + event_id
+    url = base64.b64decode('aHR0cDovL2Jyb2FkYmFuZC5lc3BuLmdvLmNvbS9lc3BuMy9hdXRoL3dhdGNoZXNwbi91dGlsL2lzVXNlckJsYWNrZWRPdXQ/ZXZlbnRJZD0=') + event_id
     xbmc.log(TAG + 'Blackout url %s' % url, LOG_LEVEL)
     blackout_data = util.get_url_as_json(url)
     blackout = blackout_data['E3BlackOut']
@@ -177,10 +177,10 @@ def PLAY_LEGACY_TV(args):
 
 
 base_url = sys.argv[0]
+xbmc.log(TAG + 'QS: %s' % sys.argv[2])
 args = urlparse.parse_qs(sys.argv[2][1:])
-mode = args.get(MODE, None)
-
 xbmc.log('ESPN3: args %s' % args, LOG_LEVEL)
+mode = args.get(MODE, None)
 
 refresh = False
 if mode is not None and mode[0] == AUTHENTICATE_MODE:
@@ -218,19 +218,19 @@ if mode is not None:
     if len(paths) > 2:
         root = paths[1]
         path = paths[2]
-        xbmc.log(TAG + 'root: %s path: %s' % (root, path))
+        xbmc.log(TAG + 'root: %s path: %s' % (root, path), xbmc.LOGDEBUG)
         for class_def in (appletv.AppleTV, legacy.Legacy, tvos.TVOS):
             class_root = getattr(getattr(class_def, '__init__'), 'mode')
-            xbmc.log(TAG + 'class root: %s' % class_root)
+            xbmc.log(TAG + 'class root: %s' % class_root, xbmc.LOGDEBUG)
             if root == class_root:
                 for method_name in dir(class_def):
                     method = getattr(class_def, method_name)
-                    xbmc.log(TAG + 'Looking at method %s' % method_name)
+                    xbmc.log(TAG + 'Looking at method %s' % method_name, xbmc.LOGDEBUG)
                     if hasattr(method, 'mode'):
                         method_mode = getattr(method, 'mode')
-                        xbmc.log(TAG + 'Found method with mode %s' % method_mode)
+                        xbmc.log(TAG + 'Found method with mode %s' % method_mode, xbmc.LOGDEBUG)
                         if method_mode == path:
-                            xbmc.log(TAG + 'Executing method')
+                            xbmc.log(TAG + 'Executing method', xbmc.LOGDEBUG)
                             getattr(class_def(), method_name)(args)
 
 
@@ -248,4 +248,4 @@ elif mode[0] == UPCOMING_MODE:
     xbmc.log("Upcoming", LOG_LEVEL)
     dialog = xbmcgui.Dialog()
     dialog.ok(translation(30035), translation(30036))
-    xbmcplugin.endOfDirectory(pluginhandle, succeeded=False,updateListing=True)
+    xbmcplugin.endOfDirectory(pluginhandle, succeeded=False, updateListing=True)
