@@ -64,9 +64,11 @@ def does_requires_auth(network_name):
     return requires_auth
 
 def get_url(url):
-    tz = player_config.get_timezone()
-    if '?' in url:
-        sep = '&'
-    else:
-        sep = '?'
-    return url + sep + 'tz=' + urllib.quote_plus(tz)
+    if 'listingsUrl' not in url:
+        tz = player_config.get_timezone()
+        if '?' in url:
+            sep = '&'
+        else:
+            sep = '?'
+        return url + sep + 'tz=' + urllib.quote_plus(tz)
+    return url

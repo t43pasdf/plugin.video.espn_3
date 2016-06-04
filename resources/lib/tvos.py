@@ -122,7 +122,14 @@ class TVOS:
         if 'date' in content and 'time' in content:
             now_time = time.localtime(time.time())
             year = time.strftime('%Y', now_time)
-            starttime = time.strptime(year + ' ' + content['date'] + ' ' + content['time'], '%Y %A, %B %d %I:%M %p')
+            # Correct no zero padding in the time hours
+            time_part = content['time']
+            if time_part.find(':') == 1:
+                time_part = '0' + time_part
+            starttime = time.strptime(year + ' ' + content['date'] + ' ' + time_part, '%Y %A, %B %d %I:%M %p')
+        else:
+            xbmc.log(TAG + str(content))
+        xbmc.log(TAG + 'startime %s' % starttime)
         if starttime is not None:
             now = time.time()
             etime = time.strftime("%I:%M %p", starttime)
