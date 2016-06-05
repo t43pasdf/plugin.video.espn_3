@@ -159,28 +159,27 @@ class TVOS:
             aired = 0
 
         network = content['tracking']['network'] if 'network' in content['tracking'] else ''
+        network_name = content['source']
         if network == 'longhorn':
             channel_color = 'BF5700'
         elif network == 'sec' or network == 'secplus':
             channel_color = '004C8D'
         else:
             channel_color = 'CC0000'
-        network = network.replace('espn', translation(30590))
-        network = network.replace('sec', translation(30600))
-        network = network.replace('longhorn', translation(30610))
         # TODO: Blackout check
         blackout = False
         blackout_text = ''
         if blackout:
             blackout_text = translation(30580)
-        if network != '':
-            ename = '[COLOR=FF%s]%s[/COLOR] %s %s' % (channel_color, network, blackout_text, ename)
+        if network_name != '':
+            ename = '[COLOR=FF%s]%s[/COLOR] %s %s' % (channel_color, network_name, blackout_text, ename)
 
-        #if 'description' in content:
-        #    description = content['description']
-        #else:
-        #   description = ''
-        #description = description + '\n\n' + self.get_metadata(item)
+        if 'date' in content and 'time' in content:
+            description = content['date'] + ' ' + content['time']
+            if 'tracking' in content:
+                description += '\n' + content['tracking']['sport']
+        else:
+            description = ''
 
         requires_auth = does_requires_auth(network)
         if requires_auth and not adobe_activate_api.is_authenticated():
@@ -189,8 +188,8 @@ class TVOS:
         infoLabels = {'title': ename,
                       'genre': sport,
                       'duration': duration,
-                      'studio': network,
-                      #'plot': description,
+                      'studio': network_name,
+                      'plot': description,
                       'aired': aired,
                       'premiered': aired}
 
