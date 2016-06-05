@@ -1,7 +1,8 @@
 import os, sys
 import xbmc, xbmcplugin, xbmcgui, xbmcaddon
 
-LOG_LEVEL = xbmc.LOGDEBUG
+# LOG_LEVEL = xbmc.LOGDEBUG
+LOG_LEVEL = xbmc.LOGNOTICE
 
 selfAddon = xbmcaddon.Addon()
 addon_data_path = xbmc.translatePath(selfAddon.getAddonInfo('path')).decode('utf-8')

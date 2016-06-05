@@ -63,7 +63,10 @@ def get_url_as_json(url):
     response = urllib2.urlopen(url)
     return json.load(response)
 
-def get_url_as_json_cache(url, cache_file, timeout = 1):
+def get_url_as_json_cache(url, cache_file = None, timeout = 300):
+    if cache_file is None:
+        cache_file = hashlib.sha224(url).hexdigest()
+        cache_file = os.path.join(ADDON_PATH_PROFILE, cache_file + '.json')
     if not is_file_valid(cache_file, timeout):
         xbmc.log(TAG + 'Fetching config file %s from %s' % (cache_file, url), LOG_LEVEL)
         fetch_file(url, cache_file)
@@ -72,19 +75,20 @@ def get_url_as_json_cache(url, cache_file, timeout = 1):
     json_file = open(cache_file)
     json_data = json_file.read()
     json_file.close()
-    json_data = json_data.replace('ud=', '')
-    json_data = json_data.replace('\'', '"')
+    if json_data.startswith('ud='):
+        json_data = json_data.replace('ud=', '')
+        json_data = json_data.replace('\'', '"')
     return json.loads(json_data)
 
-# espn.page.loadSportPage('http://espn.go.com/watchespn/appletv/league?abbreviation=nba');
-# -> http://espn.go.com/watchespn/appletv/league?abbreviation=nba
+# espn.page.loadSportPage('url');
+# -> url
 def parse_url_from_method(method):
     http_start = method.find('http')
     end = method.find('\')')
     return method[http_start:end]
 
 
-# espn.page.loadMore('loadMoreLiveAndUpcoming', 'nav-0', 'http://espn.go.com/watchespn/appletv/loadMore?url=http%3A%2F%2Fapi-app.espn.com%2Fv1%2Fwatch%2Flistings%3Fconference%3Dacc&types=live,upcoming&offset=20&limit=20')
+# espn.page.loadMore('loadMoreLiveAndUpcoming', 'nav-0', 'url')
 def parse_method_call(method):
     p = re.compile('([\\w\\.:/&\\?=%,-]{2,})')
     return p.findall(method)
