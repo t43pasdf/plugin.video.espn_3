@@ -71,9 +71,10 @@ class TVOS:
             if selected_bucket is not None and str(bucket['id']) != selected_bucket:
                 continue
             if ('contents' in bucket or 'buckets' in bucket) and selected_bucket is None and len(buckets) > 1:
-                bucket_path = '/'.join(current_bucket_path)
-                addDir(bucket['name'],
-                       dict(URL=url, MODE=self.make_mode(URL_MODE), BUCKET=bucket_path), defaultlive)
+                if bucket['type'] != 'images':
+                    bucket_path = '/'.join(current_bucket_path)
+                    addDir(bucket['name'],
+                           dict(URL=url, MODE=self.make_mode(URL_MODE), BUCKET=bucket_path), defaultlive)
             else:
                 if 'buckets' in bucket:
                     if selected_buckets is not None and len(selected_buckets) > 0:
