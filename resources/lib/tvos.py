@@ -95,6 +95,7 @@ class TVOS:
                             xbmcplugin.setContent(pluginhandle, 'episodes')
 
     def parse_json(self, args, url):
+        xbmc.log(TAG + 'Looking at url %s' % url, LOG_LEVEL)
         selected_bucket = args.get(BUCKET, None)
         if selected_bucket is not None:
             selected_bucket = selected_bucket[0].split('/')
@@ -127,8 +128,6 @@ class TVOS:
             if time_part.find(':') == 1:
                 time_part = '0' + time_part
             starttime = time.strptime(year + ' ' + content['date'] + ' ' + time_part, '%Y %A, %B %d %I:%M %p')
-        else:
-            xbmc.log(TAG + str(content))
         xbmc.log(TAG + 'startime %s' % starttime)
         if starttime is not None:
             now = time.time()
