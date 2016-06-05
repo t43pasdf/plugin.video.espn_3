@@ -194,7 +194,7 @@ class TVOS:
                       'premiered': aired}
 
         authurl = dict()
-        if content['type'] == 'upcoming':
+        if content['type'] == 'upcoming' or ('status' in content and  content['status'] == 'upcoming'):
             authurl[MODE] = UPCOMING_MODE
         else:
             authurl[EVENT_ID] = content['id']
