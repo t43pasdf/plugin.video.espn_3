@@ -81,18 +81,19 @@ class TVOS:
                     else:
                         self.process_buckets(url, bucket['buckets'], list(), current_bucket_path)
                 else:
-                    for content in bucket['contents']:
-                        content_type = content['type']
-                        if content_type == 'network' or content_type == 'subcategory' or content_type == 'category':
-                            content_url = content['links']['self']
-                            if 'imageHref' in content:
-                                fanart = content['imageHref']
+                    if 'contents' in bucket:
+                        for content in bucket['contents']:
+                            content_type = content['type']
+                            if content_type == 'network' or content_type == 'subcategory' or content_type == 'category':
+                                content_url = content['links']['self']
+                                if 'imageHref' in content:
+                                    fanart = content['imageHref']
+                                else:
+                                    fanart = defaultfanart
+                                addDir(content['name'], dict(URL=content_url, MODE=self.make_mode(URL_MODE)), fanart)
                             else:
-                                fanart = defaultfanart
-                            addDir(content['name'], dict(URL=content_url, MODE=self.make_mode(URL_MODE)), fanart)
-                        else:
-                            self.index_content(content)
-                            xbmcplugin.setContent(pluginhandle, 'episodes')
+                                self.index_content(content)
+                                xbmcplugin.setContent(pluginhandle, 'episodes')
 
     def parse_json(self, args, url):
         xbmc.log(TAG + 'Looking at url %s' % url, LOG_LEVEL)
