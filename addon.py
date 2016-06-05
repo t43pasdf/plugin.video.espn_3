@@ -103,6 +103,7 @@ def PLAY_TV(args):
         return
 
     playback_url = session_json['session']['playbackUrls']['default']
+    xbmc.log(TAG + 'Playback url %s' % playback_url, LOG_LEVEL)
     stream_quality = str(selfAddon.getSetting('StreamQuality'))
     bitrate_limit = int(selfAddon.getSetting('BitrateLimit'))
     xbmc.log(TAG + 'Stream Quality %s' % stream_quality, LOG_LEVEL)
@@ -156,7 +157,7 @@ def PLAY_TV(args):
         item = xbmcgui.ListItem(path=m3u8_obj.playlists[stream_index].uri)
         return xbmcplugin.setResolvedUrl(pluginhandle, success, item)
     else:
-        item = xbmcgui.ListItem(path=finalurl)
+        item = xbmcgui.ListItem(path=playback_url)
         return xbmcplugin.setResolvedUrl(pluginhandle, success, item)
 
 
