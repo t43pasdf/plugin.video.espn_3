@@ -128,7 +128,7 @@ class TVOS:
             if time_part.find(':') == 1:
                 time_part = '0' + time_part
             starttime = time.strptime(year + ' ' + content['date'] + ' ' + time_part, '%Y %A, %B %d %I:%M %p')
-        xbmc.log(TAG + 'startime %s' % starttime)
+        xbmc.log(TAG + 'startime %s' % starttime, LOG_LEVEL)
         if starttime is not None:
             now = time.time()
             etime = time.strftime("%I:%M %p", starttime)
