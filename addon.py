@@ -10,14 +10,12 @@ import re
 import time
 import urllib
 import urlparse
-from datetime import datetime, timedelta
 
 
 import xbmcgui
 import xbmcplugin
 
 from resources.lib import util
-from resources.lib import player_config
 from resources.lib import adobe_activate_api
 from resources.lib.globals import selfAddon, defaultlive, defaultreplay, defaultupcoming, defaultimage, defaultfanart, translation, pluginhandle, LOG_LEVEL
 from resources.lib.constants import *

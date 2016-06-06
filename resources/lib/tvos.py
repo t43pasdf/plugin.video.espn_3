@@ -1,17 +1,11 @@
-
-import json
-import re
 import time
-import urllib
-from datetime import datetime, timedelta
 import base64
 
 import xbmcplugin
 
 import util
-import player_config
 import adobe_activate_api
-from globals import selfAddon, defaultlive, defaultreplay, defaultupcoming, defaultimage, defaultfanart, translation, pluginhandle, LOG_LEVEL
+from globals import defaultlive, defaultfanart, translation, pluginhandle, LOG_LEVEL
 from addon_util import *
 from register_mode import RegisterMode
 

@@ -1,5 +1,5 @@
 import os, sys
-import xbmc, xbmcplugin, xbmcgui, xbmcaddon
+import xbmc, xbmcaddon
 
 LOG_LEVEL = xbmc.LOGDEBUG
 #LOG_LEVEL = xbmc.LOGNOTICE
