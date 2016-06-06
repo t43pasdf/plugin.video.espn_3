@@ -36,30 +36,37 @@ class TVOS:
 
     @RegisterMode(ROOT)
     def root_menu(self, args):
-        addDir('Home', dict(MODE=self.make_mode(HOME)), defaultlive)
-        addDir('Channels', dict(MODE=self.make_mode(CHANNELS)), defaultlive)
-        addDir('Sports', dict(MODE=self.make_mode(SPORTS)), defaultlive)
+        url = base64.b64decode(
+            'aHR0cDovL3dhdGNoLnByb2R1Y3QuYXBpLmVzcG4uY29tL2FwaS9wcm9kdWN0L3YxL3R2b3Mvd2F0Y2hlc3BuL2hvbWU=')
+        self.parse_json(args, url)
+
+        addDir(translation(30550), dict(MODE=self.make_mode(SPORTS)), defaultlive)
+        addDir(translation(30560), dict(MODE=self.make_mode(CHANNELS)), defaultlive)
         xbmcplugin.endOfDirectory(pluginhandle)
 
     @RegisterMode(HOME)
     def home(self, args):
         url = base64.b64decode('aHR0cDovL3dhdGNoLnByb2R1Y3QuYXBpLmVzcG4uY29tL2FwaS9wcm9kdWN0L3YxL3R2b3Mvd2F0Y2hlc3BuL2hvbWU=')
         self.parse_json(args, url)
+        xbmcplugin.endOfDirectory(pluginhandle)
 
     @RegisterMode(CHANNELS)
     def channels(self, args):
         url = base64.b64decode('aHR0cDovL3dhdGNoLnByb2R1Y3QuYXBpLmVzcG4uY29tL2FwaS9wcm9kdWN0L3YxL3R2b3Mvd2F0Y2hlc3BuL2NoYW5uZWxz')
         self.parse_json(args, url)
+        xbmcplugin.endOfDirectory(pluginhandle)
 
     @RegisterMode(SPORTS)
     def sports(self, args):
         url = base64.b64decode('aHR0cDovL3dhdGNoLnByb2R1Y3QuYXBpLmVzcG4uY29tL2FwaS9wcm9kdWN0L3YxL3R2b3Mvd2F0Y2hlc3BuL3Nwb3J0cw==')
         self.parse_json(args, url)
+        xbmcplugin.endOfDirectory(pluginhandle)
 
     @RegisterMode(URL_MODE)
     def url_mode(self, args):
         url = args.get(URL)[0]
         self.parse_json(args, url)
+        xbmcplugin.endOfDirectory(pluginhandle)
 
     def process_buckets(self, url, buckets, selected_buckets, current_bucket_path):
         selected_bucket = None if selected_buckets is None or len(selected_buckets) == 0 else selected_buckets[0]
@@ -106,7 +113,6 @@ class TVOS:
         if 'buckets' in json_data['page']:
             buckets = json_data['page']['buckets']
             self.process_buckets(url, buckets, selected_bucket, list())
-        xbmcplugin.endOfDirectory(pluginhandle)
 
     def index_content(self, content):
         status = content['status'] if 'status' in content else 'live'
