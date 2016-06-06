@@ -33,9 +33,7 @@ class AppleTV:
 
     @RegisterMode(ROOT)
     def root_menu(self, args):
-        addDir(translation(30680),
-               dict(MODE=self.make_mode(FEATURED)),
-               defaultlive)
+        self.featured_menu()
         addDir(translation(30550),
                dict(MODE=self.make_mode(CATEGORY_SPORTS_MODE)),
                defaultlive)
@@ -44,8 +42,7 @@ class AppleTV:
                defaultlive)
         xbmcplugin.endOfDirectory(pluginhandle)
 
-    @RegisterMode(FEATURED)
-    def featured_menu(self, args):
+    def featured_menu(self):
         featured_url = base64.b64decode('aHR0cDovL2VzcG4uZ28uY29tL3dhdGNoZXNwbi9hcHBsZXR2L2ZlYXR1cmVk')
         et = util.get_url_as_xml_soup_cache(get_url(featured_url))
         for showcase in et.findall('.//showcase/items/showcasePoster'):
@@ -65,7 +62,6 @@ class AppleTV:
             addDir(title,
                    dict(SHELF_ID=name, MODE=self.make_mode(CATEGORY_SHELF_MODE)),
                    defaultlive)
-        xbmcplugin.endOfDirectory(pluginhandle)
 
     @RegisterMode(CATEGORY_SHOWCASE_MODE)
     def categories_showcase(self, args):
