@@ -109,18 +109,9 @@ class TVOS:
             self.process_buckets(url, buckets, selected_bucket, list())
 
     def index_content(self, content):
-        status = content['status'] if 'status' in content else 'live'
-        sport = content['tracking']['sport']
-        ename = content['name']
-        sport2 = content['subtitle'] if 'subtitle' in content else sport
-        if sport <> sport2:
-            sport += ' (' + sport2 + ')'
-        fanart = content['imageHref']
-
         duration = 0
         if 'tracking' in content and 'duration' in content['tracking']:
             duration = int(content['tracking']['duration'])
-
         starttime = None
         if 'date' in content and 'time' in content:
             now_time = time.localtime(time.time())
@@ -130,79 +121,27 @@ class TVOS:
             if time_part.find(':') == 1:
                 time_part = '0' + time_part
             starttime = time.strptime(year + ' ' + content['date'] + ' ' + time_part, '%Y %A, %B %d %I:%M %p')
-        xbmc.log(TAG + 'startime %s' % starttime, LOG_LEVEL)
-        if starttime is not None:
-            now = time.time()
-            etime = time.strftime("%I:%M %p", starttime)
-            if status == 'replay':
-                etime_local = starttime
-                if etime_local.tm_hour == 0 and etime_local.tm_min == 0:
-                    etime = time.strftime("%m/%d/%Y", starttime)
-                else:
-                    etime = time.strftime("%m/%d %I:%M %p", starttime)
-                ename = '[COLOR=FFB700EB]' + etime + '[/COLOR] ' + ename
-            elif status == 'live':
-                starttime_time = time.mktime(starttime)
-                duration = duration - (time.time() - starttime_time)
-                ename += ' [COLOR=FFB700EB]' + etime + '[/COLOR]'
-            else:
-                now_time = time.localtime(now)
-                if now_time.tm_year == starttime.tm_year and \
-                                now_time.tm_mon == starttime.tm_mon and \
-                                now_time.tm_mday == starttime.tm_mday:
-                    etime = time.strftime("%I:%M %p", starttime)
-                else:
-                    etime = time.strftime("%m/%d %I:%M %p", starttime)
-                ename = '[COLOR=FFB700EB]' + etime + '[/COLOR] ' + ename
-            aired = time.strftime("%Y-%m-%d", starttime)
-        else:
-            aired = 0
-
-        network = content['tracking']['network'] if 'network' in content['tracking'] else ''
-        network_name = content['source']
-        if network == 'longhorn':
-            channel_color = 'BF5700'
-        elif network == 'sec' or network == 'secplus':
-            channel_color = '004C8D'
-        else:
-            channel_color = 'CC0000'
-        # TODO: Blackout check
-        blackout = False
-        blackout_text = ''
-        if blackout:
-            blackout_text = translation(30580)
-        if network_name != '':
-            ename = '[COLOR=FF%s]%s[/COLOR] %s %s' % (channel_color, network_name, blackout_text, ename)
-
         if 'date' in content and 'time' in content:
             description = content['date'] + ' ' + content['time']
             if 'tracking' in content:
                 description += '\n' + content['tracking']['sport']
         else:
             description = ''
-
-        requires_auth = does_requires_auth(network)
-        if requires_auth and not adobe_activate_api.is_authenticated():
-            ename = '*' + ename
-
-        infoLabels = {'title': ename,
-                      'genre': sport,
-                      'duration': duration,
-                      'studio': network_name,
-                      'plot': description,
-                      'aired': aired,
-                      'premiered': aired}
-
-        authurl = dict()
-        if content['type'] == 'upcoming' or ('status' in content and  content['status'] == 'upcoming'):
-            authurl[MODE] = UPCOMING_MODE
-        else:
-            authurl[EVENT_ID] = content['id']
-            authurl[MODE] = PLAY_TV_MODE if 'adobeRSS' in content else PLAY_ITEM_MODE
-            if 'adobeRSS' in content:
-                authurl[ADOBE_RSS] = content['adobeRSS'].encode('iso-8859-1')
-                authurl[NETWORK_NAME] = content['tracking']['network']
-                authurl[SESSION_URL] = content['airings'][0]['videoHref']
-            else:
-                authurl[PLAYBACK_URL] = content['airings'][0]['videoHref']
-        addLink(ename.encode('iso-8859-1'), authurl, fanart, fanart, infoLabels=infoLabels)
+        index_item({
+            'sport': content['tracking']['sport'],
+            'eventName': content['name'],
+            'subcategory': content['subtitle'] if 'subtitle' in content else content['tracking']['sport'],
+            'imageHref': content['imageHref'],
+            'parentalRating': 'U',
+            'starttime': starttime,
+            'duration': duration,
+            'type': content['status'] if 'status' in content else 'live',
+            'networkId': content['tracking']['network'] if 'network' in content['tracking'] else '',
+            'networkName': content['source'],
+            #TODO: Blackout check
+            'blackout': False,
+            'description': description,
+            'eventId': content['id'],
+            'sessionUrl': content['airings'][0]['videoHref'],
+            'adobeRSS' : content['adobeRSS'] if 'adobeRSS' in content else None
+        })

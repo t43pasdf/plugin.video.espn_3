@@ -285,3 +285,16 @@ def clean_up_authorization_tokens():
     for key in keys_to_delete:
         del settings['authorize'][key]
     save_settings(settings)
+
+def get_user_metadata():
+    params = urllib.urlencode({'requestor': 'ESPN',
+                               'deviceId' : get_device_id()})
+
+    path = '/tokens/usermetadata'
+    url = urlparse.urlunsplit(['https', 'api.auth.adobe.com',
+                                   'api/v1' + path,
+                                   params, ''])
+
+    message = generate_message('GET', path)
+
+    resp = get_url_response(url, message)

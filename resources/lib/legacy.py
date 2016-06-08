@@ -152,7 +152,6 @@ class Legacy:
 
     def index_event(self, event, live, upcoming, replay, chosen_sport):
         sport = event.find('sportDisplayValue').text.encode('utf-8')
-        desktopStreamSource = event.find('desktopStreamSource').text
         ename = event.find('name').text
         eventid = event.get('id')
         simulcastAiringId = event.find('simulcastAiringId').text

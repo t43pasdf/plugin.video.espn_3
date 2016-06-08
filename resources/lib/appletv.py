@@ -19,6 +19,7 @@ CATEGORY_SHOWCASE_MODE = 'CATEGORY_SHOWCASE'
 CATEGORY_SHELF_MODE = 'CATEGORY_SHELF'
 CATEGORY_SPORTS_MODE = 'CATEGORY_SPORTS'
 CATEGORY_CHANNELS_MODE = 'CATEGORY_CHANNELS'
+TRENDING = 'trending'
 
 class AppleTV:
     @RegisterMode(PLACE)
@@ -30,7 +31,9 @@ class AppleTV:
 
     @RegisterMode(ROOT)
     def root_menu(self, args):
-        self.featured_menu()
+        addDir(translation(30680),
+               dict(MODE=self.make_mode(FEATURED)),
+               defaultlive)
         addDir(translation(30550),
                dict(MODE=self.make_mode(CATEGORY_SPORTS_MODE)),
                defaultlive)
@@ -39,7 +42,8 @@ class AppleTV:
                defaultlive)
         xbmcplugin.endOfDirectory(pluginhandle)
 
-    def featured_menu(self):
+    @RegisterMode(FEATURED)
+    def featured_menu(self, args):
         featured_url = base64.b64decode('aHR0cDovL2VzcG4uZ28uY29tL3dhdGNoZXNwbi9hcHBsZXR2L2ZlYXR1cmVk')
         et = util.get_url_as_xml_soup_cache(get_url(featured_url))
         for showcase in et.findall('.//showcase/items/showcasePoster'):
@@ -59,6 +63,7 @@ class AppleTV:
             addDir(title,
                    dict(SHELF_ID=name, MODE=self.make_mode(CATEGORY_SHELF_MODE)),
                    defaultlive)
+        xbmcplugin.endOfDirectory(pluginhandle)
 
     @RegisterMode(CATEGORY_SHOWCASE_MODE)
     def categories_showcase(self, args):
@@ -132,108 +137,52 @@ class AppleTV:
                    image, image)
         xbmcplugin.endOfDirectory(pluginhandle, updateListing=False)
 
+    @RegisterMode(TRENDING)
+    def trending_mode(self, args):
+        url = base64.b64decode('aHR0cDovL3dhdGNoLmFwaS5lc3BuLmNvbS92MS90cmVuZGluZw==')
+        json_data = util.get_url_as_json_cache(get_url(url))
+        for listing in json_data['listings']:
+            pass
+        xbmcplugin.endOfDirectory(pluginhandle)
+
     # Items can play as is and do not need authentication
     def index_item_shelf(self, stash_json, item):
-        sport = stash_json['sportName']
-        ename = stash_json['name']
-        fanart = stash_json['imageHref']
-        length = int(stash_json['duration'])
         description = stash_json['description']
         description = description + '\n\n' + self.get_metadata(item)
 
-        infoLabels = {'title': ename,
-                      'genre': sport,
-                      'duration': length,
-                      'plot': description}
-
-        authurl = dict()
-        authurl[MODE] = PLAY_ITEM_MODE
-        authurl[PLAYBACK_URL] = stash_json['playbackUrl']
-        addLink(ename.encode('iso-8859-1'), authurl, fanart, fanart, infoLabels=infoLabels)
+        index_item({
+            'sport': stash_json['sportName'],
+            'eventName': stash_json['name'],
+            'imageHref': stash_json['imageHref'],
+            'duration': int(stash_json['duration']),
+            'description': description,
+            'sessionUrl': stash_json['playbackUrl'],
+            'type': 'live'
+        })
 
     def index_tv_shelf(self, stash_json, item, upcoming):
-        sport = stash_json['categoryName']
-        ename = stash_json['name']
-        sport2 = stash_json['subcategoryName']
-        if sport <> sport2:
-            sport += ' (' + sport2 + ')'
-        fanart = stash_json['imageHref']
-        mpaa = stash_json['parentalRating']
-        starttime = int(stash_json['startTime']) / 1000
-        now = time.time()
-        etime = time.strftime("%I:%M %p", time.localtime(float(starttime)))
-        length = int(stash_json['duration'])
-        if stash_json['type'] == 'replay':
-            etime_local = time.localtime(starttime)
-            if etime_local.tm_hour == 0 and etime_local.tm_min == 0:
-                etime = time.strftime("%m/%d/%Y", time.localtime(starttime))
-            else:
-                etime = time.strftime("%m/%d %I:%M %p", time.localtime(starttime))
-            ename = '[COLOR=FFB700EB]' + etime + '[/COLOR] ' + ename
-        elif now > starttime:
-            length = length - (now - starttime)
-            xbmc.log(TAG + ' Setting length to %s' % length, LOG_LEVEL)
-            ename += ' [COLOR=FFB700EB]' + etime + '[/COLOR]'
-        else:
-            now_time = time.localtime(now)
-            start_time = time.localtime(starttime)
-            if now_time.tm_year == start_time.tm_year and \
-                            now_time.tm_mon == start_time.tm_mon and \
-                            now_time.tm_mday == start_time.tm_mday:
-                etime = time.strftime("%I:%M %p", time.localtime(starttime))
-            else:
-                etime = time.strftime("%m/%d %I:%M %p", time.localtime(starttime))
-            ename = '[COLOR=FFB700EB]' + etime + '[/COLOR] ' + ename
-        aired = time.strftime("%Y-%m-%d", time.localtime(starttime))
-
-        network = stash_json['network']
-        if network == 'longhorn':
-            channel_color = 'BF5700'
-        elif network == 'sec' or network == 'secplus':
-            channel_color = '004C8D'
-        else:
-            channel_color = 'CC0000'
-        network = network.replace('espn', translation(30590))
-        network = network.replace('sec', translation(30600))
-        network = network.replace('longhorn', translation(30610))
-        blackout = self.check_blackout(item)
-        blackout_text = ''
-        if blackout:
-            blackout_text = translation(30580)
-        ename = '[COLOR=FF%s]%s[/COLOR] %s %s' % (channel_color, network, blackout_text, ename)
-
         if 'description' in stash_json:
             description = stash_json['description']
         else:
             description = ''
         description = description + '\n\n' + self.get_metadata(item)
 
-        requires_auth = does_requires_auth(stash_json['network'])
-        if requires_auth and not adobe_activate_api.is_authenticated():
-            ename = '*' + ename
-
-        infoLabels = {'title': ename,
-                      'genre': sport,
-                      'duration': length,
-                      'studio': stash_json['network'],
-                      'mpaa': mpaa,
-                      'plot': description,
-                      'aired': aired,
-                      'premiered': aired}
-
-        authurl = dict()
-        if upcoming:
-            authurl[MODE] = UPCOMING_MODE
-        else:
-            authurl[EVENT_ID] = stash_json['eventId']
-            authurl[SESSION_URL] = stash_json['sessionUrl']
-            authurl[MODE] = PLAY_TV_MODE
-            authurl[NETWORK_NAME] = stash_json['network']
-            authurl[EVENT_NAME] = stash_json['name'].encode('iso-8859-1')
-            authurl[EVENT_GUID] = stash_json['guid'].encode('iso-8859-1')
-            authurl[EVENT_PARENTAL_RATING] = mpaa
-        addLink(ename.encode('iso-8859-1'), authurl, fanart, fanart, infoLabels=infoLabels)
-
+        index_item({
+            'sport': stash_json['categoryName'],
+            'eventName': stash_json['name'],
+            'subcategory': stash_json['subcategoryName'],
+            'imageHref':stash_json['imageHref'],
+            'parentalRating':stash_json['parentalRating'],
+            'starttime' : time.localtime(int(stash_json['startTime']) / 1000),
+            'duration': int(stash_json['duration']),
+            'type' : stash_json['type'],
+            'networkId' : stash_json['network'],
+            'blackout' : self.check_blackout(item),
+            'description' : description,
+            'eventId' : stash_json['eventId'],
+            'sessionUrl': stash_json['sessionUrl'],
+            'guid': stash_json['guid']
+        })
 
     def process_item_list(self, item_list):
         for item in item_list:

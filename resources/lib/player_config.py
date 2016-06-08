@@ -35,6 +35,12 @@ def get_timezone():
 def get_dma():
     return get_user_data()['dma']
 
+def get_can_sso():
+    return get_user_data()['canaddsso']
+
+def get_sso_abuse():
+    return get_user_data()['ssoabuse']
+
 def get_networks():
     networks = get_config_soup().findall('.//network')
     return networks

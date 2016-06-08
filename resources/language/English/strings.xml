@@ -85,4 +85,6 @@
     <string id="30670">Duration: %s minutes</string>
     <string id="30680">Featured</string>
     <string id="30690">Home</string>
+    <string id="30700">DMA: %s Timezone: %s</string>
+    <string id="30710">Can SSO: %s SSO Abuse: %s</string>
 </strings>

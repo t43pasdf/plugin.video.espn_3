@@ -204,6 +204,8 @@ elif mode is not None and mode[0] == AUTHENTICATION_DETAILS_MODE:
     dialog = xbmcgui.Dialog()
     ok = dialog.yesno(translation(30380),
                       translation(30390) % adobe_activate_api.get_authentication_expires(),
+                      translation(30700) % (player_config.get_dma(), player_config.get_timezone()),
+                      translation(30710) % (player_config.get_can_sso(), player_config.get_sso_abuse()),
                       nolabel = translation(30360),
                       yeslabel = translation(30430))
     if ok:
