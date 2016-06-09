@@ -75,6 +75,8 @@ def get_url(url):
     return url
 
 def index_item(args):
+    if args['type'] == 'over':
+        return
     sport = args['sport']
     ename = args['eventName']
     sport2 = args['subcategory'] if 'subcategory' in args else sport
@@ -163,3 +165,73 @@ def index_item(args):
                 authurl[EVENT_PARENTAL_RATING] = mpaa
     fanart = args['imageHref']
     addLink(ename.encode('iso-8859-1'), authurl, fanart, fanart, infoLabels=infoLabels)
+
+
+def get_league(categories):
+    for category in categories:
+        if 'type' in category and category['type'] == 'league':
+            return category['description']
+    return ''
+
+
+def get_subcategory(subcategories):
+    for subcategory in subcategories:
+        return subcategory['name']
+    return ''
+
+
+def check_json_blackout( listing):
+    blackout_dmas = list()
+    for blackout in listing['blackouts']:
+        if blackout['type'] == 'dma':
+            for dma in blackout['detail']:
+                blackout_dmas.append(dma)
+    user_dma = player_config.get_dma()
+    for blackout_dma in blackout_dmas:
+        if blackout_dma == user_dma:
+            return True
+    return False
+
+def index_listing(listing):
+    # 2016-06-06T18:00:00EDT
+    time_format = '%Y-%m-%dT%H:%M:%S%Z'
+    starttime = time.strptime(listing['startTime'], time_format)
+    endtime = time.strptime(listing['endTime'], time_format)
+    duration = (time.mktime(endtime) - time.mktime(starttime))
+    xbmc.log(TAG + ' Duration: %s' % duration, LOG_LEVEL)
+
+    index_item({
+        'sport': get_league(listing['categories']),
+        'eventName': listing['name'],
+        'subcategory': get_subcategory(listing['subcategories']),
+        'imageHref': listing['thumbnails']['large']['href'],
+        'parentalRating': listing['parentalRating'],
+        'starttime': starttime,
+        'duration': duration,
+        'type': listing['type'],
+        'networkId': listing['broadcasts'][0]['adobeResource'],
+        'networkName': listing['broadcasts'][0]['name'],
+        'blackout': check_json_blackout(listing),
+        'description': listing['keywords'],
+        'eventId': listing['eventId'],
+        'sessionUrl': listing['links']['source']['hls']['default']['href'],
+        'guid': listing['guid']
+    })
+
+
+def index_video(listing):
+    # 2016-06-06T18:00:00EDT
+    starttime = None
+    duration = listing['duration']
+    index_item({
+        'sport': get_league(listing['categories']),
+        'eventName': listing['headline'],
+        'imageHref': listing['posterImages']['default']['href'],
+        'starttime': starttime,
+        'duration': duration,
+        'type': 'live',
+        'networkId': listing['source'],
+        'description': listing['description'],
+        'eventId': listing['id'],
+        'sessionUrl': listing['links']['source']['HLS']['HD']['href']
+    })

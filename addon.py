@@ -17,13 +17,14 @@ import xbmcplugin
 
 from resources.lib import util
 from resources.lib import adobe_activate_api
-from resources.lib.globals import selfAddon, defaultlive, defaultreplay, defaultupcoming, defaultimage, defaultfanart, translation, pluginhandle, LOG_LEVEL
+from resources.lib.globals import selfAddon, defaultlive, defaultreplay, defaultupcoming, defaultimage, defaultfanart, translation, pluginhandle, LOG_LEVEL, UA_PC
 from resources.lib.constants import *
 from resources.lib.addon_util import *
 
 from resources.lib import legacy
 from resources.lib import appletv
 from resources.lib import tvos
+from resources.lib import roku
 
 TAG = 'ESPN3: '
 
@@ -36,6 +37,9 @@ def ROOT_ITEM(refresh):
            defaultlive)
     addDir('TV OS',
            dict(MODE='/tvos/'),
+           defaultlive)
+    addDir('Roku',
+           dict(MODE='/roku/'),
            defaultlive)
     if not adobe_activate_api.is_authenticated():
         addDir('[COLOR=FFFF0000]' + translation(30300) + '[/COLOR]',
@@ -105,7 +109,14 @@ def PLAY_TV(args):
     stream_quality = str(selfAddon.getSetting('StreamQuality'))
     bitrate_limit = int(selfAddon.getSetting('BitrateLimit'))
     xbmc.log(TAG + 'Stream Quality %s' % stream_quality, LOG_LEVEL)
-    m3u8_obj = m3u8.load(playback_url)
+    try:
+        m3u8_obj = m3u8.load(playback_url)
+    except:
+        playback_url += '|Connection=keep-alive&User-Agent=' + urllib.quote(UA_PC) + '&Cookie=_mediaAuth=' +\
+                        urllib.quote(base64.b64encode(session_json['session']['token']))
+        item = xbmcgui.ListItem(path=playback_url)
+        return xbmcplugin.setResolvedUrl(pluginhandle, True, item)
+
     success = True
     if m3u8_obj.is_variant:
         stream_options = list()
@@ -220,7 +231,7 @@ if mode is not None:
         root = paths[1]
         path = paths[2]
         xbmc.log(TAG + 'root: %s path: %s' % (root, path), xbmc.LOGDEBUG)
-        for class_def in (appletv.AppleTV, legacy.Legacy, tvos.TVOS):
+        for class_def in (appletv.AppleTV, legacy.Legacy, tvos.TVOS, roku.Roku):
             class_root = getattr(getattr(class_def, '__init__'), 'mode')
             xbmc.log(TAG + 'class root: %s' % class_root, xbmc.LOGDEBUG)
             if root == class_root:

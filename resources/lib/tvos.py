@@ -20,6 +20,8 @@ BUCKET = 'BUCKET'
 URL_MODE = 'URL_MODE'
 URL = 'URL'
 
+
+
 class TVOS:
     @RegisterMode(PLACE)
     def __init__(self):
@@ -30,6 +32,7 @@ class TVOS:
 
     @RegisterMode(ROOT)
     def root_menu(self, args):
+        # TVOS home
         url = base64.b64decode(
             'aHR0cDovL3dhdGNoLnByb2R1Y3QuYXBpLmVzcG4uY29tL2FwaS9wcm9kdWN0L3YxL3R2b3Mvd2F0Y2hlc3BuL2hvbWU=')
         self.parse_json(args, url)

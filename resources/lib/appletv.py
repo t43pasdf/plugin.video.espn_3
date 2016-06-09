@@ -146,63 +146,14 @@ class AppleTV:
         url = base64.b64decode('aHR0cDovL3dhdGNoLmFwaS5lc3BuLmNvbS92MS90cmVuZGluZw==')
         json_data = util.get_url_as_json_cache(get_url(url))
         for listing in json_data['listings']:
-            self.index_listing(listing)
+            index_listing(listing)
         for video in json_data['videos']:
-            self.index_video(video)
+            index_video(video)
         xbmcplugin.setContent(pluginhandle, 'episodes')
         xbmcplugin.endOfDirectory(pluginhandle)
 
-    def get_league(self, categories):
-        for category in categories:
-            if 'type' in category and category['type'] == 'league':
-                return category['description']
-        return ''
 
-    def get_subcategory(self, subcategories):
-        for subcategory in subcategories:
-            return subcategory['name']
-        return ''
 
-    def index_listing(self, listing):
-        # 2016-06-06T18:00:00EDT
-        time_format = '%Y-%m-%dT%H:%M:%S%Z'
-        starttime = time.strptime(listing['startTime'], time_format)
-        endtime = time.strptime(listing['endTime'], time_format)
-        duration = (time.mktime(starttime) - time.mktime(endtime)) / 60
-        index_item({
-            'sport': self.get_league(listing['categories']),
-            'eventName': listing['name'],
-            'subcategory': self.get_subcategory(listing['subcategories']),
-            'imageHref': listing['thumbnails']['large']['href'],
-            'parentalRating': listing['parentalRating'],
-            'starttime': starttime,
-            'duration': duration,
-            'type': listing['type'],
-            'networkId': listing['broadcasts'][0]['adobeResource'],
-            'networkName': listing['broadcasts'][0]['name'],
-            'blackout': self.check_json_blackout(listing),
-            'description': listing['keywords'],
-            'eventId': listing['eventId'],
-            'sessionUrl': listing['links']['source']['hls']['default']['href'],
-            'guid': listing['guid']
-        })
-
-    def index_video(self, listing):
-        # 2016-06-06T18:00:00EDT
-        starttime = None
-        duration = listing['duration']
-        index_item({
-            'sport': self.get_league(listing['categories']),
-            'eventName': listing['headline'],
-            'imageHref': listing['posterImages']['default']['href'],
-            'starttime': starttime,
-            'duration': duration,
-            'type': 'live',
-            'networkId': listing['source'],
-            'description': listing['description'],
-            'eventId': listing['id'],
-            'sessionUrl': listing['links']['source']['HLS']['HD']['href']
-        })
 
     # Items can play as is and do not need authentication
     def index_item_shelf(self, stash_json, item):
@@ -300,18 +251,6 @@ class AppleTV:
                 if valueLabels[i].text is not None:
                     description = description + '%s: %s\n' % (keyLabels[i].text, valueLabels[i].text)
         return description
-
-    def check_json_blackout(self, listing):
-        blackout_dmas = list()
-        for blackout in listing['blackouts']:
-            if blackout['type'] == 'dma':
-                for dma in blackout['detail']:
-                    blackout_dmas.append(dma)
-        user_dma = player_config.get_dma()
-        for blackout_dma in blackout_dmas:
-            if blackout_dma == user_dma:
-                return True
-        return False
 
     def check_blackout(self, item):
         blackouts = item.findall('.//blackouts/blackoutsItem/detail/detailItem')
