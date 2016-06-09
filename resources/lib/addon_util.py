@@ -149,7 +149,9 @@ def index_item(args):
     if args['type'] == 'upcoming':
         authurl[MODE] = UPCOMING_MODE
     else:
-        if 'adobeRSS' not in args and 'guid' not in args:
+        adobeRSS = args['adobeRSS'] if 'adobeRSS' in args else None
+        guid = args['guid'] if 'guid' in args else None
+        if adobeRSS is None and guid is None:
             authurl[PLAYBACK_URL] = args['sessionUrl']
             authurl[MODE] = PLAY_ITEM_MODE
         else:
