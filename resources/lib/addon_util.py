@@ -56,8 +56,9 @@ def check_error(session_json):
     return False
 
 def does_requires_auth(network_name):
-    requires_auth = not network_name == 'espn3'
-    if network_name == 'espn3':
+    xbmc.log(TAG + 'Checking auth of ' + network_name)
+    requires_auth = not (network_name == 'espn3' or network_name.find('free') >= 0)
+    if not requires_auth:
         free_content_check = player_config.can_access_free_content()
         if not free_content_check:
             xbmc.log('ESPN3: User needs login to ESPN3', LOG_LEVEL)
@@ -234,7 +235,7 @@ def index_video(listing):
         'starttime': starttime,
         'duration': duration,
         'type': 'live',
-        'networkId': listing['source'],
+        'networkId': listing['source'] + 'free',
         'description': listing['description'],
         'eventId': listing['id'],
         'sessionUrl': listing['links']['source']['HLS']['HD']['href']
