@@ -57,7 +57,7 @@ def check_error(session_json):
 
 def does_requires_auth(network_name):
     xbmc.log(TAG + 'Checking auth of ' + network_name)
-    requires_auth = not (network_name == 'espn3' or network_name.find('free') >= 0)
+    requires_auth = not (network_name == 'espn3' or network_name.find('free') >= 0 or network_name == '')
     if not requires_auth:
         free_content_check = player_config.can_access_free_content()
         if not free_content_check:
@@ -225,7 +225,6 @@ def index_listing(listing):
 
 
 def index_video(listing):
-    # 2016-06-06T18:00:00EDT
     starttime = None
     duration = listing['duration']
     index_item({
