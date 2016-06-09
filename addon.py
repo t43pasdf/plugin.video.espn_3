@@ -29,16 +29,16 @@ from resources.lib import roku
 TAG = 'ESPN3: '
 
 def ROOT_ITEM(refresh):
-    addDir('Apple TV',
+    addDir(translation(30730),
            dict(MODE='/appletv/'),
            defaultlive)
-    addDir('Legacy',
+    addDir(translation(30740),
            dict(MODE='/legacy/'),
            defaultlive)
-    addDir('TV OS',
+    addDir(translation(30750),
            dict(MODE='/tvos/'),
            defaultlive)
-    addDir('Roku',
+    addDir(translation(30760),
            dict(MODE='/roku/'),
            defaultlive)
     if not adobe_activate_api.is_authenticated():
@@ -56,7 +56,7 @@ def PLAY_ITEM(args):
     item = xbmcgui.ListItem(path=url)
     return xbmcplugin.setResolvedUrl(pluginhandle, True, item)
 
-# TODO: Unsure if cookie is needed
+# Cookie is only needed when authenticating with espn broadband as opposed to uplynk
 #ua UA_PC
 #finalurl = finalurl + '|Connection=keep-alive&User-Agent=' + urllib.quote(ua) + '&Cookie=_mediaAuth=' + urllib.quote(base64.b64encode(pkan))
 def PLAY_TV(args):

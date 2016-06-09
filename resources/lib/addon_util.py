@@ -167,16 +167,18 @@ def index_item(args):
     addLink(ename.encode('iso-8859-1'), authurl, fanart, fanart, infoLabels=infoLabels)
 
 
-def get_league(categories):
-    for category in categories:
-        if 'type' in category and category['type'] == 'league':
-            return category['description']
+def get_league(listing):
+    if 'categories' in listing:
+        for category in listing['categories']:
+            if 'type' in category and category['type'] == 'league':
+                return category['description']
     return ''
 
 
-def get_subcategory(subcategories):
-    for subcategory in subcategories:
-        return subcategory['name']
+def get_subcategory(listing):
+    if 'subcategories' in listing:
+        for subcategory in listing['subcategories']:
+            return subcategory['name']
     return ''
 
 
@@ -201,9 +203,9 @@ def index_listing(listing):
     xbmc.log(TAG + ' Duration: %s' % duration, LOG_LEVEL)
 
     index_item({
-        'sport': get_league(listing['categories']),
+        'sport': get_league(listing),
         'eventName': listing['name'],
-        'subcategory': get_subcategory(listing['subcategories']),
+        'subcategory': get_subcategory(listing),
         'imageHref': listing['thumbnails']['large']['href'],
         'parentalRating': listing['parentalRating'],
         'starttime': starttime,
@@ -224,7 +226,7 @@ def index_video(listing):
     starttime = None
     duration = listing['duration']
     index_item({
-        'sport': get_league(listing['categories']),
+        'sport': get_league(listing),
         'eventName': listing['headline'],
         'imageHref': listing['posterImages']['default']['href'],
         'starttime': starttime,

@@ -88,4 +88,8 @@
     <string id="30700">DMA: %s Timezone: %s</string>
     <string id="30710">Can SSO: %s SSO Abuse: %s</string>
     <string id="30720">Trending</string>
+    <string id="30730">Apple TV</string>
+    <string id="30740">Legacy</string>
+    <string id="30750">TV OS</string>
+    <string id="30760">Roku</string>
 </strings>
