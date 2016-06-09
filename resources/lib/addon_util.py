@@ -78,7 +78,7 @@ def index_item(args):
     sport = args['sport']
     ename = args['eventName']
     sport2 = args['subcategory'] if 'subcategory' in args else sport
-    if sport <> sport2:
+    if sport <> sport2 and len(sport2) > 0:
         sport += ' (' + sport2 + ')'
     starttime = args['starttime'] if 'starttime' in args else None
     length = int(args['duration'])
@@ -122,9 +122,6 @@ def index_item(args):
         network = args['networkName']
     else:
         network = network_id
-        network = network.replace('espn', translation(30590))
-        network = network.replace('sec', translation(30600))
-        network = network.replace('longhorn', translation(30610))
     blackout = args['blackout'] if 'blackout' in args else False
     blackout_text = ''
     if blackout:
