@@ -9,24 +9,21 @@ import player_config
 import adobe_activate_api
 from globals import selfAddon, defaultlive, defaultreplay, defaultupcoming, defaultimage, defaultfanart, translation, pluginhandle, LOG_LEVEL
 from addon_util import *
+from menu_listing import *
 from register_mode import RegisterMode
 
 TAG = 'AppleTV: '
 PLACE = 'appletv'
-ROOT = ''
 FEATURED = 'featured'
 CATEGORY_SHOWCASE_MODE = 'CATEGORY_SHOWCASE'
 CATEGORY_SHELF_MODE = 'CATEGORY_SHELF'
 CATEGORY_SPORTS_MODE = 'CATEGORY_SPORTS'
 CATEGORY_CHANNELS_MODE = 'CATEGORY_CHANNELS'
 
-class AppleTV:
+class AppleTV(MenuListing):
     @RegisterMode(PLACE)
     def __init__(self):
-        pass
-
-    def make_mode(self, destination):
-        return '/' + PLACE + '/' + destination
+        MenuListing.__init__(self, PLACE)
 
     @RegisterMode(ROOT)
     def root_menu(self, args):

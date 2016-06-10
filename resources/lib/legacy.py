@@ -11,6 +11,7 @@ import player_config
 import events
 import adobe_activate_api
 from globals import selfAddon, defaultlive, defaultreplay, defaultupcoming, defaultimage, defaultfanart, translation, pluginhandle, LOG_LEVEL
+from menu_listing import *
 from register_mode import RegisterMode
 
 from addon_util import *
@@ -22,13 +23,10 @@ ROOT = ''
 LIST_SPORTS_MODE = 'LIST_SPORTS'
 INDEX_SPORTS_MODE = 'INDEX_SPORTS'
 
-class Legacy:
+class Legacy(MenuListing):
     @RegisterMode(PLACE)
     def __init__(self):
-        pass
-
-    def make_mode(self, destination):
-        return '/' + PLACE + '/' + destination
+        MenuListing.__init__(self, PLACE)
 
     @RegisterMode(ROOT)
     def root_menu(self, args):

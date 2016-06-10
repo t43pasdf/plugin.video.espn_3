@@ -7,24 +7,22 @@ import util
 import adobe_activate_api
 from globals import defaultlive, defaultfanart, translation, pluginhandle, LOG_LEVEL
 from addon_util import *
+from menu_listing import *
 from register_mode import RegisterMode
+
 
 TAG = 'ROKU: '
 PLACE = 'roku'
-ROOT = ''
 URL_MODE = 'URL_MODE'
 URL = 'URL'
 ID = 'ID'
 
 MIN_THUMBNAIL_WIDTH = 500
 
-class Roku:
+class Roku(MenuListing):
     @RegisterMode(PLACE)
     def __init__(self):
-        pass
-
-    def make_mode(self, destination):
-        return '/' + PLACE + '/' + destination
+        MenuListing.__init__(self, PLACE)
 
     @RegisterMode(ROOT)
     def root_menu(self, args):
