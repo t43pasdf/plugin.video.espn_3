@@ -19,7 +19,6 @@ CATEGORY_SHOWCASE_MODE = 'CATEGORY_SHOWCASE'
 CATEGORY_SHELF_MODE = 'CATEGORY_SHELF'
 CATEGORY_SPORTS_MODE = 'CATEGORY_SPORTS'
 CATEGORY_CHANNELS_MODE = 'CATEGORY_CHANNELS'
-TRENDING = 'trending'
 
 class AppleTV:
     @RegisterMode(PLACE)
@@ -31,9 +30,7 @@ class AppleTV:
 
     @RegisterMode(ROOT)
     def root_menu(self, args):
-        addDir(translation(30720),
-               dict(MODE=self.make_mode(TRENDING)),
-               defaultlive)
+        self.trending_mode(args)
         addDir(translation(30680),
                dict(MODE=self.make_mode(FEATURED)),
                defaultlive)
@@ -141,7 +138,6 @@ class AppleTV:
         xbmcplugin.setContent(pluginhandle, 'episodes')
         xbmcplugin.endOfDirectory(pluginhandle, updateListing=False)
 
-    @RegisterMode(TRENDING)
     def trending_mode(self, args):
         url = base64.b64decode('aHR0cDovL3dhdGNoLmFwaS5lc3BuLmNvbS92MS90cmVuZGluZw==')
         json_data = util.get_url_as_json_cache(get_url(url))
@@ -149,11 +145,6 @@ class AppleTV:
             index_listing(listing)
         for video in json_data['videos']:
             index_video(video)
-        xbmcplugin.setContent(pluginhandle, 'episodes')
-        xbmcplugin.endOfDirectory(pluginhandle)
-
-
-
 
     # Items can play as is and do not need authentication
     def index_item_shelf(self, stash_json, item):
@@ -236,9 +227,6 @@ class AppleTV:
                         self.index_tv_shelf(stash_json, item, False)
                     else:
                         self.index_item_shelf(stash_json, item)
-
-
-
 
     def get_metadata(self, item):
         metadataKeysElement = item.find('.//metadataKeys')
