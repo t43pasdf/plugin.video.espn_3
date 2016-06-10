@@ -199,9 +199,10 @@ def check_json_blackout( listing):
 
 def index_listing(listing):
     # 2016-06-06T18:00:00EDT
-    time_format = '%Y-%m-%dT%H:%M:%S%Z'
-    starttime = time.strptime(listing['startTime'], time_format)
-    endtime = time.strptime(listing['endTime'], time_format)
+    # EDT is discarded due to http://bugs.python.org/issue22377
+    time_format = '%Y-%m-%dT%H:%M:%S'
+    starttime = time.strptime(listing['startTime'][:-3], time_format)
+    endtime = time.strptime(listing['endTime'][:-3], time_format)
     duration = (time.mktime(endtime) - time.mktime(starttime))
     xbmc.log(TAG + ' Duration: %s' % duration, LOG_LEVEL)
 
