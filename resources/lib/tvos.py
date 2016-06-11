@@ -14,6 +14,7 @@ TAG = 'TVOS: '
 PLACE = 'tvos'
 
 HOME = 'HOME'
+ANDROID_HOME = 'ANDROID_HOME'
 SPORTS = 'SPORTS'
 CHANNELS = 'CHANNELS'
 BUCKET = 'BUCKET'
@@ -101,7 +102,7 @@ class TVOS(MenuListing):
                     if 'contents' in bucket:
                         for content in bucket['contents']:
                             content_type = content['type']
-                            if content_type == 'network' or content_type == 'subcategory' or content_type == 'category':
+                            if content_type == 'network' or content_type == 'subcategory' or content_type == 'category' or content_type == 'program':
                                 content_url = content['links']['self']
                                 if 'imageHref' in content:
                                     fanart = content['imageHref']

@@ -25,6 +25,7 @@ from resources.lib import legacy
 from resources.lib import appletv
 from resources.lib import tvos
 from resources.lib import roku
+from resources.lib import androidtv
 from resources.lib import events
 
 TAG = 'ESPN3: '
@@ -43,6 +44,9 @@ def ROOT_ITEM(refresh):
            defaultlive)
     addDir(translation(30760),
            dict(MODE='/roku/'),
+           defaultlive)
+    addDir(translation(30780),
+           dict(MODE='/androidtv/'),
            defaultlive)
     if not adobe_activate_api.is_authenticated():
         addDir('[COLOR=FFFF0000]' + translation(30300) + '[/COLOR]',
@@ -234,7 +238,7 @@ if mode is not None:
         root = paths[1]
         path = paths[2]
         xbmc.log(TAG + 'root: %s path: %s' % (root, path), xbmc.LOGDEBUG)
-        for class_def in (appletv.AppleTV, legacy.Legacy, tvos.TVOS, roku.Roku):
+        for class_def in (appletv.AppleTV, legacy.Legacy, tvos.TVOS, roku.Roku, androidtv.AndroidTV):
             class_root = getattr(getattr(class_def, '__init__'), 'mode')
             xbmc.log(TAG + 'class root: %s' % class_root, xbmc.LOGDEBUG)
             if root == class_root:
