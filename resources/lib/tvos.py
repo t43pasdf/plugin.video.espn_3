@@ -62,6 +62,21 @@ class TVOS(MenuListing):
         self.parse_json(args, url)
         xbmcplugin.endOfDirectory(pluginhandle)
 
+    # Used on the main menu
+    def list_live_content(self):
+        url = base64.b64decode(
+            'aHR0cDovL3dhdGNoLnByb2R1Y3QuYXBpLmVzcG4uY29tL2FwaS9wcm9kdWN0L3YxL3R2b3Mvd2F0Y2hlc3BuL2hvbWU=')
+        json_data = util.get_url_as_json_cache(get_url(url))
+        if 'buckets' in json_data['page']:
+            buckets = json_data['page']['buckets']
+            for bucket in buckets:
+                if bucket['name'] == 'Live':
+                    xbmc.log(TAG + 'Chose bucket %s' % bucket['id'])
+                    bucket_arg = str(bucket['id']) + '/'
+                    bucket_list = list()
+                    bucket_list.append(bucket_arg)
+                    self.parse_json(dict(BUCKET=bucket_list), url)
+
     def process_buckets(self, url, buckets, selected_buckets, current_bucket_path):
         selected_bucket = None if selected_buckets is None or len(selected_buckets) == 0 else selected_buckets[0]
         xbmc.log(TAG + 'Selected buckets: %s Current Path: %s' % (selected_buckets, current_bucket_path), LOG_LEVEL)
@@ -98,7 +113,7 @@ class TVOS(MenuListing):
                                 xbmcplugin.setContent(pluginhandle, 'episodes')
 
     def parse_json(self, args, url):
-        xbmc.log(TAG + 'Looking at url %s' % url, LOG_LEVEL)
+        xbmc.log(TAG + 'Looking at url %s %s' % (url, args), LOG_LEVEL)
         selected_bucket = args.get(BUCKET, None)
         if selected_bucket is not None:
             selected_bucket = selected_bucket[0].split('/')

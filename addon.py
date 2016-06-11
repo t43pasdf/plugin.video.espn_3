@@ -25,10 +25,13 @@ from resources.lib import legacy
 from resources.lib import appletv
 from resources.lib import tvos
 from resources.lib import roku
+from resources.lib import events
 
 TAG = 'ESPN3: '
 
 def ROOT_ITEM(refresh):
+    tvos_inst = tvos.TVOS()
+    tvos_inst.list_live_content()
     addDir(translation(30730),
            dict(MODE='/appletv/'),
            defaultlive)

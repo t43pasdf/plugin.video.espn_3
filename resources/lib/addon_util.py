@@ -255,3 +255,4 @@ def index_video(listing):
         'eventId': listing['id'],
         'sessionUrl': listing['links']['source']['HLS']['HD']['href']
     })
+
