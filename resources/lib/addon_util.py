@@ -96,11 +96,17 @@ def index_item(args):
                 etime = time.strftime("%m/%d/%Y", starttime)
             else:
                 etime = time.strftime("%m/%d %I:%M %p", starttime)
-            ename = '[COLOR=FFB700EB]' + etime + '[/COLOR] ' + ename
+            if selfAddon.getSetting('NoColors') == 'true':
+                ename = etime + ' ' + ename
+            else:
+                ename = '[COLOR=FFB700EB]' + etime + '[/COLOR] ' + ename
         elif args['type'] == 'live':
             starttime_time = time.mktime(starttime)
-            length  -= (time.time() - starttime_time)
-            ename += ' [COLOR=FFB700EB]' + etime + '[/COLOR]'
+            length -= (time.time() - starttime_time)
+            if selfAddon.getSetting('NoColors') == 'true':
+                ename = ename + ' ' + etime
+            else:
+                ename += ' [COLOR=FFB700EB]' + etime + '[/COLOR]'
         else:
             now_time = time.localtime(now)
             if now_time.tm_year == starttime.tm_year and \
@@ -109,7 +115,10 @@ def index_item(args):
                 etime = time.strftime("%I:%M %p", starttime)
             else:
                 etime = time.strftime("%m/%d %I:%M %p", starttime)
-            ename = '[COLOR=FFB700EB]' + etime + '[/COLOR] ' + ename
+            if selfAddon.getSetting('NoColors') == 'true':
+                ename = etime + ' ' + ename
+            else:
+                ename = '[COLOR=FFB700EB]' + etime + '[/COLOR] ' + ename
         aired = time.strftime("%Y-%m-%d", starttime)
     else:
         aired = 0
@@ -129,7 +138,13 @@ def index_item(args):
     blackout_text = ''
     if blackout:
         blackout_text = translation(30580)
-    ename = '[COLOR=FF%s]%s[/COLOR] %s %s' % (channel_color, network, blackout_text, ename)
+    if len(blackout_text) > 0:
+        ename = blackout_text + ' ' + ename
+    if len(network) > 0:
+        if selfAddon.getSetting('NoColors') == 'true':
+            ename = network + ' ' + ename
+        else:
+            ename = '[COLOR=FF%s]%s[/COLOR] ' % (channel_color, network) + ename
 
     description = args['description']
     requires_auth = does_requires_auth(network_id)
@@ -235,7 +250,7 @@ def index_video(listing):
         'starttime': starttime,
         'duration': duration,
         'type': 'live',
-        'networkId': listing['source'] + 'free',
+        'networkId': '',
         'description': listing['description'],
         'eventId': listing['id'],
         'sessionUrl': listing['links']['source']['HLS']['HD']['href']

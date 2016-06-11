@@ -89,7 +89,7 @@ class Legacy(MenuListing):
             if sport not in sports:
                 sports.append(sport)
         for sport in sports:
-            addDir(sport, dict(ESPN_URL=espn_url, MODE=self.make_mode(INDEX_SPORTS_MODE), SPORT=sport), image)
+            addDir(sport, dict(ESPN_URL=espn_url, MODE=self.make_mode(LIVE_EVENTS_MODE), SPORT=sport), image)
         xbmcplugin.addSortMethod(pluginhandle, xbmcplugin.SORT_METHOD_VIDEO_SORT_TITLE)
         xbmcplugin.endOfDirectory(pluginhandle)
 
@@ -137,14 +137,18 @@ class Legacy(MenuListing):
         elif chosen_network is None:
             if num_espn3 > 0:
                 translation_number = 30191 if num_espn3 == 1 else 30190
-                addDir('[COLOR=FFCC0000]' + (translation(translation_number) % num_espn3) + '[/COLOR]',
-                   dict(ESPN_URL=espn_url, MODE=self.make_mode(LIVE_EVENTS_MODE), NETWORK_ID=ESPN3_ID),
-                   defaultlive)
+                if selfAddon.getSetting('NoColors') == 'true':
+                    name = translation(translation_number) % num_espn3
+                else:
+                    name = '[COLOR=FFCC0000]' + (translation(translation_number) % num_espn3) + '[/COLOR]'
+                addDir(name, dict(ESPN_URL=espn_url, MODE=self.make_mode(LIVE_EVENTS_MODE), NETWORK_ID=ESPN3_ID), defaultlive)
             if num_secplus > 0:
                 translation_number = 30201 if num_espn3 == 1 else 30200
-                addDir('[COLOR=FF004C8D]' + (translation(translation_number) % num_secplus) + '[/COLOR]',
-                   dict(ESPN_URL=espn_url, MODE=self.make_mode(LIVE_EVENTS_MODE), NETWORK_ID=SECPLUS_ID),
-                   defaultlive)
+                if selfAddon.getSetting('NoColors') == 'true':
+                    name = translation(translation_number) % num_secplus
+                else:
+                    name = '[COLOR=FFCC0000]' + (translation(translation_number) % num_secplus) + '[/COLOR]'
+                addDir(name, dict(ESPN_URL=espn_url, MODE=self.make_mode(LIVE_EVENTS_MODE), NETWORK_ID=SECPLUS_ID), defaultlive)
         xbmcplugin.setContent(pluginhandle, 'episodes')
         xbmcplugin.endOfDirectory(pluginhandle)
 
@@ -191,8 +195,11 @@ class Legacy(MenuListing):
         else:
             channel_color = 'CC0000'
 
-        ename = '[COLOR=FF%s]%s[/COLOR] [COLOR=FFB700EB]%s[/COLOR] [COLOR=FF%s]%s[/COLOR]' % (
-        channel_color, network, title_time, color, ename)
+        if selfAddon.getSetting('NoColors') == 'true':
+            ename = '%s %s %s' % (network, title_time, ename)
+        else:
+            ename = '[COLOR=FF%s]%s[/COLOR] [COLOR=FFB700EB]%s[/COLOR] [COLOR=FF%s]%s[/COLOR]' % (
+                channel_color, network, title_time, color, ename)
 
         length_minutes = int(length) / 60
 
