@@ -143,6 +143,11 @@ class TVOS(MenuListing):
                 description += '\n' + content['tracking']['sport']
         else:
             description = ''
+        networkId = ''
+        networkName = ''
+        if 'adobeRSS' in content:
+            networkId = content['tracking']['network'] if 'network' in content['tracking'] else ''
+            networkName = content['source']
         index_item({
             'sport': content['tracking']['sport'],
             'eventName': content['name'],
@@ -152,12 +157,12 @@ class TVOS(MenuListing):
             'starttime': starttime,
             'duration': duration,
             'type': content['status'] if 'status' in content else 'live',
-            'networkId': content['tracking']['network'] if 'network' in content['tracking'] else '',
-            'networkName': content['source'],
+            'networkId': networkId,
+            'networkName': networkName,
             #TODO: Blackout check
             'blackout': False,
             'description': description,
             'eventId': content['id'],
             'sessionUrl': content['airings'][0]['videoHref'],
-            'adobeRSS' : content['adobeRSS'] if 'adobeRSS' in content else None
+            'adobeRSS': content['adobeRSS'] if 'adobeRSS' in content else None
         })
