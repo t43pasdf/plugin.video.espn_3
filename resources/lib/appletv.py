@@ -183,6 +183,7 @@ class AppleTV(MenuListing):
         })
 
     def process_item_list(self, item_list):
+        stashes = list()
         for item in item_list:
             stash_element = item.find('./stash/json')
             if item.get('id').startswith('loadMore'):
@@ -218,12 +219,16 @@ class AppleTV(MenuListing):
                     # Some of the json is baddly formatted
                     stash = re.sub(r'\s+"', '"', stash)
                     stash_json = json.loads(stash, 'utf-8')
-                    if stash_json['type'] == 'upcoming':
-                        self.index_tv_shelf(stash_json, item, True)
-                    elif 'sessionUrl' in stash_json:
-                        self.index_tv_shelf(stash_json, item, False)
-                    else:
-                        self.index_item_shelf(stash_json, item)
+                    stashes.append(stash_json)
+
+        stashes.sort(cmp=compare)
+        for stash_json in stashes:
+            if stash_json['type'] == 'upcoming':
+                self.index_tv_shelf(stash_json, item, True)
+            elif 'sessionUrl' in stash_json:
+                self.index_tv_shelf(stash_json, item, False)
+            else:
+                self.index_item_shelf(stash_json, item)
 
     def get_metadata(self, item):
         metadataKeysElement = item.find('.//metadataKeys')
@@ -248,3 +253,18 @@ class AppleTV(MenuListing):
                 if blackout.text == user_dma:
                     return True
         return False
+
+def compare(l, r):
+
+    if 'startTime' not in l or 'startTime' not in r:
+        return 0
+    xbmc.log(TAG + ' l %s r %s' % (l['startTime'], r['startTime']))
+    if l['type'] == r['type']:
+        if l['type'] == 'upcoming':
+            return int(int(l['startTime']) - int(r['startTime']))
+        return int(int(r['startTime']) - int(l['startTime']))
+    elif l['type'] == 'live':
+        return -1
+    elif r['type'] == 'live':
+        return 1
+    return int(int(r['startTime']) - int(l['startTime']))
