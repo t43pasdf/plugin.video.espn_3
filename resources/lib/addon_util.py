@@ -87,11 +87,12 @@ def index_item(args):
     starttime = args['starttime'] if 'starttime' in args else None
     length = int(args['duration'])
     xbmc.log(TAG + 'startime %s' % starttime, LOG_LEVEL)
+    xbmc.log(TAG + 'type %s' % args['type'], LOG_LEVEL)
 
     if starttime is not None:
         now = time.time()
         etime = time.strftime("%I:%M %p", starttime)
-        if args['type'] == 'replay':
+        if 'replay' in args['type']:
             etime_local = starttime
             if etime_local.tm_hour == 0 and etime_local.tm_min == 0:
                 etime = time.strftime("%m/%d/%Y", starttime)
