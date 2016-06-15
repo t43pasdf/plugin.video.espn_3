@@ -31,8 +31,12 @@ from resources.lib import events
 TAG = 'ESPN3: '
 
 def ROOT_ITEM(refresh):
-    tvos_inst = tvos.TVOS()
-    tvos_inst.list_live_content()
+    include_premium = adobe_activate_api.is_authenticated()
+    channel_list = events.get_channel_list(include_premium)
+    legacy_inst = legacy.Legacy()
+    espn_url = list()
+    espn_url.append(events.get_live_events_url(channel_list))
+    legacy_inst.index_legacy_live_events(dict(ESPN_URL=espn_url))
     addDir(translation(30730),
            dict(MODE='/appletv/'),
            defaultlive)

@@ -95,6 +95,11 @@ class Legacy(MenuListing):
 
     @RegisterMode(LIVE_EVENTS_MODE)
     def live_events_mode(self, args):
+        self.index_legacy_live_events(args)
+        xbmcplugin.setContent(pluginhandle, 'episodes')
+        xbmcplugin.endOfDirectory(pluginhandle)
+
+    def index_legacy_live_events(self, args):
         espn_url = args.get(ESPN_URL)[0]
         chosen_sport = args.get(SPORT, None)
         if chosen_sport is not None:
@@ -119,9 +124,9 @@ class Legacy(MenuListing):
             networkid = event.find('networkId').text
             if chosen_network <> networkid and chosen_network is not None:
                 continue
-            if networkid == ESPN3_ID and chosen_network is None and live :
+            if networkid == ESPN3_ID and chosen_network is None and live:
                 num_espn3 = num_espn3 + 1
-            elif networkid == SECPLUS_ID and chosen_network is None and live :
+            elif networkid == SECPLUS_ID and chosen_network is None and live:
                 num_secplus = num_secplus + 1
             else:
                 num_events = num_events + 1
@@ -141,110 +146,56 @@ class Legacy(MenuListing):
                     name = translation(translation_number) % num_espn3
                 else:
                     name = '[COLOR=FFCC0000]' + (translation(translation_number) % num_espn3) + '[/COLOR]'
-                addDir(name, dict(ESPN_URL=espn_url, MODE=self.make_mode(LIVE_EVENTS_MODE), NETWORK_ID=ESPN3_ID), defaultlive)
+                addDir(name, dict(ESPN_URL=espn_url, MODE=self.make_mode(LIVE_EVENTS_MODE), NETWORK_ID=ESPN3_ID),
+                       defaultlive)
             if num_secplus > 0:
                 translation_number = 30201 if num_espn3 == 1 else 30200
                 if selfAddon.getSetting('NoColors') == 'true':
                     name = translation(translation_number) % num_secplus
                 else:
                     name = '[COLOR=FFCC0000]' + (translation(translation_number) % num_secplus) + '[/COLOR]'
-                addDir(name, dict(ESPN_URL=espn_url, MODE=self.make_mode(LIVE_EVENTS_MODE), NETWORK_ID=SECPLUS_ID), defaultlive)
-        xbmcplugin.setContent(pluginhandle, 'episodes')
-        xbmcplugin.endOfDirectory(pluginhandle)
+                addDir(name, dict(ESPN_URL=espn_url, MODE=self.make_mode(LIVE_EVENTS_MODE), NETWORK_ID=SECPLUS_ID),
+                       defaultlive)
 
     def index_event(self, event, live, upcoming, replay, chosen_sport):
-        sport = event.find('sportDisplayValue').text.encode('utf-8')
-        ename = event.find('name').text
-        eventid = event.get('id')
-        simulcastAiringId = event.find('simulcastAiringId').text
-        networkid = event.find('networkId').text
-        if networkid is not None:
-            network = player_config.get_network_name(networkid)
-        sport2 = event.find('sport').text
-        if sport <> sport2:
-            sport += ' (' + sport2 + ')'
-        league = event.find('league').text
-        location = event.find('site').text
+        networkId = event.find('networkId').text
+        if networkId is not None:
+            networkName = player_config.get_network_name(networkId)
+        xbmc.log(TAG + ' networkName %s' % networkName)
+
         fanart = event.find('.//thumbnail/large').text
         fanart = fanart.split('&')[0]
-        mpaa = event.find('parentalRating').text
         starttime = int(event.find('startTimeGmtMs').text) / 1000
-        etime = time.strftime("%I:%M %p", time.localtime(float(starttime)))
         endtime = int(event.find('endTimeGmtMs').text) / 1000
-        start = time.strftime("%m/%d/%Y %I:%M %p", time.localtime(starttime))
-        aired = time.strftime("%Y-%m-%d", time.localtime(starttime))
-        udate = time.strftime("%m/%d", time.localtime(starttime))
-        now = datetime.now().strftime('%H%M')
-        etime24 = time.strftime("%H%M", time.localtime(starttime))
-        aspect_ratio = event.find('aspectRatio').text
-        length = str(int(round((endtime - time.time()))))
-        title_time = etime
-        if live and now > etime24:
-            color = 'FFFFFF'
-        elif live:
-            color = '999999'
-        else:
-            color = 'E0E0E0'
-            length = str(int(round((endtime - starttime))))
-            title_time = ' - '.join((udate, etime))
+        length = int(round((endtime - starttime)))
+        xbmc.log(TAG + 'duration %s' % length)
+        session_url = base64.b64decode(
+            'aHR0cDovL2Jyb2FkYmFuZC5lc3BuLmdvLmNvbS9lc3BuMy9hdXRoL3dhdGNoZXNwbi9zdGFydFNlc3Npb24/')
+        session_url += 'channel=' + event.find('adobeResource').text
+        session_url += '&simulcastAiringId=' + event.find('simulcastAiringId').text
 
-        if network == 'longhorn':
-            channel_color = 'BF5700'
-        elif network == 'sec' or network == 'secplus':
-            channel_color = '004C8D'
-        else:
-            channel_color = 'CC0000'
+        description = event.find('summary').text
+        if description is None or len(description) == 0:
+            description = event.find('caption').text
+        if description is None:
+            description = ''
 
-        if selfAddon.getSetting('NoColors') == 'true':
-            ename = '%s %s %s' % (network, title_time, ename)
-        else:
-            ename = '[COLOR=FF%s]%s[/COLOR] [COLOR=FFB700EB]%s[/COLOR] [COLOR=FF%s]%s[/COLOR]' % (
-                channel_color, network, title_time, color, ename)
+        index_item({
+            'sport': event.find('sportDisplayValue').text,
+            'eventName': event.find('name').text,
+            'subcategory': event.find('sport').text,
+            'imageHref': fanart,
+            'parentalRating': event.find('parentalRating').text,
+            'starttime': time.localtime(starttime),
+            'duration': length,
+            'type': event.get('type'),
+            'networkId': event.find('adobeResource').text,
+            'networkName': networkName,
+            # TODO: Blackout check
+            'blackout': False,
+            'description': description,
+            'eventId': event.get('id'),
+            'sessionUrl': session_url,
+            'guid': event.find('guid').text
+        })
 
-        length_minutes = int(length) / 60
-
-        end = event.find('summary').text
-        if end is None or len(end) == 0:
-            end = event.find('caption').text
-
-        if end is None:
-            end = ''
-        end += '\nNetwork: ' + network
-
-        plot = ''
-        if sport <> None and sport <> ' ':
-            plot += translation(30620) % sport + '\n'
-        if league <> None and league <> ' ':
-            plot += translation(30630) % league + '\n'
-        if location <> None and location <> ' ':
-            plot += translation(30640) % location + '\n'
-        if start <> None and start <> ' ':
-            plot += translation(30650) % start + '\n'
-        if length <> None and length <> ' ' and live:
-            plot += translation(30660) % str(length_minutes) + '\n'
-        elif length <> None and length <> ' ' and (replay or upcoming):
-            plot += translation(30670) % str(length_minutes) + '\n'
-        plot += end
-        infoLabels = {'title': ename,
-                      'genre': sport,
-                      'plot': plot,
-                      'aired': aired,
-                      'premiered': aired,
-                      'duration': length,
-                      'studio': network,
-                      'mpaa': mpaa,
-                      'videoaspect': aspect_ratio}
-
-        session_url = base64.b64decode('aHR0cDovL2Jyb2FkYmFuZC5lc3BuLmdvLmNvbS9lc3BuMy9hdXRoL3dhdGNoZXNwbi9zdGFydFNlc3Npb24/')
-        session_url += '&channel=' + network
-        session_url += '&simulcastAiringId=' + simulcastAiringId
-
-        authurl = dict()
-        authurl[EVENT_ID] = eventid
-        authurl[MODE] = UPCOMING_MODE if upcoming else PLAY_MODE
-        authurl[NETWORK_NAME] = event.find('adobeResource').text
-        authurl[EVENT_NAME] = event.find('name').text.encode('utf-8')
-        authurl[EVENT_GUID] = event.find('guid').text.encode('utf-8')
-        authurl[EVENT_PARENTAL_RATING] = event.find('parentalRating').text
-        authurl[SESSION_URL] = session_url
-        addLink(ename, authurl, fanart, fanart, infoLabels=infoLabels)

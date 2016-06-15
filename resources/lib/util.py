@@ -54,8 +54,17 @@ def load_element_tree(data):
     except:
         if '<?xml version' not in data:
             xbmc.log(TAG + 'Fixing up data because of no xml preamble', LOG_LEVEL)
-            data = '<?xml version="1.0" encoding="ISO-8859-1" ?>' + data
-        data_tree = ET.fromstring(data)
+            try:
+                data_tree = ET.fromstring('<?xml version="1.0" encoding="ISO-8859-1" ?>' + data)
+            except:
+                try:
+                    data_tree = ET.fromstring('<?xml version="1.0" encoding="windows-1252" ?>' + data)
+                except:
+                    # One last chance to fix up the data
+                    data = re.sub('[\\x00-\\x1f]', '', data)
+                    data = re.sub('[\\x7f-\\x9f]', '', data)
+                    data_tree = ET.fromstring('<?xml version="1.0" encoding="ISO-8859-1" ?>' + data)
+
 
     return data_tree
 

@@ -11,6 +11,7 @@ import xbmcplugin
 import adobe_activate_api
 import util
 import player_config
+import events
 from globals import defaultfanart, pluginhandle, selfAddon, translation, LOG_LEVEL
 from constants import *
 
@@ -200,7 +201,7 @@ def get_subcategory(listing):
     return ''
 
 
-def check_json_blackout( listing):
+def check_json_blackout(listing):
     blackout_dmas = list()
     for blackout in listing['blackouts']:
         if blackout['type'] == 'dma':
@@ -255,4 +256,3 @@ def index_video(listing):
         'eventId': listing['id'],
         'sessionUrl': listing['links']['source']['HLS']['HD']['href']
     })
-
