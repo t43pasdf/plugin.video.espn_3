@@ -124,7 +124,7 @@ def PLAY_TV(args):
         m3u8_obj = m3u8.load(playback_url)
     except:
         playback_url += '|Connection=keep-alive&User-Agent=' + urllib.quote(UA_PC) + '&Cookie=_mediaAuth=' +\
-                        urllib.quote(base64.b64encode(session_json['session']['token']))
+                        urllib.quote(session_json['session']['token'])
         item = xbmcgui.ListItem(path=playback_url)
         return xbmcplugin.setResolvedUrl(pluginhandle, True, item)
 
