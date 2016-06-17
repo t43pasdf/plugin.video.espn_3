@@ -72,7 +72,7 @@ class Roku(MenuListing):
             id = id[0]
         json_data = util.get_url_as_json_cache(get_url(url))
         if 'listings' in json_data:
-            json_data['listings'].sort(key=sort_key, reverse=True)
+            json_data['listings'].sort(cmp=compare_roku)
             for listing in json_data['listings']:
                 index_listing(listing)
             xbmcplugin.setContent(pluginhandle, 'episodes')
@@ -114,6 +114,15 @@ class Roku(MenuListing):
                            self.get_thumbnail(channel))
         xbmcplugin.endOfDirectory(pluginhandle)
 
-def sort_key(content):
-    time_format = '%Y-%m-%dT%H:%M:%S'
-    return time.strptime(content['startTime'][:-3], time_format)
+def get_time(listing):
+    if 'startTime' in listing:
+        time_format = '%Y-%m-%dT%H:%M:%S'
+        return time.strptime(listing['startTime'][:-3], time_format)
+    return None
+
+def compare_roku(l, r):
+    lnetwork = l['broadcasts'][0]['name'] if 'broadcasts' in l else None
+    rnetwork = r['broadcasts'][0]['name'] if 'broadcasts' in r else None
+    ltype = l['type']
+    rtype = r['type']
+    return compare(get_time(l), lnetwork, ltype, get_time(r), rnetwork, rtype)

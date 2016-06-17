@@ -100,7 +100,7 @@ class TVOS(MenuListing):
                         self.process_buckets(url, bucket['buckets'], list(), current_bucket_path)
                 else:
                     if 'contents' in bucket:
-                        bucket['contents'].sort(key=sort_key, reverse=True)
+                        bucket['contents'].sort(cmp=compare_tvos)
                         for content in bucket['contents']:
                             content_type = content['type']
                             if content_type == 'network' or content_type == 'subcategory' or content_type == 'category' or content_type == 'program':
@@ -129,15 +129,7 @@ class TVOS(MenuListing):
         duration = 0
         if 'tracking' in content and 'duration' in content['tracking']:
             duration = int(content['tracking']['duration'])
-        starttime = None
-        if 'date' in content and 'time' in content:
-            now_time = time.localtime(time.time())
-            year = time.strftime('%Y', now_time)
-            # Correct no zero padding in the time hours
-            time_part = content['time']
-            if time_part.find(':') == 1:
-                time_part = '0' + time_part
-            starttime = time.strptime(year + ' ' + content['date'] + ' ' + time_part, '%Y %A, %B %d %I:%M %p')
+        starttime = get_time(content)
         if 'date' in content and 'time' in content:
             description = content['date'] + ' ' + content['time']
             if 'tracking' in content:
@@ -168,8 +160,7 @@ class TVOS(MenuListing):
             'adobeRSS': content['adobeRSS'] if 'adobeRSS' in content else None
         })
 
-
-def sort_key(content):
+def get_time(content):
     starttime = None
     if 'date' in content and 'time' in content:
         now_time = time.localtime(time.time())
@@ -180,3 +171,10 @@ def sort_key(content):
             time_part = '0' + time_part
         starttime = time.strptime(year + ' ' + content['date'] + ' ' + time_part, '%Y %A, %B %d %I:%M %p')
     return starttime
+
+def compare_tvos(l, r):
+    lnetwork = l['source'] if 'source' in l else None
+    rnetwork = r['source'] if 'source' in r else None
+    ltype = l['status'] if 'status' in l else 'clip'
+    rtype = r['status'] if 'status' in r else 'clip'
+    return compare(get_time(l), lnetwork, ltype, get_time(r), rnetwork, rtype)

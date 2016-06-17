@@ -221,7 +221,7 @@ class AppleTV(MenuListing):
                     stash_json = json.loads(stash, 'utf-8')
                     stashes.append(stash_json)
 
-        stashes.sort(cmp=compare)
+        stashes.sort(cmp=compare_appletv)
         for stash_json in stashes:
             if stash_json['type'] == 'upcoming':
                 self.index_tv_shelf(stash_json, item, True)
@@ -254,17 +254,12 @@ class AppleTV(MenuListing):
                     return True
         return False
 
-def compare(l, r):
+def get_time(listing):
+    return time.localtime(listing['starttime']) if 'starttime' in listing else None
 
-    if 'startTime' not in l or 'startTime' not in r:
-        return 0
-    xbmc.log(TAG + ' l %s r %s' % (l['startTime'], r['startTime']))
-    if l['type'] == r['type']:
-        if l['type'] == 'upcoming':
-            return int(int(l['startTime']) - int(r['startTime']))
-        return int(int(r['startTime']) - int(l['startTime']))
-    elif l['type'] == 'live':
-        return -1
-    elif r['type'] == 'live':
-        return 1
-    return int(int(r['startTime']) - int(l['startTime']))
+def compare_appletv(l, r):
+    lnetwork = l['network'] if 'network' in l else None
+    rnetwork = r['network'] if 'network' in r else None
+    ltype = l['type'] if 'type' in l else 'clip'
+    rtype = r['type'] if 'type' in r else 'clip'
+    return compare(get_time(l), lnetwork, ltype, get_time(r), rnetwork, rtype)

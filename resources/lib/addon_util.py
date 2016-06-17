@@ -257,3 +257,24 @@ def index_video(listing):
         'eventId': listing['id'],
         'sessionUrl': listing['links']['source']['HLS']['HD']['href']
     })
+
+def compare(lstart, lnetwork, lstatus, rstart, rnetwork, rstatus):
+    if lnetwork != rnetwork:
+        return 0
+    if lstart is None and rstart is None:
+        return 0
+    if lstart is None:
+        return 1
+    if rstart is None:
+        return -1
+    ltime = int(time.mktime(lstart))
+    rtime = int(time.mktime(rstart))
+    if 'replay' in lstatus and 'replay' in rstatus:
+        return int(rtime - ltime)
+    if lstatus == rstatus:
+        return int(ltime - rtime)
+    elif lstatus == 'live':
+        return -1
+    elif rstatus == 'live':
+        return 1
+    return int(rtime - ltime)
