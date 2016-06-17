@@ -57,7 +57,7 @@ def check_error(session_json):
     return False
 
 def does_requires_auth(network_name):
-    xbmc.log(TAG + 'Checking auth of ' + network_name)
+    xbmc.log(TAG + 'Checking auth of ' + network_name, LOG_LEVEL)
     requires_auth = not (network_name == 'espn3' or network_name.find('free') >= 0 or network_name == '')
     if not requires_auth:
         free_content_check = player_config.can_access_free_content()

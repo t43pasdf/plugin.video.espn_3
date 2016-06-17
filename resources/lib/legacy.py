@@ -161,14 +161,14 @@ class Legacy(MenuListing):
         networkId = event.find('networkId').text
         if networkId is not None:
             networkName = player_config.get_network_name(networkId)
-        xbmc.log(TAG + ' networkName %s' % networkName)
+        xbmc.log(TAG + ' networkName %s' % networkName, LOG_LEVEL)
 
         fanart = event.find('.//thumbnail/large').text
         fanart = fanart.split('&')[0]
         starttime = int(event.find('startTimeGmtMs').text) / 1000
         endtime = int(event.find('endTimeGmtMs').text) / 1000
         length = int(round((endtime - starttime)))
-        xbmc.log(TAG + 'duration %s' % length)
+        xbmc.log(TAG + 'duration %s' % length, LOG_LEVEL)
         session_url = base64.b64decode(
             'aHR0cDovL2Jyb2FkYmFuZC5lc3BuLmdvLmNvbS9lc3BuMy9hdXRoL3dhdGNoZXNwbi9zdGFydFNlc3Npb24/')
         session_url += 'channel=' + event.find('adobeResource').text

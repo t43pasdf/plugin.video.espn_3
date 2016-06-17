@@ -101,7 +101,7 @@ def PLAY_TV(args):
     start_session_url = args.get(SESSION_URL)[0]
     params = urllib.urlencode({'partner':'watchespn',
                                'playbackScenario':'HTTP_CLOUD_HIGH',
-                               'platform':'tvos',
+                               'platform':'chromecast_uplynk',
                                'token':media_token,
                                'tokenType':token_type,
                                'resource':base64.b64encode(resource),
