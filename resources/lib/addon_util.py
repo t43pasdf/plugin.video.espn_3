@@ -259,6 +259,8 @@ def index_video(listing):
     })
 
 def compare(lstart, lnetwork, lstatus, rstart, rnetwork, rstatus):
+    xbmc.log(TAG + 'lstart %s lnetwork %s lstatus %s rstart %s rnetwork %s rstatus %s' %
+             (lstart, lnetwork, lstatus, rstart, rnetwork, rstatus), LOG_LEVEL)
     if lnetwork != rnetwork:
         return 0
     if lstart is None and rstart is None:
