@@ -94,4 +94,8 @@
     <string id="30760">Roku</string>
     <string id="30770">Turn off all colors</string>
     <string id="30780">AndroidTV</string>
+    <string id="30800">Show the AppleTV menu</string>
+    <string id="30810">Show the Roku menu</string>
+    <string id="30820">Show the tvOS menu</string>
+    <string id="30830">Show the AndroidTV menu</string>
 </strings>
