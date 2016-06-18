@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <addon id="plugin.video.espn_3"
        name="ESPN 3"
-       version="2.5.0"
-       provider-name="BlueCop,Romans I XVI,locomot1f,MetalChris">
+       version="2.9.2"
+       provider-name="awaters1,locomot1f,MetalChris,BlueCop,Romans I XVI">
     <requires>
        <import addon="xbmc.python"                   version="2.14.0"/>
 	   <import addon="script.module.beautifulsoup4"  version="4.3.2"/>
@@ -19,7 +19,7 @@
         <platform>all</platform>
         <license>GNU GENERAL PUBLIC LICENSE. Version 3, 29 June 2007</license>
         <summary lang="en">ESPN 3</summary>
-        <description lang="en">Watch full live streaming sporting events and replays on ESPN 3 (and premium channels with a valid cable provider), including football, baseball, cricket, soccer, and basketball events.</description>
+        <description lang="en">Unofficial addon to Watch ESPN. Watch full live streaming sporting events and replays on ESPN 3 (and premium channels with a valid cable provider), including football, baseball, cricket, soccer, and basketball events.  NOT SUPPORTED BY ESPN OR DISNEY OR ANYONE ELSE</description>
 		<forum>http://forum.kodi.tv/showthread.php?tid=230418</forum>
 		<source>https://github.com/awaters1/plugin.video.espn_3</source>
 		<email>bgunteriv@gmail.com</email>

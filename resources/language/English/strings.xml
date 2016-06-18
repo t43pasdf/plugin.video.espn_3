@@ -73,4 +73,25 @@
     <string id="30550">Sports</string>
     <string id="30560">Channels</string>
     <string id="30570">Load More</string>
+    <string id="30580">[BLACKOUT]</string>
+    <string id="30590">ESPN</string>
+    <string id="30600">SEC</string>
+    <string id="30610">Longhorn</string>
+    <string id="30620">Sport: %s</string>
+    <string id="30630">League: %s</string>
+    <string id="30640">Location: %s</string>
+    <string id="30650">Air Date: %s</string>
+    <string id="30660">Duration: Approximately %s minutes remaining</string>
+    <string id="30670">Duration: %s minutes</string>
+    <string id="30680">Featured</string>
+    <string id="30690">Home</string>
+    <string id="30700">DMA: %s Timezone: %s</string>
+    <string id="30710">Can SSO: %s SSO Abuse: %s</string>
+    <string id="30720">Trending</string>
+    <string id="30730">AppleTV</string>
+    <string id="30740">Legacy</string>
+    <string id="30750">tvOS</string>
+    <string id="30760">Roku</string>
+    <string id="30770">Turn off all colors</string>
+    <string id="30780">AndroidTV</string>
 </strings>
