@@ -64,7 +64,8 @@ def load_element_tree(data):
                     data = re.sub('[\\x00-\\x1f]', '', data)
                     data = re.sub('[\\x7f-\\x9f]', '', data)
                     data_tree = ET.fromstring('<?xml version="1.0" encoding="ISO-8859-1" ?>' + data)
-
+        else:
+            data_tree = ET.fromstring(data)
 
     return data_tree
 
