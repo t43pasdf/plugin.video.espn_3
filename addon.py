@@ -9,6 +9,7 @@ import json
 import re
 import time
 import urllib
+import urllib2
 import urlparse
 
 
@@ -31,31 +32,36 @@ from resources.lib import events
 TAG = 'ESPN3: '
 
 def ROOT_ITEM(refresh):
+    if not adobe_activate_api.is_authenticated():
+        addDir('[COLOR=FFFF0000]' + translation(30300) + '[/COLOR]',
+               dict(MODE=AUTHENTICATE_MODE),
+               defaultreplay)
     include_premium = adobe_activate_api.is_authenticated()
     channel_list = events.get_channel_list(include_premium)
     legacy_inst = legacy.Legacy()
     espn_url = list()
     espn_url.append(events.get_live_events_url(channel_list))
     legacy_inst.index_legacy_live_events(dict(ESPN_URL=espn_url))
-    addDir(translation(30730),
-           dict(MODE='/appletv/'),
-           defaultlive)
-    addDir(translation(30740),
-           dict(MODE='/legacy/'),
-           defaultlive)
-    addDir(translation(30750),
-           dict(MODE='/tvos/'),
-           defaultlive)
-    addDir(translation(30760),
-           dict(MODE='/roku/'),
-           defaultlive)
-    addDir(translation(30780),
-           dict(MODE='/androidtv/'),
-           defaultlive)
-    if not adobe_activate_api.is_authenticated():
-        addDir('[COLOR=FFFF0000]' + translation(30300) + '[/COLOR]',
-               dict(MODE=AUTHENTICATE_MODE),
-               defaultreplay)
+    if selfAddon.getSetting('ShowAndroidTVMenu') == 'true':
+        addDir(translation(30780),
+               dict(MODE='/androidtv/'),
+               defaultlive)
+    if selfAddon.getSetting('ShowAppleTVMenu') == 'true':
+        addDir(translation(30730),
+               dict(MODE='/appletv/'),
+               defaultlive)
+    if selfAddon.getSetting('ShowLegacyMenu') == 'true':
+        addDir(translation(30740),
+               dict(MODE='/legacy/'),
+               defaultlive)
+    if selfAddon.getSetting('ShowRokuMenu') == 'true':
+        addDir(translation(30760),
+               dict(MODE='/roku/'),
+               defaultlive)
+    if selfAddon.getSetting('ShowTVOSMenu') == 'true':
+        addDir(translation(30750),
+               dict(MODE='/tvos/'),
+               defaultlive)
     if adobe_activate_api.is_authenticated():
         addDir('[COLOR=FF00FF00]' + translation(30380) + '[/COLOR]',
            dict(MODE=AUTHENTICATION_DETAILS_MODE),
@@ -89,7 +95,18 @@ def PLAY_TV(args):
             dialog = xbmcgui.Dialog()
             dialog.ok(translation(30037), translation(30410))
             return
-        media_token = adobe_activate_api.get_short_media_token(resource)
+        try:
+            media_token = adobe_activate_api.get_short_media_token(resource)
+        except urllib2.HTTPError as e:
+            if e.code == 410:
+                dialog = xbmcgui.Dialog()
+                dialog.ok(translation(30037), translation(30840))
+                adobe_activate_api.deauthorize()
+                xbmcplugin.endOfDirectory(pluginhandle, succeeded=False, updateListing=True)
+                return
+            else:
+                raise e
+
         token_type = 'ADOBEPASS'
     else:
         media_token = adobe_activate_api.get_device_id()

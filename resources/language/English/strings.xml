@@ -47,7 +47,7 @@
 	<string id="30201">SECPlus (%d event)</string>
 	<string id="30300">Authenticate with provider to access premium content</string>
 	<string id="30310">Authentication Process</string>
-	<string id="30320">1. Go to https://espn.go.com/watchespn/activate</string>
+	<string id="30320">1. Go to https://es.pn/appletv</string>
 	<string id="30330">2. Enter %s as the activation code</string>
 	<string id="30340">3. Press Continue when it says your device is activated on the website</string>
 	<string id="30350">Continue</string>
@@ -94,4 +94,9 @@
     <string id="30760">Roku</string>
     <string id="30770">Turn off all colors</string>
     <string id="30780">AndroidTV</string>
+    <string id="30800">Show the AppleTV menu</string>
+    <string id="30810">Show the Roku menu</string>
+    <string id="30820">Show the tvOS menu</string>
+    <string id="30830">Show the AndroidTV menu</string>
+    <string id="30840">Unable to re-authenticate, this device has been de-authorized.</string>
 </strings>
