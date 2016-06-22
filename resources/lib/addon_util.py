@@ -184,7 +184,7 @@ def index_item(args):
                 authurl[EVENT_GUID] = args['guid'].encode('iso-8859-1')
                 authurl[EVENT_PARENTAL_RATING] = mpaa
     fanart = args['imageHref']
-    addLink(ename.encode('iso-8859-1'), authurl, fanart, fanart, infoLabels=infoLabels)
+    addLink(ename, authurl, fanart, fanart, infoLabels=infoLabels)
 
 
 def get_league(listing):

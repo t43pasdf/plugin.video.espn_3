@@ -34,10 +34,13 @@ def get_cookie_jar():
         cj.load(os.path.join(ADDON_PATH_PROFILE, 'adobe-cookies.lwp'), ignore_discard=True)
     return cj
 
+def reset_settings():
+    save_settings(dict())
+
 def save_settings(settings):
     settings_file = os.path.join(ADDON_PATH_PROFILE, SETTINGS_FILE)
     with open(settings_file, 'w') as fp:
-        json.dump(settings, fp, sort_keys=True, indent=4)
+        json.dump(settings, fp, sort_keys=False, indent=4)
 
 def load_settings():
     settings_file = os.path.join(ADDON_PATH_PROFILE, SETTINGS_FILE)
@@ -201,7 +204,8 @@ def authorize(resource):
     settings = load_settings()
     if 'authorize' not in settings:
         settings['authorize'] = dict()
-    settings['authorize'][resource] = resp
+    xbmc.log(TAG + 'resource %s' % resource)
+    settings['authorize'][resource.decode('iso-8859-1').encode('utf-8')] = resp
     save_settings(settings)
 
 def deauthorize():
@@ -257,8 +261,8 @@ def has_to_reauthenticate():
 
 def is_authorized(resource):
     settings = load_settings()
-    if 'authorize' in settings and resource in settings['authorize']:
-        return not is_expired(settings['authorize'][resource]['expires'])
+    if 'authorize' in settings and resource.decode('iso-8859-1').encode('utf-8') in settings['authorize']:
+        return not is_expired(settings['authorize'][resource.decode('iso-8859-1').encode('utf-8')]['expires'])
 
 def get_expires_time(key):
     settings = load_settings()

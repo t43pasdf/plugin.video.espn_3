@@ -275,7 +275,11 @@ if mode is not None:
 
 
 if mode is None:
-    adobe_activate_api.clean_up_authorization_tokens()
+    try:
+        adobe_activate_api.clean_up_authorization_tokens()
+    except:
+        xbmc.log(TAG + 'Unable to clean up')
+        adobe_activate_api.reset_settings()
     xbmc.log("Generate Main Menu", LOG_LEVEL)
     ROOT_ITEM(refresh)
 elif mode[0] == PLAY_MODE:
