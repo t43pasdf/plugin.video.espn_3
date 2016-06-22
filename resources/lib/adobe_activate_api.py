@@ -162,7 +162,7 @@ def authenticate():
 # Get authn token (re-auth device after it expires), getAuthnToken
 def re_authenticate():
     params = urllib.urlencode({'requestor': 'ESPN',
-                               'deviceId' : get_device_id()})
+                               'deviceId': get_device_id()})
 
     path = '/tokens/authn'
     url = urlparse.urlunsplit(['https', 'api.auth.adobe.com',

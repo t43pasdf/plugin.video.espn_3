@@ -61,6 +61,7 @@ def load_element_tree(data):
                     data_tree = ET.fromstring('<?xml version="1.0" encoding="windows-1252" ?>' + data)
                 except:
                     # One last chance to fix up the data
+                    xbmc.log(TAG + 'removing invalid xml characters', LOG_LEVEL)
                     data = re.sub('[\\x00-\\x1f]', '', data)
                     data = re.sub('[\\x7f-\\x9f]', '', data)
                     data_tree = ET.fromstring('<?xml version="1.0" encoding="ISO-8859-1" ?>' + data)
@@ -102,5 +103,3 @@ def parse_url_from_method(method):
 def parse_method_call(method):
     p = re.compile('([\\w\\.:/&\\?=%,-]{2,})')
     return p.findall(method)
-
-

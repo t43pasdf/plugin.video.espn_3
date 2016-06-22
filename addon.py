@@ -9,6 +9,7 @@ import json
 import re
 import time
 import urllib
+import urllib2
 import urlparse
 
 
@@ -94,7 +95,18 @@ def PLAY_TV(args):
             dialog = xbmcgui.Dialog()
             dialog.ok(translation(30037), translation(30410))
             return
-        media_token = adobe_activate_api.get_short_media_token(resource)
+        try:
+            media_token = adobe_activate_api.get_short_media_token(resource)
+        except urllib2.HTTPError as e:
+            if e.code == 410:
+                dialog = xbmcgui.Dialog()
+                dialog.ok(translation(30037), translation(30840))
+                adobe_activate_api.deauthorize()
+                xbmcplugin.endOfDirectory(pluginhandle, succeeded=False, updateListing=True)
+                return
+            else:
+                raise e
+
         token_type = 'ADOBEPASS'
     else:
         media_token = adobe_activate_api.get_device_id()
