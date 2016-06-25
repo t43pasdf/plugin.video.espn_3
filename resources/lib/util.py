@@ -28,6 +28,14 @@ def fetch_file(url, cache_file):
 def load_file(cache_file):
     return open(cache_file, mode='r')
 
+def clear_cache(url):
+    cache_file = hashlib.sha224(url).hexdigest()
+    cache_file = os.path.join(ADDON_PATH_PROFILE, cache_file + '.xml')
+    try:
+        os.remove(cache_file)
+    except:
+        pass
+
 def get_url_as_xml_soup_cache(url, cache_file = None, timeout = 300):
     if cache_file is None:
         cache_file = hashlib.sha224(url).hexdigest()

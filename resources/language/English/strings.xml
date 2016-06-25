@@ -1,20 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <strings>
-    <string id="30000">Play in XBMC. (Disable to use Browser) </string>
-    <string id="30001">Quality of Recorded Stream</string>
-    <string id="30003">Quality of Live Stream</string>
-    <string id="30004">200k</string>
-    <string id="30005">400k</string>
-    <string id="30006">800k</string>
-    <string id="30007">1200k</string>
-    <string id="30008">1800k</string>
-    <string id="30026">2200k</string>
-    <string id="30021">Upcoming Days</string>
-    <string id="30022">1st Replay Days</string>
-    <string id="30023">2nd Replay Days</string>
-    <string id="30024">3rd Replay Days</string>
-    <string id="30025">4th Replay End</string>
-    <string id="30028">Ask Quality</string>
     <string id="30029">Live</string>
     <string id="30030">Upcoming</string>
     <string id="30031">Replay </string>
@@ -99,4 +84,5 @@
     <string id="30820">Show the tvOS menu</string>
     <string id="30830">Show the AndroidTV menu</string>
     <string id="30840">Unable to re-authenticate, this device has been de-authorized.</string>
+    <string id="30850">Refresh Live Listings</string>
 </strings>

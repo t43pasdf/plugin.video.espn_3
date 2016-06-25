@@ -36,6 +36,9 @@ def ROOT_ITEM(refresh):
         addDir('[COLOR=FFFF0000]' + translation(30300) + '[/COLOR]',
                dict(MODE=AUTHENTICATE_MODE),
                defaultreplay)
+    addDir(translation(30850),
+           dict(MODE=REFRESH_LIVE_MODE),
+           defaultlive)
     include_premium = adobe_activate_api.is_authenticated()
     channel_list = events.get_channel_list(include_premium)
     legacy_inst = legacy.Legacy()
@@ -273,6 +276,12 @@ if mode is not None:
                             xbmc.log(TAG + 'Executing method', xbmc.LOGDEBUG)
                             getattr(class_def(), method_name)(args)
 
+if mode is not None and mode[0] == REFRESH_LIVE_MODE:
+    mode = None
+    refresh = True
+    include_premium = adobe_activate_api.is_authenticated()
+    channel_list = events.get_channel_list(include_premium)
+    util.clear_cache(events.get_live_events_url(channel_list))
 
 if mode is None:
     try:
