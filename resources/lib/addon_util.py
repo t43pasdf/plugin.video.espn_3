@@ -22,13 +22,13 @@ def addLink(name, url, iconimage, fanart=None, infoLabels=None):
     liz = xbmcgui.ListItem(name, iconImage="DefaultVideo.png", thumbnailImage=iconimage)
 
     if infoLabels is None:
-        infoLabels={"Title": name}
-    liz.setInfo(type="Video", infoLabels=infoLabels)
+        infoLabels={'Title': name}
+    liz.setInfo('video', infoLabels=infoLabels)
     liz.setProperty('IsPlayable', 'true')
     liz.setIconImage(iconimage)
     if fanart is None:
         fanart=defaultfanart
-    liz.setProperty('fanart_image',fanart)
+    liz.setArt('fanart_image',fanart)
     video_streaminfo = dict()
     liz.addStreamInfo('video', video_streaminfo)
     ok = xbmcplugin.addDirectoryItem(handle=pluginhandle, url=u, listitem=liz)
@@ -40,11 +40,11 @@ def addDir(name, url, iconimage, fanart=None, infoLabels=None):
     xbmc.log(TAG + 'Made url to %s' % u, LOG_LEVEL)
     liz = xbmcgui.ListItem(name, iconImage="DefaultFolder.png", thumbnailImage=iconimage)
     if infoLabels is None:
-        infoLabels={"Title": name}
-    liz.setInfo(type="Video", infoLabels=infoLabels)
+        infoLabels={'Title': name}
+    liz.setInfo('video', infoLabels=infoLabels)
     if fanart is None:
         fanart=defaultfanart
-    liz.setProperty('fanart_image',fanart)
+    liz.setArt('fanart_image',fanart)
     ok = xbmcplugin.addDirectoryItem(handle=pluginhandle, url=u, listitem=liz, isFolder=True)
     return ok
 
