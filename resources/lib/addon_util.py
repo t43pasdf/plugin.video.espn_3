@@ -15,36 +15,37 @@ import events
 from globals import defaultfanart, pluginhandle, selfAddon, translation, LOG_LEVEL
 from constants import *
 
+
 TAG = 'Addon_Util: '
 
-def addLink(name, url, iconimage, fanart=None, infoLabels=None):
+
+def addLink(name, url, iconimage="DefaultVideo.png", fanart=defaultfanart, infoLabels=None):
     u = sys.argv[0] + '?' + urllib.urlencode(url)
-    liz = xbmcgui.ListItem(name, iconImage="DefaultVideo.png", thumbnailImage=iconimage)
+    liz = xbmcgui.ListItem(name, iconImage=iconimage, thumbnailImage=iconimage)
 
     if infoLabels is None:
         infoLabels={'Title': name}
+
     liz.setInfo('video', infoLabels=infoLabels)
     liz.setProperty('IsPlayable', 'true')
-    liz.setIconImage(iconimage)
-    if fanart is None:
-        fanart=defaultfanart
-    liz.setArt('fanart_image',fanart)
+    addon_art = {'fanart': fanart}
+    liz.setArt(addon_art)
     video_streaminfo = dict()
     liz.addStreamInfo('video', video_streaminfo)
     ok = xbmcplugin.addDirectoryItem(handle=pluginhandle, url=u, listitem=liz)
     return ok
 
 
-def addDir(name, url, iconimage, fanart=None, infoLabels=None):
+def addDir(name, url, iconimage="DefaultFolder.png", fanart=defaultfanart, infoLabels=None):
     u = sys.argv[0] + '?' + urllib.urlencode(url)
     xbmc.log(TAG + 'Made url to %s' % u, LOG_LEVEL)
-    liz = xbmcgui.ListItem(name, iconImage="DefaultFolder.png", thumbnailImage=iconimage)
+    liz = xbmcgui.ListItem(name, iconImage=iconimage, thumbnailImage=iconimage)
     if infoLabels is None:
         infoLabels={'Title': name}
+
     liz.setInfo('video', infoLabels=infoLabels)
-    if fanart is None:
-        fanart=defaultfanart
-    liz.setArt('fanart_image',fanart)
+    addon_art = {'fanart': fanart}
+    liz.setArt(addon_art)
     ok = xbmcplugin.addDirectoryItem(handle=pluginhandle, url=u, listitem=liz, isFolder=True)
     return ok
 
