@@ -12,7 +12,7 @@ import adobe_activate_api
 import util
 import player_config
 import events
-from globals import defaultfanart, pluginhandle, selfAddon, translation, LOG_LEVEL
+from globals import defaultfanart, pluginhandle, selfAddon, translation
 from constants import *
 
 
@@ -38,7 +38,7 @@ def addLink(name, url, iconimage="DefaultVideo.png", fanart=defaultfanart, infoL
 
 def addDir(name, url, iconimage="DefaultFolder.png", fanart=defaultfanart, infoLabels=None):
     u = sys.argv[0] + '?' + urllib.urlencode(url)
-    xbmc.log(TAG + 'Made url to %s' % u, LOG_LEVEL)
+    xbmc.log(TAG + 'Made url to %s' % u, xbmc.LOGDEBUG)
     liz = xbmcgui.ListItem(name, iconImage=iconimage, thumbnailImage=iconimage)
     if infoLabels is None:
         infoLabels={'Title': name}
@@ -58,12 +58,12 @@ def check_error(session_json):
     return False
 
 def does_requires_auth(network_name):
-    xbmc.log(TAG + 'Checking auth of ' + network_name, LOG_LEVEL)
+    xbmc.log(TAG + 'Checking auth of ' + network_name, xbmc.LOGDEBUG)
     requires_auth = not (network_name == 'espn3' or network_name.find('free') >= 0 or network_name == '')
     if not requires_auth:
         free_content_check = player_config.can_access_free_content()
         if not free_content_check:
-            xbmc.log('ESPN3: User needs login to ESPN3', LOG_LEVEL)
+            xbmc.log('ESPN3: User needs login to ESPN3', xbmc.LOGDEBUG)
             requires_auth = True
     return requires_auth
 
@@ -87,8 +87,8 @@ def index_item(args):
         sport += ' (' + sport2 + ')'
     starttime = args['starttime'] if 'starttime' in args else None
     length = int(args['duration'])
-    xbmc.log(TAG + 'startime %s' % starttime, LOG_LEVEL)
-    xbmc.log(TAG + 'type %s' % args['type'], LOG_LEVEL)
+    xbmc.log(TAG + 'startime %s' % starttime, xbmc.LOGDEBUG)
+    xbmc.log(TAG + 'type %s' % args['type'], xbmc.LOGDEBUG)
 
     if starttime is not None:
         now = time.time()
@@ -222,7 +222,7 @@ def index_listing(listing):
     starttime = time.strptime(listing['startTime'][:-3], time_format)
     endtime = time.strptime(listing['endTime'][:-3], time_format)
     duration = (time.mktime(endtime) - time.mktime(starttime))
-    xbmc.log(TAG + ' Duration: %s' % duration, LOG_LEVEL)
+    xbmc.log(TAG + ' Duration: %s' % duration, xbmc.LOGDEBUG)
 
     index_item({
         'sport': get_league(listing),
@@ -261,7 +261,7 @@ def index_video(listing):
 
 def compare(lstart, lnetwork, lstatus, rstart, rnetwork, rstatus):
     xbmc.log(TAG + 'lstart %s lnetwork %s lstatus %s rstart %s rnetwork %s rstatus %s' %
-             (lstart, lnetwork, lstatus, rstart, rnetwork, rstatus), LOG_LEVEL)
+             (lstart, lnetwork, lstatus, rstart, rnetwork, rstatus), xbmc.LOGDEBUG)
     if lnetwork != rnetwork:
         return 0
     if lstart is None and rstart is None:

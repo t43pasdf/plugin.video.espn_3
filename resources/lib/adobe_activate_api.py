@@ -13,7 +13,7 @@ import cookielib
 from StringIO import StringIO
 
 import xbmc
-from globals import ADDON_PATH_PROFILE, LOG_LEVEL
+from globals import ADDON_PATH_PROFILE
 
 SETTINGS_FILE = 'adobe.json'
 UA_ATV = 'AppleCoreMedia/1.0.0.13Y234 (Apple TV; U; CPU OS 9_2 like Mac OS X; en_us)'
@@ -69,7 +69,7 @@ def is_expired(expiration):
     return (time.time() * 1000) >= int(expiration)
 
 def get_url_response(url, message, body = None, method = None):
-    # xbmc.log(TAG + 'url %s message %s' % (url, message), LOG_LEVEL)
+    # xbmc.log(TAG + 'url %s message %s' % (url, message), xbmc.LOGDEBUG)
     cj = get_cookie_jar()
     opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
     opener.addheaders = [ ("Accept", "application/json"),
@@ -102,12 +102,12 @@ def generate_message(method, path):
 def is_reg_code_valid():
     settings = load_settings()
     if 'generateRegCode' not in settings:
-        xbmc.log(TAG + 'Unable to find reg code', LOG_LEVEL)
+        xbmc.log(TAG + 'Unable to find reg code', xbmc.LOGDEBUG)
         return False
     # Check code isn't expired
     expiration = settings['generateRegCode']['expires']
     if is_expired(expiration):
-        xbmc.log(TAG + 'Reg code is expired at %s' % expiration, LOG_LEVEL)
+        xbmc.log(TAG + 'Reg code is expired at %s' % expiration, xbmc.LOGDEBUG)
         return False
     return True
 
@@ -117,7 +117,7 @@ def is_reg_code_valid():
 # (generateRegCode)
 def get_regcode():
     if is_reg_code_valid():
-        xbmc.log(TAG + 'Loading reg code from cache', LOG_LEVEL)
+        xbmc.log(TAG + 'Loading reg code from cache', xbmc.LOGDEBUG)
         return load_settings()['generateRegCode']['code']
 
     params = urllib.urlencode(
@@ -143,7 +143,7 @@ def get_regcode():
 # Sample: '{"mvpd":"","requestor":"ESPN","userId":"","expires":"1466208969000"}'
 def authenticate():
     if not is_reg_code_valid():
-        xbmc.log(TAG + 'reg code is invalid', LOG_LEVEL)
+        xbmc.log(TAG + 'reg code is invalid', xbmc.LOGDEBUG)
         raise ValueError('Registration code is invalid, please restart the authentication process')
 
     reg_code = get_regcode()
@@ -187,7 +187,7 @@ def get_resource(channel, event_name, event_guid, event_parental_rating):
 # Sample '{"resource":"resource","mvpd":"","requestor":"ESPN","expires":"1463621239000"}'
 def authorize(resource):
     if is_authorized(resource):
-        xbmc.log(TAG + 'already authorized', LOG_LEVEL)
+        xbmc.log(TAG + 'already authorized', xbmc.LOGDEBUG)
         return
     params = urllib.urlencode({'requestor': 'ESPN',
                                'deviceId': get_device_id(),
@@ -231,7 +231,7 @@ def deauthorize():
 # Sample '{"mvpdId":"","expires":"1463618218000","serializedToken":"+++++++=","userId":"","requestor":"ESPN","resource":" resource"}'
 def get_short_media_token(resource):
     if has_to_reauthenticate():
-        xbmc.log(TAG + 're-authenticating device', LOG_LEVEL)
+        xbmc.log(TAG + 're-authenticating device', xbmc.LOGDEBUG)
         re_authenticate()
     authorize(resource)
     params = urllib.urlencode({'requestor': 'ESPN',

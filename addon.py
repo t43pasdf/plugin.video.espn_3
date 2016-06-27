@@ -18,7 +18,7 @@ import xbmcplugin
 
 from resources.lib import util
 from resources.lib import adobe_activate_api
-from resources.lib.globals import selfAddon, defaultlive, defaultreplay, defaultupcoming, defaultimage, defaultfanart, translation, pluginhandle, LOG_LEVEL, UA_PC
+from resources.lib.globals import selfAddon, defaultlive, defaultreplay, defaultupcoming, defaultimage, defaultfanart, translation, pluginhandle, UA_PC
 from resources.lib.constants import *
 from resources.lib.addon_util import *
 
@@ -129,17 +129,17 @@ def PLAY_TV(args):
                                })
     start_session_url += '&' + params
 
-    xbmc.log('ESPN3: start_session_url: ' + start_session_url, LOG_LEVEL)
+    xbmc.log('ESPN3: start_session_url: ' + start_session_url, xbmc.LOGDEBUG)
 
     session_json = util.get_url_as_json(start_session_url)
     if check_error(session_json):
         return
 
     playback_url = session_json['session']['playbackUrls']['default']
-    xbmc.log(TAG + 'Playback url %s' % playback_url, LOG_LEVEL)
+    xbmc.log(TAG + 'Playback url %s' % playback_url, xbmc.LOGDEBUG)
     stream_quality = str(selfAddon.getSetting('StreamQuality'))
     bitrate_limit = int(selfAddon.getSetting('BitrateLimit'))
-    xbmc.log(TAG + 'Stream Quality %s' % stream_quality, LOG_LEVEL)
+    xbmc.log(TAG + 'Stream Quality %s' % stream_quality, xbmc.LOGDEBUG)
     try:
         m3u8_obj = m3u8.load(playback_url)
     except:
@@ -182,7 +182,7 @@ def PLAY_TV(args):
                 bandwidth = int(stream_info[bandwidth_key]) / 1024
                 if 'average_bandwidth' in stream_info:
                     xbmc.log(TAG + 'bandwidth: %s average bandwidth: %s' %
-                             (stream_info['bandwidth'], stream_info['average_bandwidth']), LOG_LEVEL)
+                             (stream_info['bandwidth'], stream_info['average_bandwidth']), xbmc.LOGDEBUG)
                 stream_options.append(translation(30450) % (resolution,
                                                       frame_rate,
                                                       bandwidth))
@@ -193,7 +193,7 @@ def PLAY_TV(args):
             else:
                 selfAddon.setSetting(id='StreamQualityIndex', value=str(stream_index))
 
-        xbmc.log(TAG + 'Chose stream %d' % stream_index, LOG_LEVEL)
+        xbmc.log(TAG + 'Chose stream %d' % stream_index, xbmc.LOGDEBUG)
         item = xbmcgui.ListItem(path=m3u8_obj.playlists[stream_index].uri)
         return xbmcplugin.setResolvedUrl(pluginhandle, success, item)
     else:
@@ -205,7 +205,7 @@ def PLAY_LEGACY_TV(args):
     # check blackout differently for legacy shows
     event_id = args.get(EVENT_ID)[0]
     url = base64.b64decode('aHR0cDovL2Jyb2FkYmFuZC5lc3BuLmdvLmNvbS9lc3BuMy9hdXRoL3dhdGNoZXNwbi91dGlsL2lzVXNlckJsYWNrZWRPdXQ/ZXZlbnRJZD0=') + event_id
-    xbmc.log(TAG + 'Blackout url %s' % url, LOG_LEVEL)
+    xbmc.log(TAG + 'Blackout url %s' % url, xbmc.LOGDEBUG)
     blackout_data = util.get_url_as_json(url)
     blackout = blackout_data['E3BlackOut']
     if not blackout == 'true':
@@ -218,14 +218,14 @@ def PLAY_LEGACY_TV(args):
 
 
 base_url = sys.argv[0]
-xbmc.log(TAG + 'QS: %s' % sys.argv[2], LOG_LEVEL)
+xbmc.log(TAG + 'QS: %s' % sys.argv[2], xbmc.LOGDEBUG)
 args = urlparse.parse_qs(sys.argv[2][1:])
-xbmc.log('ESPN3: args %s' % args, LOG_LEVEL)
+xbmc.log('ESPN3: args %s' % args, xbmc.LOGDEBUG)
 mode = args.get(MODE, None)
 
 refresh = False
 if mode is not None and mode[0] == AUTHENTICATE_MODE:
-    xbmc.log('Authenticate Device', LOG_LEVEL)
+    xbmc.log('Authenticate Device', xbmc.LOGDEBUG)
     regcode = adobe_activate_api.get_regcode()
     dialog = xbmcgui.Dialog()
     ok = dialog.yesno(translation(30310),
@@ -289,7 +289,7 @@ if mode is None:
     except:
         xbmc.log(TAG + 'Unable to clean up')
         adobe_activate_api.reset_settings()
-    xbmc.log("Generate Main Menu", LOG_LEVEL)
+    xbmc.log("Generate Main Menu", xbmc.LOGDEBUG)
     ROOT_ITEM(refresh)
 elif mode[0] == PLAY_MODE:
     PLAY_LEGACY_TV(args)
@@ -298,7 +298,7 @@ elif mode[0] == PLAY_ITEM_MODE:
 elif mode[0] == PLAY_TV_MODE:
     PLAY_TV(args)
 elif mode[0] == UPCOMING_MODE:
-    xbmc.log("Upcoming", LOG_LEVEL)
+    xbmc.log("Upcoming", xbmc.LOGDEBUG)
     dialog = xbmcgui.Dialog()
     dialog.ok(translation(30035), translation(30036))
     xbmcplugin.endOfDirectory(pluginhandle, succeeded=False, updateListing=True)
