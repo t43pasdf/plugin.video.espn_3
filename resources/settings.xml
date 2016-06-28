@@ -13,7 +13,7 @@
         <setting id="ShowEspn3" type="bool" label="30992" default="true"/>
         <setting id="ShowEspnu" type="bool" label="30993" default="true"/>
         <setting id="ShowEspnews" type="bool" label="30994" default="true"/>
-        <setting id="ShowEspndeportes" type="bool" label="30995" default="true"/>
+        <setting id="ShowEspnDeportes" type="bool" label="30995" default="true"/>
         <setting id="ShowSec" type="bool" label="30996" default="true"/>
         <setting id="ShowSecPlus" type="bool" label="30997" default="true"/>
         <setting id="ShowLonghorn" type="bool" label="30998" default="true"/>
