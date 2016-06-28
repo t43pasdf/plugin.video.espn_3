@@ -263,3 +263,59 @@ msgstr ""
 msgctxt "#30850"
 msgid "Refresh Live Content"
 msgstr ""
+
+msgctxt "#30860"
+msgid "Playback"
+msgstr ""
+
+msgctxt "#30870"
+msgid "Device Menu"
+msgstr ""
+
+msgctxt "#30880"
+msgid "Advanced"
+msgstr ""
+
+msgctxt "#30890"
+msgid "Channels"
+msgstr ""
+
+msgctxt "#30990"
+msgid "ESPN"
+msgstr ""
+
+msgctxt "#30991"
+msgid "ESPN2"
+msgstr ""
+
+msgctxt "#30992"
+msgid "ESPN3"
+msgstr ""
+
+msgctxt "#30993"
+msgid "ESPN U"
+msgstr ""
+
+msgctxt "#30994"
+msgid "ESPNews"
+msgstr ""
+
+msgctxt "#30995"
+msgid "ESPN Deportes"
+msgstr ""
+
+msgctxt "#30996"
+msgid "SEC"
+msgstr ""
+
+msgctxt "#30997"
+msgid "SEC+"
+msgstr ""
+
+msgctxt "#30998"
+msgid "Longhorn"
+msgstr ""
+
+msgctxt "#30999"
+msgid "Buzzer Beater"
+msgstr ""

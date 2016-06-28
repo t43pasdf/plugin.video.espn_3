@@ -77,6 +77,26 @@ def get_url(url):
         return url + sep + 'tz=' + urllib.quote_plus(tz)
     return url
 
+CHANNEL_SETTINGS = {
+    'ShowEspn1': 'espn1',
+    'ShowEspn2': 'espn2',
+    'ShowEspn3': 'espn3',
+    'ShowEspnu': 'espnu',
+    'ShowEspnews': 'espnews',
+    'ShowEspnDeportes': 'espndeportes',
+    'ShowSec': 'sec',
+    'ShowSecPlus': 'secplus',
+    'ShowLonghorn': 'longhorn',
+    'ShowBuzzerBeater': 'buzzerbeater'
+}
+
+def include_item(networkId):
+    for setting in CHANNEL_SETTINGS:
+        channel = CHANNEL_SETTINGS[setting]
+        if channel == networkId:
+            return selfAddon.getSetting(setting) == 'true'
+    return True
+
 def index_item(args):
     if args['type'] == 'over':
         return
@@ -185,7 +205,11 @@ def index_item(args):
                 authurl[EVENT_GUID] = args['guid'].encode('iso-8859-1')
                 authurl[EVENT_PARENTAL_RATING] = mpaa
     fanart = args['imageHref']
-    addLink(ename, authurl, fanart, fanart, infoLabels=infoLabels)
+
+    if include_item(args['networkId']):
+        addLink(ename, authurl, fanart, fanart, infoLabels=infoLabels)
+    else:
+        xbmc.log(TAG + 'Skipping %s' % args['networkId'], xbmc.LOGDEBUG)
 
 
 def get_league(listing):

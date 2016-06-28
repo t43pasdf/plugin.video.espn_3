@@ -140,7 +140,7 @@ class Legacy(MenuListing):
                 self.index_event(event, live, upcoming, replay, chosen_sport)
         # Dir for ESPN3/SECPlus
         elif chosen_network is None:
-            if num_espn3 > 0:
+            if num_espn3 > 0 and selfAddon.getSetting('ShowEspn3') == 'true':
                 translation_number = 30191 if num_espn3 == 1 else 30190
                 if selfAddon.getSetting('NoColors') == 'true':
                     name = translation(translation_number) % num_espn3
@@ -148,7 +148,7 @@ class Legacy(MenuListing):
                     name = '[COLOR=FFCC0000]' + (translation(translation_number) % num_espn3) + '[/COLOR]'
                 addDir(name, dict(ESPN_URL=espn_url, MODE=self.make_mode(LIVE_EVENTS_MODE), NETWORK_ID=ESPN3_ID),
                        defaultlive)
-            if num_secplus > 0:
+            if num_secplus > 0 and selfAddon.getSetting('ShowSecPlus') == 'true':
                 translation_number = 30201 if num_espn3 == 1 else 30200
                 if selfAddon.getSetting('NoColors') == 'true':
                     name = translation(translation_number) % num_secplus
