@@ -90,6 +90,12 @@ CHANNEL_SETTINGS = {
     'ShowBuzzerBeater': 'buzzerbeater'
 }
 
+def get_setting_from_channel(channel):
+    for setting in CHANNEL_SETTINGS:
+        if CHANNEL_SETTINGS[setting] == channel:
+            return setting
+    return None
+
 def include_item(networkId):
     for setting in CHANNEL_SETTINGS:
         channel = CHANNEL_SETTINGS[setting]

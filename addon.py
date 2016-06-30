@@ -69,7 +69,7 @@ def ROOT_ITEM(refresh):
         addDir('[COLOR=FF00FF00]' + translation(30380) + '[/COLOR]',
            dict(MODE=AUTHENTICATION_DETAILS_MODE),
            defaultfanart)
-    xbmcplugin.endOfDirectory(pluginhandle, updateListing=refresh)
+    xbmcplugin.endOfDirectory(pluginhandle, updateListing=refresh, cacheToDisc=False)
 
 def PLAY_ITEM(args):
     url = args.get(PLAYBACK_URL)[0]
@@ -100,15 +100,22 @@ def PLAY_TV(args):
             return
         try:
             media_token = adobe_activate_api.get_short_media_token(resource)
-        except urllib2.HTTPError as e:
-            if e.code == 410:
+        except urllib2.HTTPError as exception:
+            if exception.code == 410:
                 dialog = xbmcgui.Dialog()
                 dialog.ok(translation(30037), translation(30840))
                 adobe_activate_api.deauthorize()
                 xbmcplugin.endOfDirectory(pluginhandle, succeeded=False, updateListing=True)
                 return
+            elif exception.code == 403:
+                dialog = xbmcgui.Dialog()
+                dialog.ok(translation(30037), translation(30900))
+                setting = get_setting_from_channel(network_name)
+                if setting is not None:
+                    selfAddon.setSetting(setting, 'false')
+                return
             else:
-                raise e
+                raise exception
 
         token_type = 'ADOBEPASS'
     else:
@@ -195,10 +202,10 @@ def PLAY_TV(args):
 
         xbmc.log(TAG + 'Chose stream %d' % stream_index, xbmc.LOGDEBUG)
         item = xbmcgui.ListItem(path=m3u8_obj.playlists[stream_index].uri)
-        return xbmcplugin.setResolvedUrl(pluginhandle, success, item)
+        xbmcplugin.setResolvedUrl(pluginhandle, success, item)
     else:
         item = xbmcgui.ListItem(path=playback_url)
-        return xbmcplugin.setResolvedUrl(pluginhandle, success, item)
+        xbmcplugin.setResolvedUrl(pluginhandle, success, item)
 
 
 def PLAY_LEGACY_TV(args):

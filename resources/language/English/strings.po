@@ -280,6 +280,10 @@ msgctxt "#30890"
 msgid "Channels"
 msgstr ""
 
+msgctxt "#30900"
+msgid "This channel isn't supported by your provider, its display has been hidden in the addon settings."
+msgstr ""
+
 msgctxt "#30990"
 msgid "ESPN"
 msgstr ""

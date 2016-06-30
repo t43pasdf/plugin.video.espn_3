@@ -204,7 +204,7 @@ def authorize(resource):
     settings = load_settings()
     if 'authorize' not in settings:
         settings['authorize'] = dict()
-    xbmc.log(TAG + 'resource %s' % resource)
+    xbmc.log(TAG + 'resource %s' % resource, xbmc.LOGDEBUG)
     settings['authorize'][resource.decode('iso-8859-1').encode('utf-8')] = resp
     save_settings(settings)
 
