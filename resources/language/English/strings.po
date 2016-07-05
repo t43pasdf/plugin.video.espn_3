@@ -297,7 +297,7 @@ msgid "ESPN3"
 msgstr ""
 
 msgctxt "#30993"
-msgid "ESPN U"
+msgid "ESPNU"
 msgstr ""
 
 msgctxt "#30994"

@@ -89,6 +89,16 @@ CHANNEL_SETTINGS = {
     'ShowLonghorn': 'longhorn',
     'ShowBuzzerBeater': 'buzzerbeater'
 }
+NETWORK_ID_TO_NETWORK_NAME = {
+    'espn1': 30990,
+    'espn2': 30991,
+    'espn3': 30992,
+    'espnu': 30993,
+    'espnews': 30994,
+    'espndeportes': 30995,
+    'sec': 30996,
+    'longhorn': 30998
+}
 
 def get_setting_from_channel(channel):
     for setting in CHANNEL_SETTINGS:
@@ -163,6 +173,8 @@ def index_item(args):
         network = args['networkName']
     else:
         network = network_id
+    if network_id in NETWORK_ID_TO_NETWORK_NAME:
+        network = translation(NETWORK_ID_TO_NETWORK_NAME[network_id])
     blackout = args['blackout'] if 'blackout' in args else False
     blackout_text = ''
     if blackout:
