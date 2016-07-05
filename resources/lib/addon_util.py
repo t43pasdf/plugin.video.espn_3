@@ -180,6 +180,8 @@ def index_item(args):
     if requires_auth and not adobe_activate_api.is_authenticated():
         ename = '*' + ename
 
+    xbmc.log(TAG + 'Duration %s' % length)
+
     mpaa = args['parentalRating'] if 'parentRating' in args else 'U'
     infoLabels = {'title': ename,
                   'genre': sport,
@@ -212,7 +214,7 @@ def index_item(args):
                 authurl[EVENT_PARENTAL_RATING] = mpaa
     fanart = args['imageHref']
 
-    if include_item(args['networkId']):
+    if include_item(network_id):
         addLink(ename, authurl, fanart, fanart, infoLabels=infoLabels)
     else:
         xbmc.log(TAG + 'Skipping %s' % args['networkId'], xbmc.LOGDEBUG)
