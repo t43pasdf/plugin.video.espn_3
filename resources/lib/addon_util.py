@@ -192,7 +192,7 @@ def index_item(args):
     if requires_auth and not adobe_activate_api.is_authenticated():
         ename = '*' + ename
 
-    xbmc.log(TAG + 'Duration %s' % length)
+    xbmc.log(TAG + 'Duration %s' % length, xbmc.LOGDEBUG)
 
     mpaa = args['parentalRating'] if 'parentRating' in args else 'U'
     infoLabels = {'title': ename,
