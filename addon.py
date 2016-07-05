@@ -36,7 +36,8 @@ def ROOT_ITEM(refresh):
         addDir('[COLOR=FFFF0000]' + translation(30300) + '[/COLOR]',
                dict(MODE=AUTHENTICATE_MODE),
                defaultreplay)
-    addDir(translation(30850),
+    current_time = time.strftime("%I:%M %p", time.localtime(time.time()))
+    addDir(translation(30850) % current_time,
            dict(MODE=REFRESH_LIVE_MODE),
            defaultlive)
     include_premium = adobe_activate_api.is_authenticated()
