@@ -1,4 +1,11 @@
 --------------------------------
+version 2.9.11 (July 2016)
+--------------------------------
+- Handle playing blacked out events better
+- Show when legacy events are blacked out
+- When a channel has an error prompt the user to hide the channel
+
+--------------------------------
 version 2.9.10 (July 2016)
 --------------------------------
 - Display fixes for channel names
