@@ -100,6 +100,7 @@ def PLAY_TV(args):
             dialog.ok(translation(30037), translation(30410))
             return
         try:
+            # testing code raise urllib2.HTTPError(url='test', code=403, msg='no', hdrs=dict(), fp=None)
             media_token = adobe_activate_api.get_short_media_token(resource)
         except urllib2.HTTPError as exception:
             if exception.code == 410:
@@ -109,11 +110,13 @@ def PLAY_TV(args):
                 xbmcplugin.endOfDirectory(pluginhandle, succeeded=False, updateListing=True)
                 return
             elif exception.code == 403:
+                # Check for blackout
                 dialog = xbmcgui.Dialog()
-                dialog.ok(translation(30037), translation(30900))
-                setting = get_setting_from_channel(network_name)
-                if setting is not None:
-                    selfAddon.setSetting(setting, 'false')
+                ok = dialog.yesno(translation(30037), translation(30900))
+                if ok:
+                    setting = get_setting_from_channel(network_name)
+                    if setting is not None:
+                        selfAddon.setSetting(setting, 'false')
                 return
             else:
                 raise exception
@@ -208,23 +211,6 @@ def PLAY_TV(args):
         item = xbmcgui.ListItem(path=playback_url)
         xbmcplugin.setResolvedUrl(pluginhandle, success, item)
 
-
-def PLAY_LEGACY_TV(args):
-    # check blackout differently for legacy shows
-    event_id = args.get(EVENT_ID)[0]
-    url = base64.b64decode('aHR0cDovL2Jyb2FkYmFuZC5lc3BuLmdvLmNvbS9lc3BuMy9hdXRoL3dhdGNoZXNwbi91dGlsL2lzVXNlckJsYWNrZWRPdXQ/ZXZlbnRJZD0=') + event_id
-    xbmc.log(TAG + 'Blackout url %s' % url, xbmc.LOGDEBUG)
-    blackout_data = util.get_url_as_json(url)
-    blackout = blackout_data['E3BlackOut']
-    if not blackout == 'true':
-        blackout = blackout_data['LinearBlackOut']
-    if blackout == 'true':
-        dialog = xbmcgui.Dialog()
-        dialog.ok(translation(30037), translation(30040))
-        return
-    PLAY_TV(args)
-
-
 base_url = sys.argv[0]
 xbmc.log(TAG + 'QS: %s' % sys.argv[2], xbmc.LOGDEBUG)
 args = urlparse.parse_qs(sys.argv[2][1:])
@@ -299,8 +285,6 @@ if mode is None:
         adobe_activate_api.reset_settings()
     xbmc.log("Generate Main Menu", xbmc.LOGDEBUG)
     ROOT_ITEM(refresh)
-elif mode[0] == PLAY_MODE:
-    PLAY_LEGACY_TV(args)
 elif mode[0] == PLAY_ITEM_MODE:
     PLAY_ITEM(args)
 elif mode[0] == PLAY_TV_MODE:

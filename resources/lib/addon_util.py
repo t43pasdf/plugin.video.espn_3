@@ -259,6 +259,17 @@ def check_json_blackout(listing):
             return True
     return False
 
+def check_event_blackout(event_id):
+    xbmc.log(TAG + ' Checking blackout for ' + event_id, xbmc.LOGDEBUG)
+    url = base64.b64decode(
+        'aHR0cDovL2Jyb2FkYmFuZC5lc3BuLmdvLmNvbS9lc3BuMy9hdXRoL3dhdGNoZXNwbi91dGlsL2lzVXNlckJsYWNrZWRPdXQ/ZXZlbnRJZD0=') + event_id
+    xbmc.log(TAG + 'Blackout url %s' % url, xbmc.LOGDEBUG)
+    blackout_data = util.get_url_as_json_cache(url)
+    blackout = blackout_data['E3BlackOut']
+    if not blackout == 'true':
+        blackout = blackout_data['LinearBlackOut']
+    return blackout == 'true'
+
 def index_listing(listing):
     # 2016-06-06T18:00:00EDT
     # EDT is discarded due to http://bugs.python.org/issue22377

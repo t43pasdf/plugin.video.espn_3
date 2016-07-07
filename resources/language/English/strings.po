@@ -281,7 +281,7 @@ msgid "Channels"
 msgstr ""
 
 msgctxt "#30900"
-msgid "This channel isn't supported by your provider, its display has been hidden in the addon settings."
+msgid "This channel may not be supported by your provider would you like to hide this channel? (configured in settings)"
 msgstr ""
 
 msgctxt "#30990"

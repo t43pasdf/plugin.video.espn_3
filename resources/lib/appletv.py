@@ -3,6 +3,7 @@ import re
 import time
 
 import xbmcplugin
+import xml.etree.ElementTree as ET
 
 import util
 import player_config
@@ -158,11 +159,12 @@ class AppleTV(MenuListing):
             'type': 'live'
         })
 
-    def index_tv_shelf(self, stash_json, item, upcoming):
+    def index_tv_shelf(self, stash_json, upcoming):
         if 'description' in stash_json:
             description = stash_json['description']
         else:
             description = ''
+        item = stash_json['internal_item']
         description = description + '\n\n' + self.get_metadata(item)
 
         index_item({
@@ -219,15 +221,16 @@ class AppleTV(MenuListing):
                     # Some of the json is baddly formatted
                     stash = re.sub(r'\s+"', '"', stash)
                     stash_json = json.loads(stash, 'utf-8')
+                    stash_json['internal_item'] = item
                     stashes.append(stash_json)
 
         xbmc.log(TAG + ' sorting %s items' % len(stashes), xbmc.LOGDEBUG)
         stashes.sort(cmp=compare_appletv)
         for stash_json in stashes:
             if stash_json['type'] == 'upcoming':
-                self.index_tv_shelf(stash_json, item, True)
+                self.index_tv_shelf(stash_json, True)
             elif 'sessionUrl' in stash_json:
-                self.index_tv_shelf(stash_json, item, False)
+                self.index_tv_shelf(stash_json, False)
             else:
                 self.index_item_shelf(stash_json, item)
 
@@ -244,7 +247,9 @@ class AppleTV(MenuListing):
         return description
 
     def check_blackout(self, item):
+        xbmc.log(TAG + 'check blackout %s' % ET.tostring(item), xbmc.LOGDEBUG)
         blackouts = item.findall('.//blackouts/blackoutsItem/detail/detailItem')
+        xbmc.log(TAG + '%s' % blackouts, xbmc.LOGDEBUG)
         blackout_type = item.find('.//blackouts/blackoutsItem/type')
         if blackout_type is not None and not blackout_type.text == 'dma':
             return False
