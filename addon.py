@@ -142,7 +142,13 @@ def PLAY_TV(args):
 
     xbmc.log('ESPN3: start_session_url: ' + start_session_url, xbmc.LOGDEBUG)
 
-    session_json = util.get_url_as_json(start_session_url)
+    try:
+        session_json = util.get_url_as_json(start_session_url)
+    except urllib2.HTTPError as exception:
+        if exception.code == 403:
+            session_json = json.load(exception)
+            xbmc.log(TAG + 'checking for errors in %s' % session_json)
+
     if check_error(session_json):
         return
 
