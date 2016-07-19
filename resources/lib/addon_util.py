@@ -89,6 +89,22 @@ CHANNEL_SETTINGS = {
     'ShowLonghorn': 'longhorn',
     'ShowBuzzerBeater': 'buzzerbeater'
 }
+NETWORK_ID_TO_NETWORK_NAME = {
+    'espn1': 30990,
+    'espn2': 30991,
+    'espn3': 30992,
+    'espnu': 30993,
+    'espnews': 30994,
+    'espndeportes': 30995,
+    'sec': 30996,
+    'longhorn': 30998
+}
+
+def get_setting_from_channel(channel):
+    for setting in CHANNEL_SETTINGS:
+        if CHANNEL_SETTINGS[setting] == channel:
+            return setting
+    return None
 
 def include_item(networkId):
     for setting in CHANNEL_SETTINGS:
@@ -157,6 +173,8 @@ def index_item(args):
         network = args['networkName']
     else:
         network = network_id
+    if network_id in NETWORK_ID_TO_NETWORK_NAME:
+        network = translation(NETWORK_ID_TO_NETWORK_NAME[network_id])
     blackout = args['blackout'] if 'blackout' in args else False
     blackout_text = ''
     if blackout:
@@ -173,6 +191,8 @@ def index_item(args):
     requires_auth = does_requires_auth(network_id)
     if requires_auth and not adobe_activate_api.is_authenticated():
         ename = '*' + ename
+
+    xbmc.log(TAG + 'Duration %s' % length, xbmc.LOGDEBUG)
 
     mpaa = args['parentalRating'] if 'parentRating' in args else 'U'
     infoLabels = {'title': ename,
@@ -206,7 +226,7 @@ def index_item(args):
                 authurl[EVENT_PARENTAL_RATING] = mpaa
     fanart = args['imageHref']
 
-    if include_item(args['networkId']):
+    if include_item(network_id):
         addLink(ename, authurl, fanart, fanart, infoLabels=infoLabels)
     else:
         xbmc.log(TAG + 'Skipping %s' % args['networkId'], xbmc.LOGDEBUG)
@@ -238,6 +258,17 @@ def check_json_blackout(listing):
         if blackout_dma == user_dma:
             return True
     return False
+
+def check_event_blackout(event_id):
+    xbmc.log(TAG + ' Checking blackout for ' + event_id, xbmc.LOGDEBUG)
+    url = base64.b64decode(
+        'aHR0cDovL2Jyb2FkYmFuZC5lc3BuLmdvLmNvbS9lc3BuMy9hdXRoL3dhdGNoZXNwbi91dGlsL2lzVXNlckJsYWNrZWRPdXQ/ZXZlbnRJZD0=') + event_id
+    xbmc.log(TAG + 'Blackout url %s' % url, xbmc.LOGDEBUG)
+    blackout_data = util.get_url_as_json_cache(url)
+    blackout = blackout_data['E3BlackOut']
+    if not blackout == 'true':
+        blackout = blackout_data['LinearBlackOut']
+    return blackout == 'true'
 
 def index_listing(listing):
     # 2016-06-06T18:00:00EDT

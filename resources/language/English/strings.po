@@ -261,7 +261,7 @@ msgid "Unable to re-authenticate, this device has been de-authorized."
 msgstr ""
 
 msgctxt "#30850"
-msgid "Refresh Live Content"
+msgid "Refresh Content (Generated at %s)"
 msgstr ""
 
 msgctxt "#30860"
@@ -280,6 +280,10 @@ msgctxt "#30890"
 msgid "Channels"
 msgstr ""
 
+msgctxt "#30900"
+msgid "This channel may not be supported by your provider would you like to hide this channel? (configured in settings)"
+msgstr ""
+
 msgctxt "#30990"
 msgid "ESPN"
 msgstr ""
@@ -293,7 +297,7 @@ msgid "ESPN3"
 msgstr ""
 
 msgctxt "#30993"
-msgid "ESPN U"
+msgid "ESPNU"
 msgstr ""
 
 msgctxt "#30994"

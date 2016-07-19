@@ -180,6 +180,11 @@ class Legacy(MenuListing):
         if description is None:
             description = ''
 
+        check_blackout = event.find('checkBlackout').text
+        blackout = False
+        if check_blackout == 'true':
+            blackout = check_event_blackout(event.get('id'))
+
         index_item({
             'sport': event.find('sportDisplayValue').text,
             'eventName': event.find('name').text,
@@ -192,7 +197,7 @@ class Legacy(MenuListing):
             'networkId': event.find('adobeResource').text,
             'networkName': networkName,
             # TODO: Blackout check
-            'blackout': False,
+            'blackout': blackout,
             'description': description,
             'eventId': event.get('id'),
             'sessionUrl': session_url,
