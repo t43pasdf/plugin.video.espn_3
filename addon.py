@@ -290,7 +290,22 @@ if mode is None:
         xbmc.log(TAG + 'Unable to clean up')
         adobe_activate_api.reset_settings()
     xbmc.log("Generate Main Menu", xbmc.LOGDEBUG)
-    ROOT_ITEM(refresh)
+    try:
+        ROOT_ITEM(refresh)
+    except IOError as exception:
+        xbmc.log('SSL certificate failure %s' % exception)
+        xbmc.log('%s-%s-%s' % (exception.errno, exception.message, exception.strerror))
+        if '[SSL: CERTIFICATE_VERIFY_FAILED]' in str(exception.strerror):
+            dialog = xbmcgui.Dialog()
+            ok = dialog.yesno(translation(30037), translation(30910))
+            if ok:
+                selfAddon.setSetting('DisableSSL', 'true')
+                ROOT_ITEM(refresh)
+            else:
+                raise exception
+        else:
+            raise exception
+
 elif mode[0] == PLAY_ITEM_MODE:
     PLAY_ITEM(args)
 elif mode[0] == PLAY_TV_MODE:
