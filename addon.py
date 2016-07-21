@@ -293,8 +293,8 @@ if mode is None:
     try:
         ROOT_ITEM(refresh)
     except IOError as exception:
-        xbmc.log('SSL certificate failure %s' % exception)
-        xbmc.log('%s-%s-%s' % (exception.errno, exception.message, exception.strerror))
+        xbmc.log('SSL certificate failure %s' % exception, xbmc.LOGDEBUG)
+        xbmc.log('%s-%s-%s' % (exception.errno, exception.message, exception.strerror), xbmc.LOGDEBUG)
         if '[SSL: CERTIFICATE_VERIFY_FAILED]' in str(exception.strerror):
             dialog = xbmcgui.Dialog()
             ok = dialog.yesno(translation(30037), translation(30910))
