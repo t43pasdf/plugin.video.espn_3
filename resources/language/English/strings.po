@@ -284,6 +284,9 @@ msgctxt "#30900"
 msgid "This channel may not be supported by your provider would you like to hide this channel? (configured in settings)"
 msgstr ""
 
+msgctxt "#30910"
+msgid "There was an SSL certificate verification failure would you like to disable this verification? (configured in settings)"
+
 msgctxt "#30990"
 msgid "ESPN"
 msgstr ""

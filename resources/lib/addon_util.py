@@ -21,14 +21,18 @@ TAG = 'Addon_Util: '
 
 def addLink(name, url, iconimage="DefaultVideo.png", fanart=defaultfanart, infoLabels=None):
     u = sys.argv[0] + '?' + urllib.urlencode(url)
-    liz = xbmcgui.ListItem(name, iconImage=iconimage, thumbnailImage=iconimage)
+    liz = xbmcgui.ListItem(name)
 
     if infoLabels is None:
         infoLabels={'Title': name}
 
     liz.setInfo('video', infoLabels=infoLabels)
     liz.setProperty('IsPlayable', 'true')
-    addon_art = {'fanart': fanart}
+    addon_art = {
+        'fanart': fanart,
+        'thumb': iconimage,
+        'icon': iconimage
+    }
     liz.setArt(addon_art)
     video_streaminfo = dict()
     liz.addStreamInfo('video', video_streaminfo)
@@ -39,12 +43,16 @@ def addLink(name, url, iconimage="DefaultVideo.png", fanart=defaultfanart, infoL
 def addDir(name, url, iconimage="DefaultFolder.png", fanart=defaultfanart, infoLabels=None):
     u = sys.argv[0] + '?' + urllib.urlencode(url)
     xbmc.log(TAG + 'Made url to %s' % u, xbmc.LOGDEBUG)
-    liz = xbmcgui.ListItem(name, iconImage=iconimage, thumbnailImage=iconimage)
+    liz = xbmcgui.ListItem(name)
     if infoLabels is None:
         infoLabels={'Title': name}
 
     liz.setInfo('video', infoLabels=infoLabels)
-    addon_art = {'fanart': fanart}
+    addon_art = {
+        'fanart': fanart,
+        'thumb': iconimage,
+        'icon': iconimage
+    }
     liz.setArt(addon_art)
     ok = xbmcplugin.addDirectoryItem(handle=pluginhandle, url=u, listitem=liz, isFolder=True)
     return ok

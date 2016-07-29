@@ -1,4 +1,14 @@
 --------------------------------
+version 2.9.13 (July 2016)
+--------------------------------
+- Added in a check for SSL certificate verification failures
+
+--------------------------------
+version 2.9.12 (July 2016)
+--------------------------------
+- Updated icon.png and fanart.jpg
+
+--------------------------------
 version 2.9.11 (July 2016)
 --------------------------------
 - Handle playing blacked out events better
