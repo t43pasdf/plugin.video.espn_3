@@ -226,20 +226,23 @@ mode = args.get(MODE, None)
 refresh = False
 if mode is not None and mode[0] == AUTHENTICATE_MODE:
     xbmc.log('Authenticate Device', xbmc.LOGDEBUG)
-    regcode = adobe_activate_api.get_regcode()
-    dialog = xbmcgui.Dialog()
-    ok = dialog.yesno(translation(30310),
-                   translation(30320),
-                   translation(30330) % regcode,
-                   translation(30340),
-                   translation(30360),
-                   translation(30350))
-    if ok:
-        try:
-            adobe_activate_api.authenticate()
-            dialog.ok(translation(30310), translation(30370))
-        except urllib2.HTTPError as e:
-            dialog.ok(translation(30037), translation(30420) % e)
+    if adobe_activate_api.is_authenticated():
+        xbmc.log('Device already authenticated, skipping authentication', xbmc.LOGDEBUG)
+    else:
+        regcode = adobe_activate_api.get_regcode()
+        dialog = xbmcgui.Dialog()
+        ok = dialog.yesno(translation(30310),
+                       translation(30320),
+                       translation(30330) % regcode,
+                       translation(30340),
+                       translation(30360),
+                       translation(30350))
+        if ok:
+            try:
+                adobe_activate_api.authenticate()
+                dialog.ok(translation(30310), translation(30370))
+            except urllib2.HTTPError as e:
+                dialog.ok(translation(30037), translation(30420) % e)
     mode = None
     refresh = True
 elif mode is not None and mode[0] == AUTHENTICATION_DETAILS_MODE:
@@ -248,8 +251,8 @@ elif mode is not None and mode[0] == AUTHENTICATION_DETAILS_MODE:
                       translation(30390) % adobe_activate_api.get_authentication_expires(),
                       translation(30700) % (player_config.get_dma(), player_config.get_timezone()),
                       translation(30710) % (player_config.get_can_sso(), player_config.get_sso_abuse()),
-                      nolabel = translation(30360),
-                      yeslabel = translation(30430))
+                      nolabel=translation(30360),
+                      yeslabel=translation(30430))
     if ok:
         adobe_activate_api.deauthorize()
     mode = None
