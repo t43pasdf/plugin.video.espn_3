@@ -1,4 +1,10 @@
 --------------------------------
+version 2.9.14 (July 2016)
+--------------------------------
+- Deprecation fixes
+- Prevent authenticating when already authenticated
+
+--------------------------------
 version 2.9.13 (July 2016)
 --------------------------------
 - Added in a check for SSL certificate verification failures
