@@ -148,6 +148,8 @@ def PLAY_TV(args):
         if exception.code == 403:
             session_json = json.load(exception)
             xbmc.log(TAG + 'checking for errors in %s' % session_json)
+        else:
+            raise exception
 
     if check_error(session_json):
         return
@@ -188,7 +190,7 @@ def PLAY_TV(args):
                 bandwidth = int(stream_info[bandwidth_key]) / 1024
                 if bandwidth <= bitrate_limit:
                     break
-                stream_index = stream_index + 1
+                stream_index += 1
         elif '2' == stream_quality: #Ask everytime
             should_ask = True
         if should_ask:

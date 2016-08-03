@@ -10,7 +10,8 @@ import util
 import player_config
 import events
 import adobe_activate_api
-from globals import selfAddon, defaultlive, defaultreplay, defaultupcoming, defaultimage, defaultfanart, translation, pluginhandle
+from globals import selfAddon, defaultlive, defaultreplay, \
+    defaultupcoming, defaultimage, defaultfanart, translation, pluginhandle
 from menu_listing import *
 from register_mode import RegisterMode
 
@@ -41,30 +42,30 @@ class Legacy(MenuListing):
         addDir(translation(30030),
                dict(ESPN_URL=events.get_upcoming_events_url(channel_list) + '&endDate=' + days + '&startDate=' + curdate.strftime("%Y%m%d"), MODE=self.make_mode(LIST_SPORTS_MODE)),
                defaultupcoming)
-        enddate = '&endDate='+ (curdate+timedelta(days=1)).strftime("%Y%m%d")
-        replays1 = [5,10,15,20,25]
+        enddate = '&endDate=' + (curdate+timedelta(days=1)).strftime("%Y%m%d")
+        replays1 = [5, 10, 15, 20, 25]
         replays1 = replays1[int(selfAddon.getSetting('replays1'))]
         start1 = (curdate-timedelta(days=replays1)).strftime("%Y%m%d")
-        replays2 = [10,20,30,40,50]
+        replays2 = [10, 20, 30, 40, 50]
         replays2 = replays2[int(selfAddon.getSetting('replays2'))]
         start2 = (curdate-timedelta(days=replays2)).strftime("%Y%m%d")
-        replays3 = [30,60,90,120]
+        replays3 = [30, 60, 90, 120]
         replays3 = replays3[int(selfAddon.getSetting('replays3'))]
         start3 = (curdate-timedelta(days=replays3)).strftime("%Y%m%d")
-        replays4 = [60,90,120,240]
+        replays4 = [60, 90, 120, 240]
         replays4 = replays4[int(selfAddon.getSetting('replays4'))]
         start4 = (curdate-timedelta(days=replays4)).strftime("%Y%m%d")
         startAll = (curdate-timedelta(days=365)).strftime("%Y%m%d")
-        addDir(translation(30031) + str(replays1) +' Days',
+        addDir(translation(30031) + str(replays1) + ' Days',
                dict(ESPN_URL=events.get_replay_events_url(channel_list) + enddate + '&startDate=' + start1, MODE=self.make_mode(LIST_SPORTS_MODE)),
                defaultreplay)
-        addDir(translation(30031) + str(replays2) +' Days',
+        addDir(translation(30031) + str(replays2) + ' Days',
                dict(ESPN_URL=events.get_replay_events_url(channel_list) + enddate + '&startDate=' + start2, MODE=self.make_mode(LIST_SPORTS_MODE)),
                defaultreplay)
-        addDir(translation(30031) + str(replays3) +' Days',
+        addDir(translation(30031) + str(replays3) + ' Days',
                dict(ESPN_URL=events.get_replay_events_url(channel_list) + enddate + '&startDate=' + start3, MODE=self.make_mode(LIST_SPORTS_MODE)),
                defaultreplay)
-        addDir(translation(30031) + str(replays3) +'-' + str(replays4) +' Days',
+        addDir(translation(30031) + str(replays3) + '-' + str(replays4) +' Days',
                dict(ESPN_URL=events.get_replay_events_url(channel_list) + '&endDate=' + start3 + '&startDate=' + start4, MODE=self.make_mode(LIST_SPORTS_MODE)),
                defaultreplay)
         addDir(translation(30032),
@@ -125,11 +126,11 @@ class Legacy(MenuListing):
             if chosen_network <> networkid and chosen_network is not None:
                 continue
             if networkid == ESPN3_ID and chosen_network is None and live:
-                num_espn3 = num_espn3 + 1
+                num_espn3 += 1
             elif networkid == SECPLUS_ID and chosen_network is None and live:
-                num_secplus = num_secplus + 1
+                num_secplus += 1
             else:
-                num_events = num_events + 1
+                num_events += 1
                 self.index_event(event, live, upcoming, replay, chosen_sport)
         # Don't show ESPN3 folder if there are no premium events
         if num_events == 0:
@@ -159,6 +160,7 @@ class Legacy(MenuListing):
 
     def index_event(self, event, live, upcoming, replay, chosen_sport):
         networkId = event.find('networkId').text
+        networkName = ''
         if networkId is not None:
             networkName = player_config.get_network_name(networkId)
         xbmc.log(TAG + ' networkName %s' % networkName, xbmc.LOGDEBUG)
