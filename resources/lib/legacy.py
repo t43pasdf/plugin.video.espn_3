@@ -117,6 +117,7 @@ class Legacy(MenuListing):
             data = util.get_url_as_xml_soup_cache(espn_url).findall(".//event")
         num_espn3 = 0
         num_secplus = 0
+        num_accextra = 0
         num_events = 0
         for event in data:
             sport = event.find('sportDisplayValue').text.encode('utf-8')
@@ -129,6 +130,8 @@ class Legacy(MenuListing):
                 num_espn3 += 1
             elif networkid == SECPLUS_ID and chosen_network is None and live:
                 num_secplus += 1
+            elif networkid == ACC_EXTRA_ID and chosen_network is None and live:
+                num_accextra += 1
             else:
                 num_events += 1
                 self.index_event(event, live, upcoming, replay, chosen_sport)
@@ -139,7 +142,7 @@ class Legacy(MenuListing):
                 if chosen_sport <> sport and chosen_sport is not None:
                     continue
                 self.index_event(event, live, upcoming, replay, chosen_sport)
-        # Dir for ESPN3/SECPlus
+        # Dir for ESPN3/SECPlus/ACC Extra
         elif chosen_network is None:
             if num_espn3 > 0 and selfAddon.getSetting('ShowEspn3') == 'true':
                 translation_number = 30191 if num_espn3 == 1 else 30190
@@ -150,12 +153,20 @@ class Legacy(MenuListing):
                 addDir(name, dict(ESPN_URL=espn_url, MODE=self.make_mode(LIVE_EVENTS_MODE), NETWORK_ID=ESPN3_ID),
                        defaultlive)
             if num_secplus > 0 and selfAddon.getSetting('ShowSecPlus') == 'true':
-                translation_number = 30201 if num_espn3 == 1 else 30200
+                translation_number = 30201 if num_secplus == 1 else 30200
                 if selfAddon.getSetting('NoColors') == 'true':
                     name = translation(translation_number) % num_secplus
                 else:
-                    name = '[COLOR=FFCC0000]' + (translation(translation_number) % num_secplus) + '[/COLOR]'
+                    name = '[COLOR=FF004C8D]' + (translation(translation_number) % num_secplus) + '[/COLOR]'
                 addDir(name, dict(ESPN_URL=espn_url, MODE=self.make_mode(LIVE_EVENTS_MODE), NETWORK_ID=SECPLUS_ID),
+                       defaultlive)
+            if num_accextra > 0 and selfAddon.getSetting('ShowAccExtra') == 'true':
+                translation_number = 30203 if num_accextra == 1 else 30202
+                if selfAddon.getSetting('NoColors') == 'true':
+                    name = translation(translation_number) % num_accextra
+                else:
+                    name = '[COLOR=FF013ca6]' + (translation(translation_number) % num_accextra) + '[/COLOR]'
+                addDir(name, dict(ESPN_URL=espn_url, MODE=self.make_mode(LIVE_EVENTS_MODE), NETWORK_ID=ACC_EXTRA_ID),
                        defaultlive)
 
     def index_event(self, event, live, upcoming, replay, chosen_sport):
@@ -196,9 +207,8 @@ class Legacy(MenuListing):
             'starttime': time.localtime(starttime),
             'duration': length,
             'type': event.get('type'),
-            'networkId': event.find('adobeResource').text,
+            'networkId': networkName,
             'networkName': networkName,
-            # TODO: Blackout check
             'blackout': blackout,
             'description': description,
             'eventId': event.get('id'),

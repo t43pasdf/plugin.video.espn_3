@@ -95,7 +95,8 @@ CHANNEL_SETTINGS = {
     'ShowSec': 'sec',
     'ShowSecPlus': 'secplus',
     'ShowLonghorn': 'longhorn',
-    'ShowBuzzerBeater': 'buzzerbeater'
+    'ShowBuzzerBeater': 'buzzerbeater',
+    'ShowAccExtra': 'accextra'
 }
 NETWORK_ID_TO_NETWORK_NAME = {
     'espn1': 30990,
@@ -105,7 +106,8 @@ NETWORK_ID_TO_NETWORK_NAME = {
     'espnews': 30994,
     'espndeportes': 30995,
     'sec': 30996,
-    'longhorn': 30998
+    'longhorn': 30998,
+    'accextra': 30989
 }
 
 def get_setting_from_channel(channel):
@@ -175,12 +177,15 @@ def index_item(args):
         channel_color = 'BF5700'
     elif network_id == 'sec' or network_id == 'secplus':
         channel_color = '004C8D'
+    elif network_id == 'accextra':
+        channel_color = '013ca6'
     else:
         channel_color = 'CC0000'
     if 'networkName' in args:
         network = args['networkName']
     else:
         network = network_id
+    xbmc.log(TAG + 'network_id ' + network_id, xbmc.LOGDEBUG)
     if network_id in NETWORK_ID_TO_NETWORK_NAME:
         network = translation(NETWORK_ID_TO_NETWORK_NAME[network_id])
     blackout = args['blackout'] if 'blackout' in args else False
