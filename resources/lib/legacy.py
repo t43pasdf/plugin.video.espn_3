@@ -184,7 +184,7 @@ class Legacy(MenuListing):
         xbmc.log(TAG + 'duration %s' % length, xbmc.LOGDEBUG)
         session_url = base64.b64decode(
             'aHR0cDovL2Jyb2FkYmFuZC5lc3BuLmdvLmNvbS9lc3BuMy9hdXRoL3dhdGNoZXNwbi9zdGFydFNlc3Npb24/')
-        session_url += 'channel=' + event.find('adobeResource').text
+        session_url += 'channel=' + networkName
         session_url += '&simulcastAiringId=' + event.find('simulcastAiringId').text
 
         description = event.find('summary').text
