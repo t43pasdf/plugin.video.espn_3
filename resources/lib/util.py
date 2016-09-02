@@ -27,10 +27,6 @@ def fetch_file(url, cache_file):
     urllib.urlretrieve(url, cache_file)
 
 
-def load_file(cache_file):
-    return open(cache_file, mode='r')
-
-
 def clear_cache(url):
     cache_file = hashlib.sha224(url).hexdigest()
     cache_file = os.path.join(ADDON_PATH_PROFILE, cache_file + '.xml')
@@ -49,10 +45,9 @@ def get_url_as_xml_soup_cache(url, cache_file = None, timeout = 300):
         fetch_file(url, cache_file)
     else:
         xbmc.log(TAG + 'Using cache %s for %s' % (cache_file, url), xbmc.LOGDEBUG)
-    xml_file = open(cache_file)
-    xml_data = xml_file.read()
-    xml_file.close()
-    return load_element_tree(xml_data)
+    with open(cache_file) as xml_file:
+        xml_data = xml_file.read()
+        return load_element_tree(xml_data)
 
 
 def get_url_as_xml_soup(url):
@@ -99,13 +94,13 @@ def get_url_as_json_cache(url, cache_file = None, timeout = 300):
         fetch_file(url, cache_file)
     else:
         xbmc.log(TAG + 'Using cache %s for %s' % (cache_file, url), xbmc.LOGDEBUG)
-    json_file = open(cache_file)
-    json_data = json_file.read()
-    json_file.close()
-    if json_data.startswith('ud='):
-        json_data = json_data.replace('ud=', '')
-        json_data = json_data.replace('\'', '"')
-    return json.loads(json_data)
+    with open(cache_file) as json_file:
+        json_data = json_file.read()
+        json_file.close()
+        if json_data.startswith('ud='):
+            json_data = json_data.replace('ud=', '')
+            json_data = json_data.replace('\'', '"')
+        return json.loads(json_data)
 
 
 # espn.page.loadSportPage('url');
