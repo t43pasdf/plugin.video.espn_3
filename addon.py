@@ -103,7 +103,7 @@ def PLAY_TV(args):
             # testing code raise urllib2.HTTPError(url='test', code=403, msg='no', hdrs=dict(), fp=None)
             media_token = adobe_activate_api.get_short_media_token(resource)
         except urllib2.HTTPError as exception:
-            if exception.code == 410:
+            if exception.code == 410 or exception.code == 404:
                 dialog = xbmcgui.Dialog()
                 dialog.ok(translation(30037), translation(30840))
                 adobe_activate_api.deauthorize()

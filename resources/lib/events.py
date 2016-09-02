@@ -7,7 +7,7 @@ def get_channel_list(include_premium):
     network_ids = []
     for network in networks:
         network_name = network.get('name')
-        if include_premium or network_name == 'espn3':
+        if include_premium or network_name == 'espn3' or network_name == 'accextra':
             network_ids.append(network_name)
     return network_ids
 
