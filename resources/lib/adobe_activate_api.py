@@ -265,7 +265,15 @@ def get_short_media_token(resource):
 
     message = generate_message('GET', path)
 
-    resp = get_url_response(url, message)
+    try:
+        resp = get_url_response(url, message)
+    except urllib2.HTTPError as exception:
+        if exception.code == 401:
+            xbmc.log(TAG + 'Unauthorized exception, trying again', xbmc.LOGDEBUG)
+            re_authenticate()
+            resp = get_url_response(url, message)
+        else:
+            raise exception
     settings = load_settings()
     settings['getShortMediaToken'] = resp
     save_settings(settings)
