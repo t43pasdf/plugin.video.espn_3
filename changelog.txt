@@ -1,7 +1,8 @@
 --------------------------------
-version 2.9.17 (August 2016)
+version 2.9.18 (September 2016)
 --------------------------------
 - Add in support for ACC Extra
+- Updated Goal Line text and settings
 
 --------------------------------
 version 2.9.14 (July 2016)
