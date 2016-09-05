@@ -109,7 +109,8 @@ NETWORK_ID_TO_NETWORK_NAME = {
     'sec': 30996,
     'longhorn': 30998,
     'accextra': 30989,
-    'goalline': 30988
+    'goalline': 30988,
+    'secplus': 30997
 }
 
 def get_setting_from_channel(channel):
