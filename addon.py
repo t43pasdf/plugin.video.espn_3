@@ -88,7 +88,8 @@ def PLAY_TV(args):
         event_name = args.get(EVENT_NAME)[0]
         event_guid = args.get(EVENT_GUID)[0]
         event_parental_rating = args.get(EVENT_PARENTAL_RATING)[0]
-        resource = adobe_activate_api.get_resource(network_name, event_name, event_guid, event_parental_rating)
+        channel_resource_id = args.get(CHANNEL_RESOURCE_ID)[0]
+        resource = adobe_activate_api.get_resource(channel_resource_id, event_name, event_guid, event_parental_rating)
     else:
         resource = resource[0]
 
@@ -104,7 +105,7 @@ def PLAY_TV(args):
             return
         try:
             # testing code raise urllib2.HTTPError(url='test', code=403, msg='no', hdrs=dict(), fp=None)
-            xbmc.log(TAG + ' getting media token', xbmc.LOGDEBUG)
+            xbmc.log(TAG + ' getting media token for resource %s' % resource, xbmc.LOGDEBUG)
             media_token = adobe_activate_api.get_short_media_token(resource)
         except urllib2.HTTPError as http_exception:
             xbmc.log(TAG + ' error getting media token %s' % http_exception, xbmc.LOGDEBUG)

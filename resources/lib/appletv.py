@@ -183,7 +183,8 @@ class AppleTV(MenuListing):
             'description' : description,
             'eventId' : stash_json['eventId'],
             'sessionUrl': stash_json['sessionUrl'],
-            'guid': stash_json['guid']
+            'guid': stash_json['guid'],
+            'channelResourceId': stash_json['channelResourceId']
         })
 
     def process_item_list(self, item_list):

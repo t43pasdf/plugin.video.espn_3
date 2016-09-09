@@ -213,6 +213,7 @@ class Legacy(MenuListing):
             'description': description,
             'eventId': event.get('id'),
             'sessionUrl': session_url,
-            'guid': event.find('guid').text
+            'guid': event.find('guid').text,
+            'channelResourceId': event.find('adobeResource').text
         })
 

@@ -240,6 +240,7 @@ def index_item(args):
                 authurl[EVENT_NAME] = args['eventName'].encode('iso-8859-1')
                 authurl[EVENT_GUID] = args['guid'].encode('iso-8859-1')
                 authurl[EVENT_PARENTAL_RATING] = mpaa
+                authurl[CHANNEL_RESOURCE_ID] = args['channelResourceId']
     fanart = args['imageHref']
 
     if include_item(network_id):
@@ -310,7 +311,9 @@ def index_listing(listing):
         'description': listing['keywords'],
         'eventId': listing['eventId'],
         'sessionUrl': listing['links']['source']['hls']['default']['href'],
-        'guid': listing['guid']
+        'guid': listing['guid'],
+        'channelResourceId': listing['broadcasts'][0]['adobeResource']
+
     })
 
 
