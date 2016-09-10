@@ -305,7 +305,7 @@ def index_listing(listing):
         'starttime': starttime,
         'duration': duration,
         'type': listing['type'],
-        'networkId': listing['broadcasts'][0]['adobeResource'],
+        'networkId': listing['broadcasts'][0]['abbreviation'],
         'networkName': listing['broadcasts'][0]['name'],
         'blackout': check_json_blackout(listing),
         'description': listing['keywords'],
