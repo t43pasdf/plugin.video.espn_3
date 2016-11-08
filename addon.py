@@ -109,7 +109,7 @@ def PLAY_TV(args):
             media_token = adobe_activate_api.get_short_media_token(resource)
         except urllib2.HTTPError as http_exception:
             xbmc.log(TAG + ' error getting media token %s' % http_exception, xbmc.LOGDEBUG)
-            if http_exception.code == 410 or http_exception.code == 404:
+            if http_exception.code == 410 or http_exception.code == 404 or http_exception.code == 401:
                 dialog = xbmcgui.Dialog()
                 dialog.ok(translation(30037), translation(30840))
                 adobe_activate_api.deauthorize()
@@ -247,7 +247,7 @@ if mode is not None and mode[0] == AUTHENTICATE_MODE:
                        translation(30350))
         if ok:
             try:
-                adobe_activate_api.authenticate()
+                adobe_activate_api.authenticate(regcode)
                 dialog.ok(translation(30310), translation(30370))
             except urllib2.HTTPError as e:
                 dialog.ok(translation(30037), translation(30420) % e)
@@ -306,6 +306,10 @@ if mode is None:
     except IOError as exception:
         xbmc.log('SSL certificate failure %s' % exception, xbmc.LOGDEBUG)
         xbmc.log('%s-%s-%s' % (exception.errno, exception.message, exception.strerror), xbmc.LOGDEBUG)
+        xbmc.log('err: %s' % err, xbmc.LOGDEBUG)
+        xbmc.log('repr(err): %s ' % repr(err), xbmc.LOGDEBUG)
+        xbmc.log('err.reason: %s' % err.reason, xbmc.LOGDEBUG)
+        xbmc.log('repr(err.reason): %s' % repr(err.reason), xbmc.LOGDEBUG)
         if '[SSL: CERTIFICATE_VERIFY_FAILED]' in str(exception.strerror):
             dialog = xbmcgui.Dialog()
             ok = dialog.yesno(translation(30037), translation(30910))

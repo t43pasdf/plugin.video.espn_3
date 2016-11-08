@@ -130,10 +130,6 @@ def is_reg_code_valid():
 # "appId":null,"appVersion":null,"registrationURL":null}}'
 # (generateRegCode)
 def get_regcode():
-    if is_reg_code_valid():
-        xbmc.log(TAG + 'Loading reg code from cache', xbmc.LOGDEBUG)
-        return load_settings()['generateRegCode']['code']
-
     params = urllib.urlencode(
         {'deviceId': get_device_id(),
          'deviceType': 'appletv',
@@ -156,16 +152,10 @@ def get_regcode():
 
 # Authenticates the user after they have been authenticated on the activation website (authenticateRegCode)
 # Sample: '{"mvpd":"","requestor":"ESPN","userId":"","expires":"1466208969000"}'
-def authenticate():
-    if not is_reg_code_valid():
-        xbmc.log(TAG + 'reg code is invalid', xbmc.LOGDEBUG)
-        raise ValueError('Registration code is invalid, please restart the authentication process')
-
-    reg_code = get_regcode()
-
+def authenticate(regcode):
     params = urllib.urlencode({'requestor': 'ESPN'})
 
-    path = '/authenticate/' + reg_code
+    path = '/authenticate/' + regcode
     url = urlparse.urlunsplit(['https', 'api.auth.adobe.com',
                                    'api/v1' + path,
                                    params, ''])
@@ -190,11 +180,13 @@ def re_authenticate():
 
     message = generate_message('GET', path)
 
+    xbmc.log(TAG + 'Attempting to re-authenticate the device', xbmc.LOGDEBUG)
     resp = get_url_response(url, message)
     settings = load_settings()
     settings['authenticateRegCode'] = resp
     if 'authorize' in settings:
         del settings['authorize']
+    xbmc.log(TAG + 'Re-authenticated device', xbmc.LOGDEBUG)
     save_settings(settings)
 
 
@@ -219,6 +211,7 @@ def authorize(resource):
     message = generate_message('GET', path)
 
     resp = get_url_response(url, message)
+
     settings = load_settings()
     if 'authorize' not in settings:
         settings['authorize'] = dict()
@@ -237,7 +230,10 @@ def deauthorize():
 
     message = generate_message('DELETE', path)
 
-    resp = get_url_response(url, message, body = None, method = 'DELETE')
+    try:
+        resp = get_url_response(url, message, body=None, method='DELETE')
+    except:
+        xbmc.log(TAG + 'De-authorize failed', xbmc.LOGDEBUG)
     settings = load_settings()
     if 'authorize' in settings:
         del settings['authorize']
@@ -253,7 +249,7 @@ def get_short_media_token(resource):
     if has_to_reauthenticate():
         xbmc.log(TAG + 're-authenticating device', xbmc.LOGDEBUG)
         re_authenticate()
-    authorize(resource)
+
     params = urllib.urlencode({'requestor': 'ESPN',
                                'deviceId' : get_device_id(),
                                'resource' : resource})
@@ -266,13 +262,16 @@ def get_short_media_token(resource):
     message = generate_message('GET', path)
 
     try:
+        authorize(resource)
         resp = get_url_response(url, message)
     except urllib2.HTTPError as exception:
         if exception.code == 401:
             xbmc.log(TAG + 'Unauthorized exception, trying again', xbmc.LOGDEBUG)
             re_authenticate()
+            authorize(resource)
             resp = get_url_response(url, message)
         else:
+            xbmc.log(TAG + 'Rethrowing exception %s' % exception, xbmc.LOGDEBUG)
             raise exception
     settings = load_settings()
     settings['getShortMediaToken'] = resp
