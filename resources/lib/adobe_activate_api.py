@@ -11,6 +11,7 @@ import gzip
 import os
 import cookielib
 from StringIO import StringIO
+import requests
 
 import xbmc
 from globals import ADDON_PATH_PROFILE
@@ -19,22 +20,14 @@ SETTINGS_FILE = 'adobe.json'
 UA_ATV = 'AppleCoreMedia/1.0.0.13Y234 (Apple TV; U; CPU OS 9_2 like Mac OS X; en_us)'
 TAG = 'ESPN3-adobe-api: '
 
-
-# Fixes an issue with 32bit systems not supporting times after 2038
-def save_cookies(cj):
-    for cookie in cj:
-        if cookie.expires > 2000000000:
-            cookie.expires = 2000000000
-    cj.save(os.path.join(ADDON_PATH_PROFILE, 'adobe-cookies.lwp'), ignore_discard=True, ignore_expires=True)
-
-
-def get_cookie_jar():
-    cj = cookielib.LWPCookieJar()
-    if not os.path.isfile(os.path.join(ADDON_PATH_PROFILE, 'adobe-cookies.lwp')):
-        save_cookies(cj)
-    else:
-        cj.load(os.path.join(ADDON_PATH_PROFILE, 'adobe-cookies.lwp'), ignore_discard=True)
-    return cj
+adobe_session = requests.Session()
+adobe_session.headers.update({
+    'Accept': 'application/json',
+    'Accept-Encoding': 'gzip, deflate',
+    'Accept-Language': 'en-us',
+    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+    'User-Agent': UA_ATV
+})
 
 
 def reset_settings():
@@ -63,40 +56,19 @@ def get_device_id():
     return settings['device_id']
 
 
-def read_response(resp):
-    if resp.info().get('Content-Encoding') == 'gzip':
-        buf = StringIO(resp.read())
-        f = gzip.GzipFile(fileobj=buf)
-        content = f.read()
-    else:
-        content = resp.read()
-    return json.loads(content)
-
-
 def is_expired(expiration):
     return (time.time() * 1000) >= int(expiration)
 
 
-def get_url_response(url, message, body = None, method = None):
+def get_url_response(url, message, body=None, method=None):
     # xbmc.log(TAG + 'url %s message %s' % (url, message), xbmc.LOGDEBUG)
-    cj = get_cookie_jar()
-    opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
-    opener.addheaders = [ ("Accept", "application/json"),
-                            ("Accept-Encoding", "gzip, deflate"),
-                            ("Accept-Language", "en-us"),
-                            ("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8"),
-                            ("Connection", "close"),
-                            ("User-Agent", UA_ATV),
-                            ("Authorization", message)]
+    headers = {'Authorization': message}
+
     if method == 'DELETE':
-        request = urllib2.Request(url)
-        request.get_method = lambda: method
-        resp = opener.open(request)
+        resp = requests.delete(url, headers=headers)
     else:
-        resp = opener.open(url, body)
-        resp = read_response(resp)
-    save_cookies(cj)
-    return resp
+        resp = adobe_session.get(url, headers=headers)
+    return resp.json()
 
 
 def generate_message(method, path):

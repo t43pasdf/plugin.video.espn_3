@@ -2,6 +2,7 @@ import os
 import sys
 import xbmc
 import xbmcaddon
+import requests
 
 selfAddon = xbmcaddon.Addon()
 addon_data_path = xbmc.translatePath(selfAddon.getAddonInfo('path')).decode('utf-8')
@@ -42,6 +43,7 @@ def CLEAR_SAVED_DATA():
 if selfAddon.getSetting('ClearData') == 'true':
     CLEAR_SAVED_DATA()
 
+global_session = requests.Session()
+
 if selfAddon.getSetting('DisableSSL') == 'true':
-    import ssl
-    ssl._create_default_https_context = ssl._create_unverified_context
+    global_session.verify = False
