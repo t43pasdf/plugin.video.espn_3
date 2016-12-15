@@ -126,6 +126,13 @@ def PLAY_TV(args):
                 return
             else:
                 raise http_exception
+        except adobe_activate_api.AuthorizationException as exception:
+            xbmc.log(TAG + ' Error authorizating media token %s' % exception, xbmc.LOGDEBUG)
+            dialog = xbmcgui.Dialog()
+            dialog.ok(translation(30037), translation(30840))
+            adobe_activate_api.deauthorize()
+            xbmcplugin.endOfDirectory(pluginhandle, succeeded=False, updateListing=True)
+            return
 
         token_type = 'ADOBEPASS'
     else:

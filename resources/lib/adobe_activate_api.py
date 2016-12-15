@@ -30,6 +30,10 @@ adobe_session.headers.update({
 })
 
 
+class AuthorizationException(Exception):
+    pass
+
+
 def reset_settings():
     save_settings(dict())
 
@@ -66,8 +70,11 @@ def get_url_response(url, message, body=None, method=None):
 
     if method == 'DELETE':
         resp = requests.delete(url, headers=headers)
+    elif method == 'POST':
+        resp = adobe_session.post(url, headers=headers)
     else:
         resp = adobe_session.get(url, headers=headers)
+    # xbmc.log(TAG + 'resp %s ' % (resp.text), xbmc.LOGDEBUG)
     return resp.json()
 
 
@@ -114,7 +121,7 @@ def get_regcode():
 
     message = generate_message('POST', path)
 
-    resp = get_url_response(url, message, dict())
+    resp = get_url_response(url, message, dict(), 'POST')
 
     settings = load_settings()
     settings['generateRegCode'] = resp
@@ -154,6 +161,8 @@ def re_authenticate():
 
     xbmc.log(TAG + 'Attempting to re-authenticate the device', xbmc.LOGDEBUG)
     resp = get_url_response(url, message)
+    if 'status' in resp and resp['status'] == '410':
+        raise AuthorizationException()
     settings = load_settings()
     settings['authenticateRegCode'] = resp
     if 'authorize' in settings:
@@ -188,6 +197,8 @@ def authorize(resource):
     if 'authorize' not in settings:
         settings['authorize'] = dict()
     xbmc.log(TAG + 'resource %s' % resource, xbmc.LOGDEBUG)
+    if 'status' in resp and resp['status'] == 403:
+        raise AuthorizationException()
     settings['authorize'][resource.decode('iso-8859-1').encode('utf-8')] = resp
     save_settings(settings)
 
@@ -236,6 +247,8 @@ def get_short_media_token(resource):
     try:
         authorize(resource)
         resp = get_url_response(url, message)
+        if 'status' in resp and resp['status'] == 403:
+            raise AuthorizationException()
     except urllib2.HTTPError as exception:
         if exception.code == 401:
             xbmc.log(TAG + 'Unauthorized exception, trying again', xbmc.LOGDEBUG)
@@ -245,6 +258,14 @@ def get_short_media_token(resource):
         else:
             xbmc.log(TAG + 'Rethrowing exception %s' % exception, xbmc.LOGDEBUG)
             raise exception
+    except AuthorizationException as exception:
+        xbmc.log(TAG + 'Authorization exception, trying again', xbmc.LOGDEBUG)
+        re_authenticate()
+        authorize(resource)
+        resp = get_url_response(url, message)
+        if 'status' in resp and resp['status'] == 403:
+            raise AuthorizationException()
+    xbmc.log(TAG + 'Resp %s' % resp, xbmc.LOGDEBUG)
     settings = load_settings()
     settings['getShortMediaToken'] = resp
     save_settings(settings)
@@ -258,7 +279,9 @@ def is_authenticated():
 
 def has_to_reauthenticate():
     settings = load_settings()
-    return is_expired(settings['authenticateRegCode']['expires'])
+    if 'authenticateRegCode' in settings and 'expires' in settings['authenticateRegCode']:
+        return is_expired(settings['authenticateRegCode']['expires'])
+    return True
 
 
 def is_authorized(resource):
