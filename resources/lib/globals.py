@@ -36,6 +36,8 @@ def CLEAR_SAVED_DATA():
             for currentFile in files:
                 if currentFile.lower().endswith('.xml') and not currentFile.lower() == 'settings.xml':
                     os.remove(os.path.join(ADDON_PATH_PROFILE, currentFile))
+                if currentFile.lower().endswith('.json') and not currentFile.lower() == 'adobe.json':
+                    os.remove(os.path.join(ADDON_PATH_PROFILE, currentFile))
     except:
         pass
     selfAddon.setSetting(id='ClearData', value='false')

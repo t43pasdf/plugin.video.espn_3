@@ -220,10 +220,11 @@ class AppleTV(MenuListing):
                            dict(SHOWCASE_URL=url, MODE=self.make_mode(CATEGORY_SHOWCASE_MODE)),
                            image, image)
                 else:
-                    stash = stash_element.text.encode('utf-8')
+                    stash = stash_element.text.encode('ISO-8859-1')
+                    xbmc.log(TAG + 'Stash Data %s' % (stash), xbmc.LOGDEBUG)
                     # Some of the json is baddly formatted
                     stash = re.sub(r'\s+"', '"', stash)
-                    stash_json = json.loads(stash, 'utf-8')
+                    stash_json = json.loads(stash) #, 'utf-8')
                     stash_json['internal_item'] = item
                     stashes.append(stash_json)
 

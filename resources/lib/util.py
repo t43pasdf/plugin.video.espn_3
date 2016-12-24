@@ -22,9 +22,9 @@ def is_file_valid(cache_file, timeout):
     return False
 
 
-def fetch_file(url, cache_file):
+def fetch_file(url, cache_file, encoding):
     resp = global_session.get(url)
-    with codecs.open(cache_file, 'w', 'utf-8') as file:
+    with codecs.open(cache_file, 'w', encoding) as file:
         file.write(resp.text)
 
 
@@ -41,13 +41,13 @@ def clear_cache(url):
         pass
 
 
-def get_url_as_xml_cache(url, cache_file=None, timeout=300):
+def get_url_as_xml_cache(url, cache_file=None, timeout=300, encoding='utf-8'):
     if cache_file is None:
         cache_file = hashlib.sha224(url).hexdigest()
         cache_file = os.path.join(ADDON_PATH_PROFILE, cache_file + '.xml')
     if not is_file_valid(cache_file, timeout):
         xbmc.log(TAG + 'Fetching config file %s from %s' % (cache_file, url), xbmc.LOGDEBUG)
-        fetch_file(url, cache_file)
+        fetch_file(url, cache_file, encoding)
     else:
         xbmc.log(TAG + 'Using cache %s for %s' % (cache_file, url), xbmc.LOGDEBUG)
     with open(cache_file) as xml_file:
@@ -89,7 +89,7 @@ def get_url_as_json_cache(url, cache_file=None, timeout=300):
         cache_file = os.path.join(ADDON_PATH_PROFILE, cache_file + '.json')
     if not is_file_valid(cache_file, timeout):
         xbmc.log(TAG + 'Fetching config file %s from %s' % (cache_file, url), xbmc.LOGDEBUG)
-        fetch_file(url, cache_file)
+        fetch_file(url, cache_file, 'utf-8')
     else:
         xbmc.log(TAG + 'Using cache %s for %s' % (cache_file, url), xbmc.LOGDEBUG)
 
