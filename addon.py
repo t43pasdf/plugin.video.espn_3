@@ -313,10 +313,6 @@ if mode is None:
     except IOError as exception:
         xbmc.log('SSL certificate failure %s' % exception, xbmc.LOGDEBUG)
         xbmc.log('%s-%s-%s' % (exception.errno, exception.message, exception.strerror), xbmc.LOGDEBUG)
-        xbmc.log('err: %s' % err, xbmc.LOGDEBUG)
-        xbmc.log('repr(err): %s ' % repr(err), xbmc.LOGDEBUG)
-        xbmc.log('err.reason: %s' % err.reason, xbmc.LOGDEBUG)
-        xbmc.log('repr(err.reason): %s' % repr(err.reason), xbmc.LOGDEBUG)
         if '[SSL: CERTIFICATE_VERIFY_FAILED]' in str(exception.strerror):
             dialog = xbmcgui.Dialog()
             ok = dialog.yesno(translation(30037), translation(30910))
