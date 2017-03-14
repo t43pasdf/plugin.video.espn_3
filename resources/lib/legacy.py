@@ -170,6 +170,7 @@ class Legacy(MenuListing):
                        defaultlive)
 
     def index_event(self, event, live, upcoming, replay, chosen_sport):
+        xbmc.log(TAG + ' processing event %s' % event.get('id'), xbmc.LOGDEBUG)
         networkId = event.find('networkId').text
         networkName = ''
         if networkId is not None:
@@ -185,7 +186,8 @@ class Legacy(MenuListing):
         session_url = base64.b64decode(
             'aHR0cDovL2Jyb2FkYmFuZC5lc3BuLmdvLmNvbS9lc3BuMy9hdXRoL3dhdGNoZXNwbi9zdGFydFNlc3Npb24/')
         session_url += 'channel=' + networkName
-        session_url += '&simulcastAiringId=' + event.find('simulcastAiringId').text
+        if (event.find('simulcastAiringId')):
+            session_url += '&simulcastAiringId=' + event.find('simulcastAiringId').text
 
         description = event.find('summary').text
         if description is None or len(description) == 0:
