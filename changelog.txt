@@ -1,5 +1,5 @@
 --------------------------------
-version 2.9.27 (March 2017)
+version 2.9.28 (March 2017)
 --------------------------------
 - SSL Fixes
 - Fixed an issue with missing XML elements
