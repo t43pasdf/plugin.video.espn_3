@@ -186,7 +186,7 @@ class Legacy(MenuListing):
         session_url = base64.b64decode(
             'aHR0cDovL2Jyb2FkYmFuZC5lc3BuLmdvLmNvbS9lc3BuMy9hdXRoL3dhdGNoZXNwbi9zdGFydFNlc3Npb24/')
         session_url += 'channel=' + networkName
-        if event.find('simulcastAiringId') is not None:
+        if event.find('simulcastAiringId') is not None and event.find('simulcastAiringId').text is not None:
             session_url += '&simulcastAiringId=' + event.find('simulcastAiringId').text
 
         description = event.find('summary').text
