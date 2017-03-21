@@ -181,7 +181,7 @@ def PLAY_TV(args):
         return xbmcplugin.setResolvedUrl(pluginhandle, True, item)
 
     success = True
-    if m3u8_obj.is_variant:
+    if False and m3u8_obj.is_variant:
         stream_options = list()
         bandwidth_key = 'bandwidth'
         m3u8_obj.playlists.sort(key=lambda playlist: playlist.stream_info.bandwidth, reverse=True)
@@ -227,9 +227,13 @@ def PLAY_TV(args):
 
         xbmc.log(TAG + 'Chose stream %d' % stream_index, xbmc.LOGDEBUG)
         item = xbmcgui.ListItem(path=m3u8_obj.playlists[stream_index].uri)
+        item.setProperty('inputstreamaddon', 'inputstream.hls')
+        item.setProperty('inputstream.hls.manifest_type', 'hls')
         xbmcplugin.setResolvedUrl(pluginhandle, success, item)
     else:
         item = xbmcgui.ListItem(path=playback_url)
+        item.setProperty('inputstreamaddon', 'inputstream.hls')
+        item.setProperty('inputstream.hls.manifest_type', 'hls')
         xbmcplugin.setResolvedUrl(pluginhandle, success, item)
 
 base_url = sys.argv[0]
