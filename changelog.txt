@@ -1,4 +1,15 @@
 --------------------------------
+version 2.9.30 (June 2017)
+--------------------------------
+- Support for inputstream.hls (when installed)
+
+--------------------------------
+version 2.9.28 (March 2017)
+--------------------------------
+- SSL Fixes
+- Fixed an issue with missing XML elements
+
+--------------------------------
 version 2.9.25 (December 2016)
 --------------------------------
 - SSL Fixes

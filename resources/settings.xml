@@ -38,5 +38,6 @@
         <setting id="NoColors" type="bool" label="30770" default="false"/>
         <setting id="ClearData" type="bool" label="30170" default="false"/>
         <setting id="DisableSSL" type="bool" label="30180" default="false"/>
+        <setting id="DisableInputStream" type="bool" label="30185" default="true"/>
     </category>
 </settings>
