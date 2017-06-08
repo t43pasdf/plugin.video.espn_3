@@ -181,55 +181,65 @@ def PLAY_TV(args):
         return xbmcplugin.setResolvedUrl(pluginhandle, True, item)
 
     success = True
-    if m3u8_obj.is_variant:
-        stream_options = list()
-        bandwidth_key = 'bandwidth'
-        m3u8_obj.playlists.sort(key=lambda playlist: playlist.stream_info.bandwidth, reverse=True)
-        m3u8_obj.data['playlists'].sort(key=lambda playlist: int(playlist['stream_info'][bandwidth_key]), reverse=True)
-        stream_quality_index = str(selfAddon.getSetting('StreamQualityIndex'))
-        stream_index = None
-        should_ask = False
-        try:
-            stream_index = int(stream_quality_index)
-            if stream_index < 0 or stream_index >= len(m3u8_obj.playlists):
-                should_ask = True
-        except:
-            should_ask = True
-        if '0' == stream_quality: # Best
-            stream_index = 0
-            should_ask = False
-            for playlist in m3u8_obj.data['playlists']:
-                stream_info = playlist['stream_info']
-                bandwidth = int(stream_info[bandwidth_key]) / 1024
-                if bandwidth <= bitrate_limit:
-                    break
-                stream_index += 1
-        elif '2' == stream_quality: #Ask everytime
-            should_ask = True
-        if should_ask:
-            for playlist in m3u8_obj.data['playlists']:
-                stream_info = playlist['stream_info']
-                resolution = stream_info['resolution']
-                frame_rate = stream_info['frame_rate']
-                bandwidth = int(stream_info[bandwidth_key]) / 1024
-                if 'average_bandwidth' in stream_info:
-                    xbmc.log(TAG + 'bandwidth: %s average bandwidth: %s' %
-                             (stream_info['bandwidth'], stream_info['average_bandwidth']), xbmc.LOGDEBUG)
-                stream_options.append(translation(30450) % (resolution,
-                                                      frame_rate,
-                                                      bandwidth))
-            dialog = xbmcgui.Dialog()
-            stream_index = dialog.select(translation(30440), stream_options)
-            if stream_index < 0:
-                success = False
-            else:
-                selfAddon.setSetting(id='StreamQualityIndex', value=str(stream_index))
 
-        xbmc.log(TAG + 'Chose stream %d' % stream_index, xbmc.LOGDEBUG)
-        item = xbmcgui.ListItem(path=m3u8_obj.playlists[stream_index].uri)
-        xbmcplugin.setResolvedUrl(pluginhandle, success, item)
+    use_inputstream_addon = selfAddon.getSetting('DisableInputStream') == 'false'
+
+    if not use_inputstream_addon:
+        if m3u8_obj.is_variant:
+            stream_options = list()
+            bandwidth_key = 'bandwidth'
+            m3u8_obj.playlists.sort(key=lambda playlist: playlist.stream_info.bandwidth, reverse=True)
+            m3u8_obj.data['playlists'].sort(key=lambda playlist: int(playlist['stream_info'][bandwidth_key]), reverse=True)
+            stream_quality_index = str(selfAddon.getSetting('StreamQualityIndex'))
+            stream_index = None
+            should_ask = False
+            try:
+                stream_index = int(stream_quality_index)
+                if stream_index < 0 or stream_index >= len(m3u8_obj.playlists):
+                    should_ask = True
+            except:
+                should_ask = True
+            if '0' == stream_quality:  # Best
+                stream_index = 0
+                should_ask = False
+                for playlist in m3u8_obj.data['playlists']:
+                    stream_info = playlist['stream_info']
+                    bandwidth = int(stream_info[bandwidth_key]) / 1024
+                    if bandwidth <= bitrate_limit:
+                        break
+                    stream_index += 1
+            elif '2' == stream_quality: #Ask everytime
+                should_ask = True
+            if should_ask:
+                for playlist in m3u8_obj.data['playlists']:
+                    stream_info = playlist['stream_info']
+                    resolution = stream_info['resolution']
+                    frame_rate = stream_info['frame_rate']
+                    bandwidth = int(stream_info[bandwidth_key]) / 1024
+                    if 'average_bandwidth' in stream_info:
+                        xbmc.log(TAG + 'bandwidth: %s average bandwidth: %s' %
+                                 (stream_info['bandwidth'], stream_info['average_bandwidth']), xbmc.LOGDEBUG)
+                    stream_options.append(translation(30450) % (resolution,
+                                                          frame_rate,
+                                                          bandwidth))
+                dialog = xbmcgui.Dialog()
+                stream_index = dialog.select(translation(30440), stream_options)
+                if stream_index < 0:
+                    success = False
+                else:
+                    selfAddon.setSetting(id='StreamQualityIndex', value=str(stream_index))
+
+            xbmc.log(TAG + 'Chose stream %d' % stream_index, xbmc.LOGDEBUG)
+            item = xbmcgui.ListItem(path=m3u8_obj.playlists[stream_index].uri)
+            xbmcplugin.setResolvedUrl(pluginhandle, success, item)
+        else:
+            item = xbmcgui.ListItem(path=playback_url)
+            xbmcplugin.setResolvedUrl(pluginhandle, success, item)
     else:
+        xbmc.log(TAG + 'Using inputstream.hls addon', xbmc.LOGDEBUG)
         item = xbmcgui.ListItem(path=playback_url)
+        item.setProperty('inputstreamaddon', 'inputstream.hls')
+        item.setProperty('inputstream.hls.manifest_type', 'hls')
         xbmcplugin.setResolvedUrl(pluginhandle, success, item)
 
 base_url = sys.argv[0]

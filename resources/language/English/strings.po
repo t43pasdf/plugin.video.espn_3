@@ -80,6 +80,10 @@ msgctxt "#30180"
 msgid "Disable SSL Certificate checks (Unsafe)"
 msgstr ""
 
+msgctxt "#30185"
+msgid "Disable InputStream"
+msgstr ""
+
 msgctxt "#30190"
 msgid "ESPN3 (%d events)"
 msgstr ""

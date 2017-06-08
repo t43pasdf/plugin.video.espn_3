@@ -3,6 +3,7 @@ import sys
 import xbmc
 import xbmcaddon
 import requests
+import json
 
 selfAddon = xbmcaddon.Addon()
 addon_data_path = xbmc.translatePath(selfAddon.getAddonInfo('path')).decode('utf-8')
@@ -49,3 +50,23 @@ global_session = requests.Session()
 
 if selfAddon.getSetting('DisableSSL') == 'true':
     global_session.verify = False
+
+if selfAddon.getSetting('DisableInputStream') == 'false':
+    # Check that it is enabled
+    addon_id = 'inputstream.hls'
+    rpc_request = json.dumps({"jsonrpc": "2.0",
+                              "method": "Addons.GetAddonDetails",
+                              "id": 1,
+                              "params": {"addonid": "%s" % addon_id,
+                                         "properties": ["enabled"]}
+                              })
+    response = json.loads(xbmc.executeJSONRPC(rpc_request))
+    try:
+        if response['result']['addon']['enabled'] is False:
+            selfAddon.setSetting(id='DisableInputStream', value='true')
+    except KeyError:
+        message = response['error']['message']
+        code = response['error']['code']
+        error = 'Requested |%s| received error |%s| and code: |%s|' % (rpc_request, message, code)
+        xbmc.log(error, xbmc.LOGDEBUG)
+        selfAddon.setSetting(id='DisableInputStream', value='true')
