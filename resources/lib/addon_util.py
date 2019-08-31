@@ -97,7 +97,8 @@ CHANNEL_SETTINGS = {
     'ShowLonghorn': 'longhorn',
     'ShowBuzzerBeater': 'buzzerbeater',
     'ShowAccExtra': 'accextra',
-    'ShowGoalLine': 'goalline'
+    'ShowGoalLine': 'goalline',
+    'ShowAcc': 'acc',
 }
 NETWORK_ID_TO_NETWORK_NAME = {
     'espn1': 30990,
@@ -110,7 +111,8 @@ NETWORK_ID_TO_NETWORK_NAME = {
     'longhorn': 30998,
     'accextra': 30989,
     'goalline': 30988,
-    'secplus': 30997
+    'secplus': 30997,
+    'acc': 31000,
 }
 
 def get_setting_from_channel(channel):

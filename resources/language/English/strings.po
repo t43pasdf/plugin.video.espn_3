@@ -347,3 +347,6 @@ msgctxt "#30999"
 msgid "Buzzer Beater"
 msgstr ""
 
+msgctxt "#31000"
+msgid "ACC"
+msgstr ""
