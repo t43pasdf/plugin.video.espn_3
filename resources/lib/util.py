@@ -1,5 +1,3 @@
-#!/usr/bin/python2
-
 import xbmc
 import os
 import time

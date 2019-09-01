@@ -1,20 +1,17 @@
-import sys
-import urllib
 import base64
-import m3u8
+import sys
 import time
+import urllib
 
 import xbmc
 import xbmcgui
 import xbmcplugin
 
 import adobe_activate_api
-import util
 import player_config
-import events
-from globals import defaultfanart, pluginhandle, selfAddon, translation
+import util
 from constants import *
-
+from globals import defaultfanart, pluginhandle, selfAddon, translation
 
 TAG = 'Addon_Util: '
 

@@ -1,16 +1,9 @@
 import json
 import re
-import time
-
-import xbmcplugin
 import xml.etree.ElementTree as ET
 
-import util
-import player_config
-import adobe_activate_api
-from globals import selfAddon, defaultlive, defaultreplay, defaultupcoming, \
-    defaultimage, defaultfanart, translation, pluginhandle
 from addon_util import *
+from globals import defaultlive, defaultimage
 from menu_listing import *
 from register_mode import RegisterMode
 

@@ -1,12 +1,5 @@
-import time
-import base64
-
-import xbmcplugin
-
-import util
-import adobe_activate_api
-from globals import defaultlive, defaultfanart, translation, pluginhandle
 from addon_util import *
+from globals import defaultlive
 from menu_listing import *
 from register_mode import RegisterMode
 

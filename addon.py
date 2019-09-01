@@ -4,30 +4,18 @@
 # Written by Ksosez, BlueCop, Romans I XVI, locomot1f, MetalChris, awaters1 (https://github.com/awaters1)
 # Released under GPL(v2)
 
-import base64
 import json
-import re
-import time
-import urllib
 import urllib2
 import urlparse
 
-
-import xbmcgui
-import xbmcplugin
-
-from resources.lib import util
-from resources.lib import adobe_activate_api
-from resources.lib.globals import selfAddon, defaultlive, defaultreplay, defaultupcoming, defaultimage, defaultfanart, translation, pluginhandle, UA_PC
-from resources.lib.constants import *
-from resources.lib.addon_util import *
-
-from resources.lib import legacy
-from resources.lib import appletv
-from resources.lib import tvos
-from resources.lib import roku
 from resources.lib import androidtv
+from resources.lib import appletv
 from resources.lib import events
+from resources.lib import legacy
+from resources.lib import roku
+from resources.lib import tvos
+from resources.lib.addon_util import *
+from resources.lib.globals import defaultlive, defaultreplay, UA_PC
 
 TAG = 'ESPN3: '
 
