@@ -51,9 +51,9 @@ def index():
         channel_list = events.get_channel_list(include_premium)
         util.clear_cache(events.get_live_events_url(channel_list))
     if not adobe_activate_api.is_authenticated():
-        addDir('[COLOR=FFFF0000]' + translation(30300) + '[/COLOR]',
-               dict(MODE=AUTHENTICATE_MODE),
-               defaultreplay)
+        addDirectoryItem(plugin.handle,
+                         plugin.url_for(authenticate),
+                         ListItem('[COLOR=FFFF0000]' + translation(30300) + '[/COLOR]'))
     current_time = time.strftime("%I:%M %p", time.localtime(time.time()))
     addDirectoryItem(plugin.handle, plugin.url_for(index, refresh=True),
                      ListItem(translation(30850) % current_time), True)
@@ -108,7 +108,7 @@ def authenticate():
                 dialog.ok(translation(30310), translation(30370))
             except urllib2.HTTPError as e:
                 dialog.ok(translation(30037), translation(30420) % e)
-    plugin.run('/?refresh')
+    plugin.run('/?refresh=True&clear-cache=True')
 
 
 @plugin.route('/authentication-details')
