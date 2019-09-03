@@ -19,7 +19,6 @@ import logging
 import legacy
 
 from plugin_routing import *
-from resources.lib import androidtv
 from resources.lib import appletv
 from resources.lib import events
 from resources.lib import roku
@@ -29,11 +28,14 @@ from resources.lib.globals import defaultlive, defaultreplay, UA_PC
 from resources.lib import kodilogging
 import adobe_activate_api
 from resources.lib.legacy import legacy_root_menu
+from page_api import page_api_url
+
 
 TAG = 'ESPN3: '
 ADDON = xbmcaddon.Addon()
 logger = logging.getLogger(ADDON.getAddonInfo('id'))
 kodilogging.config()
+
 
 @plugin.route('/')
 def index():
@@ -60,7 +62,9 @@ def index():
     espn_url = events.get_live_events_url(channel_list)
     legacy.index_legacy_live_events(espn_url)
     if get_setting_as_bool('ShowAndroidTVMenu'):
-        addDirectoryItem(plugin.handle, plugin.url_for(android_tv_root_menu),
+        url = base64.b64decode(
+            'aHR0cHM6Ly93YXRjaC5wcm9kdWN0LmFwaS5lc3BuLmNvbS9hcGkvcHJvZHVjdC92MS9hbmRyb2lkL3R2L2hvbWU=')
+        addDirectoryItem(plugin.handle, plugin.url_for(page_api_url, url=url),
                          ListItem(translation(30780)), True)
     # if selfAddon.getSetting('ShowAppleTVMenu') == 'true':
     #     addDir(translation(30730),
@@ -83,12 +87,6 @@ def index():
            ListItem('[COLOR=FF00FF00]' + translation(30380) + '[/COLOR]'))
     endOfDirectory(plugin.handle, updateListing=refresh, cacheToDisc=False)
 
-@plugin.route('/upcoming-event')
-def upcoming_event():
-    logger.debug('Upcoming event chosen')
-    dialog = xbmcgui.Dialog()
-    dialog.ok(translation(30035), translation(30036))
-    xbmcplugin.endOfDirectory(plugin.handle, succeeded=False, updateListing=True)
 
 @plugin.route('/authenticate')
 def authenticate():
@@ -112,6 +110,7 @@ def authenticate():
                 dialog.ok(translation(30037), translation(30420) % e)
     plugin.run('/?refresh')
 
+
 @plugin.route('/authentication-details')
 def authentication_details():
     dialog = xbmcgui.Dialog()
@@ -125,26 +124,6 @@ def authentication_details():
         adobe_activate_api.deauthorize()
     plugin.run('/?refresh')
 
-@plugin.route('/page-api/<path:url>')
-def page_api(url):
-    paths = url.split('/')
-    if len(paths) > 2:
-        root = paths[1]
-        path = paths[2]
-        xbmc.log(TAG + 'root: %s path: %s' % (root, path), xbmc.LOGDEBUG)
-        for class_def in (appletv.AppleTV, legacy.Legacy, tvos.TVOS, roku.Roku, androidtv.AndroidTV):
-            class_root = getattr(getattr(class_def, '__init__'), 'mode')
-            xbmc.log(TAG + 'class root: %s' % class_root, xbmc.LOGDEBUG)
-            if root == class_root:
-                for method_name in dir(class_def):
-                    method = getattr(class_def, method_name)
-                    xbmc.log(TAG + 'Looking at method %s' % method_name, xbmc.LOGDEBUG)
-                    if hasattr(method, 'mode'):
-                        method_mode = getattr(method, 'mode')
-                        xbmc.log(TAG + 'Found method with mode %s' % method_mode, xbmc.LOGDEBUG)
-                        if method_mode == path:
-                            xbmc.log(TAG + 'Executing method', xbmc.LOGDEBUG)
-                            getattr(class_def(), method_name)(url)
 
 # if mode is None:
 #

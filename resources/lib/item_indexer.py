@@ -97,16 +97,17 @@ def index_item(args):
     fanart = args['imageHref']
     authurl = dict()
     if args['type'] == 'upcoming':
-        authurl[MODE] = UPCOMING_MODE
+        addDirectoryItem(plugin.handle,
+                         plugin.url_for(upcoming_event),
+                         make_list_item(ename, icon=fanart, infoLabels=infoLabels))
     else:
         adobeRSS = args['adobeRSS'] if 'adobeRSS' in args else None
         guid = args['guid'] if 'guid' in args else None
         if adobeRSS is None and guid is None:
-            authurl[PLAYBACK_URL] = args['sessionUrl']
-            authurl[MODE] = PLAY_ITEM_MODE
+            addDirectoryItem(plugin.handle,
+                             plugin.url_for(PLAY_ITEM, url=args['sessionUrl']),
+                             make_list_item(ename, icon=fanart, infoLabels=infoLabels))
         else:
-            authurl[SESSION_URL] = args['sessionUrl']
-            authurl[NETWORK_NAME] = args['networkId']
             if 'adobeRSS' in args:
                 adobe_rss = args['adobeRSS']
             else:
@@ -123,6 +124,7 @@ def index_item(args):
                                  make_list_item(ename, icon=fanart, infoLabels=infoLabels))
             else:
                 logging.debug('Skipping %s' % args['networkId'])
+
 
 def index_listing(listing):
     # 2016-06-06T18:00:00EDT

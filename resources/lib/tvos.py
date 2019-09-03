@@ -71,6 +71,7 @@ class TVOS(MenuListing):
                     bucket_list.append(bucket_arg)
                     self.parse_json(dict(BUCKET=bucket_list), url)
 
+    # REPLACE WITH page_api
     def process_buckets(self, url, buckets, selected_buckets, current_bucket_path):
         selected_bucket = None if selected_buckets is None or len(selected_buckets) == 0 else selected_buckets[0]
         xbmc.log(TAG + 'Selected buckets: %s Current Path: %s' % (selected_buckets, current_bucket_path), xbmc.LOGDEBUG)
@@ -107,6 +108,7 @@ class TVOS(MenuListing):
                                 self.index_content(content)
                                 xbmcplugin.setContent(plugin.handle, 'episodes')
 
+    # REPLACE WITH page_api
     def parse_json(self, args, url):
         xbmc.log(TAG + 'Looking at url %s %s' % (url, args), xbmc.LOGDEBUG)
         selected_bucket = args.get(BUCKET, None)
@@ -154,6 +156,8 @@ class TVOS(MenuListing):
             'adobeRSS': content['adobeRSS'] if 'adobeRSS' in content else None
         })
 
+
+# duplicated in page_api
 def get_time(content):
     starttime = None
     if 'date' in content and 'time' in content:
@@ -166,6 +170,7 @@ def get_time(content):
         starttime = time.strptime(year + ' ' + content['date'] + ' ' + time_part, '%Y %A, %B %d %I:%M %p')
     return starttime
 
+# duplicated in page api
 def compare_tvos(l, r):
     lnetwork = l['source'] if 'source' in l else None
     rnetwork = r['source'] if 'source' in r else None

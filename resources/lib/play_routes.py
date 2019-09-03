@@ -11,10 +11,11 @@ from resources.lib.globals import UA_PC
 import adobe_activate_api
 
 @plugin.route('/play-item')
-def PLAY_ITEM(args):
-    url = args.get(PLAYBACK_URL)[0]
+def PLAY_ITEM():
+    url = arg_as_string('url')
     item = xbmcgui.ListItem(path=url)
     return setResolvedUrl(plugin.handle, True, item)
+
 
 # Cookie is only needed when authenticating with espn broadband as opposed to uplynk
 #ua UA_PC
@@ -170,3 +171,11 @@ def PLAY_TV(event_id):
         item.setProperty('inputstreamaddon', 'inputstream.hls')
         item.setProperty('inputstream.hls.manifest_type', 'hls')
         xbmcplugin.setResolvedUrl(plugin.handle, success, item)
+
+
+@plugin.route('/upcoming-event')
+def upcoming_event():
+    logging.debug('Upcoming event chosen')
+    dialog = xbmcgui.Dialog()
+    dialog.ok(translation(30035), translation(30036))
+    xbmcplugin.endOfDirectory(plugin.handle, succeeded=False, updateListing=True)
