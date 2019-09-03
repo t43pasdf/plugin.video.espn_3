@@ -39,5 +39,6 @@
         <setting id="ClearData" type="bool" label="30170" default="false"/>
         <setting id="DisableSSL" type="bool" label="30180" default="false"/>
         <setting id="DisableInputStream" type="bool" label="30185" default="true"/>
+        <setting id="debug" type="bool" label="32001" default="false"/>
     </category>
 </settings>

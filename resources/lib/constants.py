@@ -36,3 +36,31 @@ BAM_NS = '{http://services.bamnetworks.com/media/types/2.1}'
 ESPN3_ID = 'n360'
 SECPLUS_ID = 'n323'
 ACC_EXTRA_ID = 'n321'
+
+CHANNEL_SETTINGS = {
+    'ShowEspn1': 'espn1',
+    'ShowEspn2': 'espn2',
+    'ShowEspn3': 'espn3',
+    'ShowEspnu': 'espnu',
+    'ShowEspnews': 'espnews',
+    'ShowEspnDeportes': 'espndeportes',
+    'ShowSec': 'sec',
+    'ShowSecPlus': 'secplus',
+    'ShowLonghorn': 'longhorn',
+    'ShowBuzzerBeater': 'buzzerbeater',
+    'ShowAccExtra': 'accextra',
+    'ShowGoalLine': 'goalline'
+}
+NETWORK_ID_TO_NETWORK_NAME = {
+    'espn1': 30990,
+    'espn2': 30991,
+    'espn3': 30992,
+    'espnu': 30993,
+    'espnews': 30994,
+    'espndeportes': 30995,
+    'sec': 30996,
+    'longhorn': 30998,
+    'accextra': 30989,
+    'goalline': 30988,
+    'secplus': 30997
+}

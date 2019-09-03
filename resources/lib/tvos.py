@@ -30,31 +30,31 @@ class TVOS(MenuListing):
 
         addDir(translation(30550), dict(MODE=self.make_mode(SPORTS)), defaultlive)
         addDir(translation(30560), dict(MODE=self.make_mode(CHANNELS)), defaultlive)
-        xbmcplugin.endOfDirectory(pluginhandle)
+        xbmcplugin.endOfDirectory(plugin.handle)
 
     @RegisterMode(HOME)
     def home(self, args):
         url = base64.b64decode('aHR0cDovL3dhdGNoLnByb2R1Y3QuYXBpLmVzcG4uY29tL2FwaS9wcm9kdWN0L3YxL3R2b3Mvd2F0Y2hlc3BuL2hvbWU=')
         self.parse_json(args, url)
-        xbmcplugin.endOfDirectory(pluginhandle)
+        xbmcplugin.endOfDirectory(plugin.handle)
 
     @RegisterMode(CHANNELS)
     def channels(self, args):
         url = base64.b64decode('aHR0cDovL3dhdGNoLnByb2R1Y3QuYXBpLmVzcG4uY29tL2FwaS9wcm9kdWN0L3YxL3R2b3Mvd2F0Y2hlc3BuL2NoYW5uZWxz')
         self.parse_json(args, url)
-        xbmcplugin.endOfDirectory(pluginhandle)
+        xbmcplugin.endOfDirectory(plugin.handle)
 
     @RegisterMode(SPORTS)
     def sports(self, args):
         url = base64.b64decode('aHR0cDovL3dhdGNoLnByb2R1Y3QuYXBpLmVzcG4uY29tL2FwaS9wcm9kdWN0L3YxL3R2b3Mvd2F0Y2hlc3BuL3Nwb3J0cw==')
         self.parse_json(args, url)
-        xbmcplugin.endOfDirectory(pluginhandle)
+        xbmcplugin.endOfDirectory(plugin.handle)
 
     @RegisterMode(URL_MODE)
     def url_mode(self, args):
         url = args.get(URL)[0]
         self.parse_json(args, url)
-        xbmcplugin.endOfDirectory(pluginhandle)
+        xbmcplugin.endOfDirectory(plugin.handle)
 
     # Used on the main menu
     def list_live_content(self):
@@ -105,7 +105,7 @@ class TVOS(MenuListing):
                                 addDir(content['name'], dict(URL=content_url, MODE=self.make_mode(URL_MODE)), fanart)
                             else:
                                 self.index_content(content)
-                                xbmcplugin.setContent(pluginhandle, 'episodes')
+                                xbmcplugin.setContent(plugin.handle, 'episodes')
 
     def parse_json(self, args, url):
         xbmc.log(TAG + 'Looking at url %s %s' % (url, args), xbmc.LOGDEBUG)

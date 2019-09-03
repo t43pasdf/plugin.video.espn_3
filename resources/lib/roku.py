@@ -36,7 +36,7 @@ class Roku(MenuListing):
             for content in group['contents']:
                 addDir(extra + content['name'],
                        dict(URL=content['href'], MODE=self.make_mode(URL_MODE)), defaultlive)
-        xbmcplugin.endOfDirectory(pluginhandle)
+        xbmcplugin.endOfDirectory(plugin.handle)
 
     def get_thumbnail(self, category):
         max_width = 0
@@ -68,11 +68,11 @@ class Roku(MenuListing):
             json_data['listings'].sort(cmp=compare_roku)
             for listing in json_data['listings']:
                 index_listing(listing)
-            xbmcplugin.setContent(pluginhandle, 'episodes')
+            xbmcplugin.setContent(plugin.handle, 'episodes')
         if 'videos' in json_data:
             for video in json_data['videos']:
                 index_video(video)
-            xbmcplugin.setContent(pluginhandle, 'episodes')
+            xbmcplugin.setContent(plugin.handle, 'episodes')
         if 'categories' in json_data:
             for category in json_data['categories']:
                 if category_id is None:
@@ -106,7 +106,7 @@ class Roku(MenuListing):
                     addDir(channel['name'],
                            dict(URL=channel['links']['api']['listings']['href'], MODE=self.make_mode(URL_MODE)),
                            self.get_thumbnail(channel))
-        xbmcplugin.endOfDirectory(pluginhandle)
+        xbmcplugin.endOfDirectory(plugin.handle)
 
 
 def get_time(listing):

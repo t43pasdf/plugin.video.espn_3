@@ -13,7 +13,6 @@ defaultfanart = os.path.join(addon_data_path, 'fanart.jpg')
 defaultlive = os.path.join(addon_data_path, 'resources/media/new_live.png')
 defaultreplay = os.path.join(addon_data_path, 'resources/media/new_replay.png')
 defaultupcoming = os.path.join(addon_data_path, 'resources/media/new_upcoming.png')
-pluginhandle = int(sys.argv[1])
 
 ADDON_PATH_PROFILE = xbmc.translatePath(selfAddon.getAddonInfo('profile')).decode('utf-8')
 if not os.path.exists(ADDON_PATH_PROFILE):

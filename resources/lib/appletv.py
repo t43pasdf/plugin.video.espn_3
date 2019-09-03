@@ -32,7 +32,7 @@ class AppleTV(MenuListing):
         addDir(translation(30560),
                dict(MODE=self.make_mode(CATEGORY_CHANNELS_MODE)),
                defaultlive)
-        xbmcplugin.endOfDirectory(pluginhandle)
+        xbmcplugin.endOfDirectory(plugin.handle)
 
     @RegisterMode(FEATURED)
     def featured_menu(self, args):
@@ -55,7 +55,7 @@ class AppleTV(MenuListing):
             addDir(title,
                    dict(SHELF_ID=name, MODE=self.make_mode(CATEGORY_SHELF_MODE)),
                    defaultlive)
-        xbmcplugin.endOfDirectory(pluginhandle)
+        xbmcplugin.endOfDirectory(plugin.handle)
 
     @RegisterMode(CATEGORY_SHOWCASE_MODE)
     def categories_showcase(self, args):
@@ -80,13 +80,13 @@ class AppleTV(MenuListing):
                     xbmc.log('ESPN3 Found nav item %s' % selected_nav_id[0], xbmc.LOGDEBUG)
                     self.process_item_list(navigation_item.findall('.//twoLineMenuItem'))
                     self.process_item_list(navigation_item.findall('.//twoLineEnhancedMenuItem'))
-                    xbmcplugin.setContent(pluginhandle, 'episodes')
+                    xbmcplugin.setContent(plugin.handle, 'episodes')
         else: # If there are no navigation items then just dump all of the menu entries
             xbmc.log('ESPN3: Dumping all menu items', xbmc.LOGDEBUG)
             self.process_item_list(et.findall('.//twoLineMenuItem'))
             self.process_item_list(et.findall('.//twoLineEnhancedMenuItem'))
-            xbmcplugin.setContent(pluginhandle, 'episodes')
-        xbmcplugin.endOfDirectory(pluginhandle)
+            xbmcplugin.setContent(plugin.handle, 'episodes')
+        xbmcplugin.endOfDirectory(plugin.handle)
 
     @RegisterMode(CATEGORY_SHELF_MODE)
     def category_shelf(self, args):
@@ -96,8 +96,8 @@ class AppleTV(MenuListing):
             name = shelf.get('id')
             if name == args.get(SHELF_ID)[0]:
                 self.process_item_list(shelf.findall('.//sixteenByNinePoster'))
-        xbmcplugin.setContent(pluginhandle, 'episodes')
-        xbmcplugin.endOfDirectory(pluginhandle)
+        xbmcplugin.setContent(plugin.handle, 'episodes')
+        xbmcplugin.endOfDirectory(plugin.handle)
 
     @RegisterMode(CATEGORY_SPORTS_MODE)
     def category_sports(self, args):
@@ -114,7 +114,7 @@ class AppleTV(MenuListing):
             addDir(name,
                    dict(SHOWCASE_URL=url, MODE=self.make_mode(CATEGORY_SHOWCASE_MODE)),
                    image, image)
-        xbmcplugin.endOfDirectory(pluginhandle, updateListing=False)
+        xbmcplugin.endOfDirectory(plugin.handle, updateListing=False)
 
     @RegisterMode(CATEGORY_CHANNELS_MODE)
     def category_channels(self, args):
@@ -127,8 +127,8 @@ class AppleTV(MenuListing):
             addDir(name,
                    dict(SHOWCASE_URL=url, MODE=self.make_mode(CATEGORY_SHOWCASE_MODE)),
                    image, image)
-        xbmcplugin.setContent(pluginhandle, 'episodes')
-        xbmcplugin.endOfDirectory(pluginhandle, updateListing=False)
+        xbmcplugin.setContent(plugin.handle, 'episodes')
+        xbmcplugin.endOfDirectory(plugin.handle, updateListing=False)
 
     def trending_mode(self, args):
         url = base64.b64decode('aHR0cDovL3dhdGNoLmFwaS5lc3BuLmNvbS92MS90cmVuZGluZw==')

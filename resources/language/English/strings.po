@@ -45,11 +45,15 @@ msgid "Upcoming"
 msgstr ""
 
 msgctxt "#30031"
-msgid "Replay "
+msgid "Replay %d Days"
 msgstr ""
 
 msgctxt "#30032"
 msgid "Replay All"
+msgstr ""
+
+msgctxt "#30033"
+msgid "Replay %d to %d Days"
 msgstr ""
 
 msgctxt "#30034"
@@ -347,3 +351,6 @@ msgctxt "#30999"
 msgid "Buzzer Beater"
 msgstr ""
 
+msgctxt "#32001"
+msgid "Debug"
+msgstr""
