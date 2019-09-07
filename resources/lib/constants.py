@@ -64,3 +64,16 @@ NETWORK_ID_TO_NETWORK_NAME = {
     'goalline': 30988,
     'secplus': 30997
 }
+
+ID = 'id'
+URL = 'url'
+
+TV_OS_HOME = 'http://watch.product.api.espn.com/api/product/v1/tvos/watchespn/home'
+TV_OS_CHANNELS = 'http://watch.product.api.espn.com/api/product/v1/tvos/watchespn/channels'
+TV_OS_SPORTS = 'http://watch.product.api.espn.com/api/product/v1/tvos/watchespn/sports'
+
+APPLE_TV_FEATURED = 'http://espn.go.com/watchespn/appletv/featured'
+APPLE_TV_SPORTS = 'http://espn.go.com/watchespn/appletv/sports'
+APPLE_TV_CHANNELS = 'http://espn.go.com/watchespn/appletv/channels'
+
+WATCH_API_V1_TRENDING = 'http://watch.api.espn.com/v1/trending'

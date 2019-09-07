@@ -1,15 +1,10 @@
-import json
-import re
-import xml.etree.ElementTree as ET
+import logging
 
-from addon_util import *
-from globals import defaultlive, defaultimage
-from menu_listing import *
-from register_mode import RegisterMode
-from plugin import *
-from item_indexer import *
+from xbmcplugin import addDirectoryItem, endOfDirectory, setContent
 
-TAG = 'AppleTV: '
+from resources.lib.plugin import *
+from resources.lib.item_indexer import *
+
 ROOT = '/appletv'
 
 @plugin.route(ROOT)
@@ -24,12 +19,11 @@ def appletv_root_menu():
     addDirectoryItem(plugin.handle,
                      plugin.url_for(appletv_channels),
                      make_list_item(translation(30560)), True)
-    xbmcplugin.endOfDirectory(plugin.handle)
+    endOfDirectory(plugin.handle)
 
 @plugin.route(ROOT + '/featured')
 def appletv_featured():
-    featured_url = base64.b64decode('aHR0cDovL2VzcG4uZ28uY29tL3dhdGNoZXNwbi9hcHBsZXR2L2ZlYXR1cmVk')
-    et = util.get_url_as_xml_cache(get_url(featured_url))
+    et = util.get_url_as_xml_cache(get_url(APPLE_TV_FEATURED))
     for showcase in et.findall('.//showcase/items/showcasePoster'):
         name = showcase.get('accessibilityLabel')
         image = showcase.find('./image').get('src')
@@ -47,7 +41,7 @@ def appletv_featured():
         addDirectoryItem(plugin.handle,
                          plugin.url_for(appletv_shelf, shelf_id=name),
                          make_list_item(title), True)
-    xbmcplugin.endOfDirectory(plugin.handle)
+    endOfDirectory(plugin.handle)
 
 @plugin.route(ROOT + '/showcase')
 def appletv_showcase():
@@ -55,7 +49,7 @@ def appletv_showcase():
     selected_nav_id = arg_as_string('nav_id')
     et = util.get_url_as_xml_cache(get_url(url))
     navigation_items = et.findall('.//navigation/navigationItem')
-    xbmc.log('ESPN3 Found %s items' % len(navigation_items), xbmc.LOGDEBUG)
+    logging.debug('Found %s items' % len(navigation_items))
     if selected_nav_id is '' and len(navigation_items) > 0:
         for navigation_item in navigation_items:
             name = navigation_item.find('./title').text
@@ -70,32 +64,30 @@ def appletv_showcase():
     elif len(navigation_items) > 0:
         for navigation_item in navigation_items:
             if str(navigation_item.get('id')) == selected_nav_id:
-                xbmc.log('ESPN3 Found nav item %s' % selected_nav_id, xbmc.LOGDEBUG)
+                logging.debug('Found nav item %s' % selected_nav_id)
                 process_item_list(navigation_item.findall('.//twoLineMenuItem'))
                 process_item_list(navigation_item.findall('.//twoLineEnhancedMenuItem'))
-                xbmcplugin.setContent(plugin.handle, 'episodes')
+                setContent(plugin.handle, 'episodes')
     else: # If there are no navigation items then just dump all of the menu entries
-        xbmc.log('ESPN3: Dumping all menu items', xbmc.LOGDEBUG)
+        logging.debug('Dumping all menu items')
         process_item_list(et.findall('.//twoLineMenuItem'))
         process_item_list(et.findall('.//twoLineEnhancedMenuItem'))
-        xbmcplugin.setContent(plugin.handle, 'episodes')
-    xbmcplugin.endOfDirectory(plugin.handle)
+        setContent(plugin.handle, 'episodes')
+    endOfDirectory(plugin.handle)
 
 @plugin.route(ROOT + '/shelf/<shelf_id>')
 def appletv_shelf(shelf_id):
-    featured_url = base64.b64decode('aHR0cDovL2VzcG4uZ28uY29tL3dhdGNoZXNwbi9hcHBsZXR2L2ZlYXR1cmVk')
-    et = util.get_url_as_xml_cache(get_url(featured_url))
+    et = util.get_url_as_xml_cache(get_url(APPLE_TV_FEATURED))
     for shelf in et.findall('.//shelf'):
         name = shelf.get('id')
         if name == shelf_id:
             process_item_list(shelf.findall('.//sixteenByNinePoster'))
-    xbmcplugin.setContent(plugin.handle, 'episodes')
-    xbmcplugin.endOfDirectory(plugin.handle)
+    setContent(plugin.handle, 'episodes')
+    endOfDirectory(plugin.handle)
 
 @plugin.route(ROOT + '/sports')
 def appletv_sports():
-    sports_url = base64.b64decode('aHR0cDovL2VzcG4uZ28uY29tL3dhdGNoZXNwbi9hcHBsZXR2L3Nwb3J0cw==')
-    et = util.get_url_as_xml_cache(get_url(sports_url))
+    et = util.get_url_as_xml_cache(get_url(APPLE_TV_SPORTS))
     images = et.findall('.//image')
     sports = et.findall('.//oneLineMenuItem')
     for i in range(0, min(len(images), len(sports))):
@@ -107,12 +99,11 @@ def appletv_sports():
         addDirectoryItem(plugin.handle,
                          plugin.url_for(appletv_showcase, url=url),
                          make_list_item(name, image), True)
-    xbmcplugin.endOfDirectory(plugin.handle, updateListing=False)
+    endOfDirectory(plugin.handle, updateListing=False)
 
 @plugin.route(ROOT + '/channels')
 def appletv_channels():
-    channels_url = base64.b64decode('aHR0cDovL2VzcG4uZ28uY29tL3dhdGNoZXNwbi9hcHBsZXR2L2NoYW5uZWxz')
-    et = util.get_url_as_xml_cache(get_url(channels_url))
+    et = util.get_url_as_xml_cache(get_url(APPLE_TV_CHANNELS))
     for channel in et.findall('.//oneLineMenuItem'):
         name = channel.get('accessibilityLabel')
         image = channel.find('.//image').text
@@ -120,12 +111,11 @@ def appletv_channels():
         addDirectoryItem(plugin.handle,
                          plugin.url_for(appletv_showcase, url=url),
                          make_list_item(name, image), True)
-    xbmcplugin.setContent(plugin.handle, 'episodes')
-    xbmcplugin.endOfDirectory(plugin.handle, updateListing=False)
+    setContent(plugin.handle, 'episodes')
+    endOfDirectory(plugin.handle, updateListing=False)
 
 def trending_mode():
-    url = base64.b64decode('aHR0cDovL3dhdGNoLmFwaS5lc3BuLmNvbS92MS90cmVuZGluZw==')
-    json_data = util.get_url_as_json_cache(get_url(url))
+    json_data = util.get_url_as_json_cache(get_url(WATCH_API_V1_TRENDING))
     for listing in json_data['listings']:
         index_listing(listing)
     for video in json_data['videos']:
@@ -192,7 +182,7 @@ def process_item_list(item_list):
                 url = method_info[3]
                 nav_id = method_info[2]
                 url = url + '&navigationItemId=' + nav_id
-                xbmc.log(TAG + 'Load more url %s' % url, xbmc.LOGDEBUG)
+                logging.debug('Load more url %s' % url)
                 addDirectoryItem(plugin.handle,
                                  plugin.url_for(appletv_showcase, url=url),
                                  make_list_item(menu_label), True)
@@ -207,14 +197,13 @@ def process_item_list(item_list):
                                  make_list_item(name, image), True)
             else:
                 stash = stash_element.text.encode('ISO-8859-1')
-                xbmc.log(TAG + 'Stash Data %s' % (stash), xbmc.LOGDEBUG)
                 # Some of the json is baddly formatted
                 stash = re.sub(r'\s+"', '"', stash)
                 stash_json = json.loads(stash) #, 'utf-8')
                 stash_json['internal_item'] = item
                 stashes.append(stash_json)
 
-    xbmc.log(TAG + ' sorting %s items' % len(stashes), xbmc.LOGDEBUG)
+    logging.debug('sorting %s items' % len(stashes))
     stashes.sort(cmp=compare_appletv)
     for stash_json in stashes:
         if stash_json['type'] == 'upcoming':
@@ -237,9 +226,7 @@ def get_metadata(item):
     return description
 
 def check_blackout(item):
-    xbmc.log(TAG + 'check blackout %s' % ET.tostring(item), xbmc.LOGDEBUG)
     blackouts = item.findall('.//blackouts/blackoutsItem/detail/detailItem')
-    xbmc.log(TAG + '%s' % blackouts, xbmc.LOGDEBUG)
     blackout_type = item.find('.//blackouts/blackoutsItem/type')
     if blackout_type is not None and not blackout_type.text == 'dma':
         return False

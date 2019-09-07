@@ -1,11 +1,11 @@
 # Legacy menu system
 from datetime import datetime, timedelta
 
-import events
-from globals import defaultlive, defaultreplay, \
+from resources.lib import events
+from resources.lib.globals import defaultlive, defaultreplay, \
     defaultupcoming
-from item_indexer import *
-from kodiutils import get_setting_as_int
+from resources.lib.item_indexer import *
+from resources.lib.kodiutils import get_setting_as_int
 
 LIST_SPORTS_MODE = 'LIST_SPORTS'
 INDEX_SPORTS_MODE = 'INDEX_SPORTS'

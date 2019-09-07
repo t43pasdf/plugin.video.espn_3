@@ -17,43 +17,6 @@ from resources.lib.kodiutils import get_setting_as_bool
 
 TAG = 'Addon_Util: '
 
-
-def addLink(name, url, iconimage="DefaultVideo.png", fanart=defaultfanart, infoLabels=None):
-    u = sys.argv[0] + '?' + urllib.urlencode(url)
-    liz = xbmcgui.ListItem(name)
-
-    if infoLabels is None:
-        infoLabels={'Title': name}
-
-    liz.setInfo('video', infoLabels=infoLabels)
-    liz.setProperty('IsPlayable', 'true')
-    addon_art = {
-        'fanart': fanart,
-        'thumb': iconimage,
-        'icon': iconimage
-    }
-    liz.setArt(addon_art)
-    video_streaminfo = dict()
-    liz.addStreamInfo('video', video_streaminfo)
-    ok = xbmcplugin.addDirectoryItem(handle=plugin.handle, url=u, listitem=liz)
-    return ok
-
-
-def addDir(name, url, iconimage="DefaultFolder.png", fanart=defaultfanart, infoLabels=None):
-    liz = xbmcgui.ListItem(name)
-    if infoLabels is None:
-        infoLabels={'Title': name}
-
-    liz.setInfo('video', infoLabels=infoLabels)
-    addon_art = {
-        'fanart': fanart,
-        'thumb': iconimage,
-        'icon': iconimage
-    }
-    liz.setArt(addon_art)
-    ok = xbmcplugin.addDirectoryItem(handle=plugin.handle, url=url, listitem=liz, isFolder=True)
-    return ok
-
 def check_error(session_json):
     status = session_json['status']
     if not status == 'success':

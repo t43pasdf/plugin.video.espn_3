@@ -4,30 +4,18 @@
 # Written by Ksosez, BlueCop, Romans I XVI, locomot1f, MetalChris, awaters1 (https://github.com/awaters1)
 # Released under GPL(v2)
 
-import json
 import urllib2
-import urlparse
-import m3u8
 
 import xbmcaddon
-from xbmcgui import ListItem
 from xbmcplugin import addDirectoryItem, endOfDirectory
 
-
-import logging
-
-import legacy
-
 from plugin_routing import *
-from resources.lib import appletv
 from resources.lib import events
-from resources.lib import roku
-from resources.lib import tvos
+from ui import tvos, appletv, legacy, roku
 from resources.lib.addon_util import *
-from resources.lib.globals import defaultlive, defaultreplay, UA_PC
 from resources.lib import kodilogging
 import adobe_activate_api
-from resources.lib.legacy import legacy_root_menu
+from ui.legacy import legacy_root_menu
 from page_api import page_api_url
 
 
@@ -115,7 +103,6 @@ def authentication_details():
     ok = dialog.yesno(translation(30380),
                       translation(30390) % adobe_activate_api.get_authentication_expires(),
                       translation(30700) % (player_config.get_dma(), player_config.get_timezone()),
-                      translation(30710) % (player_config.get_can_sso(), player_config.get_sso_abuse()),
                       nolabel=translation(30360),
                       yeslabel=translation(30430))
     if ok:

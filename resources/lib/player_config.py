@@ -28,26 +28,18 @@ def get_config():
 def get_user_data():
     return util.get_url_as_json_cache(USER_DATA_URL, USER_DATA_FILE, TIME_DIFFERENCE)
 
+def get_user_location():
+    return get_user_data()['user']['location']
 
 def can_access_free_content():
-    return get_user_data()['affvalid'] == 'true'
-
+    return 'isp' in get_user_data()['user']['authentication']
 
 def get_timezone():
-    return get_user_data()['timezone']
+    return get_user_location()['timeZone']
 
 
 def get_dma():
-    return get_user_data()['dma']
-
-
-def get_can_sso():
-    return get_user_data()['canaddsso']
-
-
-def get_sso_abuse():
-    return get_user_data()['ssoabuse']
-
+    return get_user_location()['dma']
 
 def get_networks():
     networks = get_config().findall('.//network')

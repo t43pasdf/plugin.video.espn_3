@@ -1,18 +1,11 @@
-from addon_util import *
-from globals import defaultlive
-from menu_listing import *
-from register_mode import RegisterMode
-from plugin_routing import *
-import adobe_activate_api
-from xbmcplugin import addDirectoryItem
-from item_indexer import *
+from xbmcplugin import addDirectoryItem, endOfDirectory
 
-TAG = 'ROKU: '
+from resources.lib.item_indexer import *
+from resources.lib.addon_util import *
+from resources.lib.plugin_routing import *
+from resources.lib import adobe_activate_api
+
 ROOT = '/roku'
-URL_MODE = 'URL_MODE'
-URL = 'URL'
-ID = 'ID'
-
 MIN_THUMBNAIL_WIDTH = 500
 
 @plugin.route(ROOT)
@@ -35,7 +28,7 @@ def roku_root_menu():
             addDirectoryItem(plugin.handle,
                              plugin.url_for(roku_url_mode, url=content['href']),
                              ListItem(extra + content['name']), True)
-    xbmcplugin.endOfDirectory(plugin.handle)
+    endOfDirectory(plugin.handle)
 
 def get_thumbnail(category):
     max_width = 0
@@ -106,7 +99,7 @@ def roku_url_mode():
                                  plugin.url_for(roku_url_mode,
                                                 url=channel['links']['api']['listings']['href']),
                                  make_list_item(channel['name'], get_thumbnail(channel)), True)
-    xbmcplugin.endOfDirectory(plugin.handle)
+    endOfDirectory(plugin.handle)
 
 
 def get_time(listing):
