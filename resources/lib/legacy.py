@@ -89,7 +89,7 @@ def list_sports():
     xbmcplugin.addSortMethod(plugin.handle, xbmcplugin.SORT_METHOD_VIDEO_SORT_TITLE)
     xbmcplugin.endOfDirectory(plugin.handle)
 
-@plugin.route(ROOT + '/live/')
+@plugin.route(ROOT + '/live')
 def live_events_mode():
     espn_url = arg_as_string('espn_url')
     index_legacy_live_events(espn_url)

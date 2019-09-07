@@ -72,10 +72,9 @@ def index():
     if get_setting_as_bool('ShowLegacyMenu'):
         addDirectoryItem(plugin.handle, plugin.url_for(legacy_root_menu),
                          ListItem(translation(30740)), True)
-    # if selfAddon.getSetting('ShowRokuMenu') == 'true':
-    #     addDir(translation(30760),
-    #            dict(MODE='/roku/'),
-    #            defaultlive)
+    if get_setting_as_bool('ShowRokuMenu'):
+        addDirectoryItem(plugin.handle, plugin.url_for(roku.roku_root_menu),
+                         ListItem(translation(30760)), True)
     # if selfAddon.getSetting('ShowTVOSMenu') == 'true':
     #     addDirectoryItem(plugin.handle, translation(30750),
     #            dict(MODE='/tvos/'),
