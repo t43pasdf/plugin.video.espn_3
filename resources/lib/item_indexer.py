@@ -116,7 +116,7 @@ def index_item(args):
                                                            mpaa)
 
             if include_item(network_id):
-                logging.debug('Adding %s with handle %d' % (ename, plugin.handle))
+                logging.debug('Adding %s with handle %d and id %s' % (ename, plugin.handle, args['eventId']))
                 addDirectoryItem(plugin.handle,
                                  plugin.url_for(PLAY_TV, event_id=args['eventId'],
                                                 session_url=args['sessionUrl'], network_name=args['networkId'],

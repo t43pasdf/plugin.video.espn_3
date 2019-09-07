@@ -66,10 +66,9 @@ def index():
             'aHR0cHM6Ly93YXRjaC5wcm9kdWN0LmFwaS5lc3BuLmNvbS9hcGkvcHJvZHVjdC92MS9hbmRyb2lkL3R2L2hvbWU=')
         addDirectoryItem(plugin.handle, plugin.url_for(page_api_url, url=url),
                          ListItem(translation(30780)), True)
-    # if selfAddon.getSetting('ShowAppleTVMenu') == 'true':
-    #     addDir(translation(30730),
-    #            dict(MODE='/appletv/'),
-    #            defaultlive)
+    if get_setting_as_bool('ShowAppleTVMenu'):
+        addDirectoryItem(plugin.handle, plugin.url_for(appletv.appletv_root_menu),
+                         ListItem(translation(30730)), True)
     if get_setting_as_bool('ShowLegacyMenu'):
         addDirectoryItem(plugin.handle, plugin.url_for(legacy_root_menu),
                          ListItem(translation(30740)), True)

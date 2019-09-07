@@ -75,6 +75,8 @@ def does_requires_auth(network_name):
 def get_url(url):
     if 'listingsUrl' not in url and 'tz' not in url:
         tz = player_config.get_timezone()
+        if tz is None or tz == '':
+            tz = 'America/New_York'
         if '?' in url:
             sep = '&'
         else:

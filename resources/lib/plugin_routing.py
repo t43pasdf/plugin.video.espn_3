@@ -17,3 +17,10 @@ def arg_as_bool(arg):
 
 def arg_as_string(arg):
     return plugin.args[arg][0] if arg in plugin.args else ''
+
+def arg_as_number(arg):
+    val = arg_as_string(arg)
+    try:
+        return int(float(val))
+    except:
+        return None
