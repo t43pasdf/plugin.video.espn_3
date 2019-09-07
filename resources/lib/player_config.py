@@ -43,6 +43,11 @@ def get_dma():
 
 def get_networks():
     networks = get_config().findall('.//network')
+    # Manually append the ACC network because their config file isn't up to date
+    networks.append({
+        'id':'n821',
+        'name':'acc'
+    })
     return networks
 
 

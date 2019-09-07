@@ -1,4 +1,9 @@
 --------------------------------
+version 2.9.31 (August 2019)
+--------------------------------
+- Support for the ACC Network
+
+--------------------------------
 version 2.9.30 (June 2017)
 --------------------------------
 - Support for inputstream.hls (when installed)
