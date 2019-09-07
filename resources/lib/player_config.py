@@ -48,6 +48,10 @@ def get_networks():
         'id':'n821',
         'name':'acc'
     })
+    networks.append({
+        'id': 'n25',
+        'name': 'goalline'
+    })
     return networks
 
 
