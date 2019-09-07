@@ -75,10 +75,10 @@ def index():
     if get_setting_as_bool('ShowRokuMenu'):
         addDirectoryItem(plugin.handle, plugin.url_for(roku.roku_root_menu),
                          ListItem(translation(30760)), True)
-    # if selfAddon.getSetting('ShowTVOSMenu') == 'true':
-    #     addDirectoryItem(plugin.handle, translation(30750),
-    #            dict(MODE='/tvos/'),
-    #            defaultlive)
+    if get_setting_as_bool('ShowTVOSMenu'):
+        addDirectoryItem(plugin.handle,
+                         plugin.url_for(tvos.tvos_root_menu),
+                         ListItem(translation(30750)), True)
     if adobe_activate_api.is_authenticated():
         addDirectoryItem(plugin.handle,
            plugin.url_for(authentication_details),
