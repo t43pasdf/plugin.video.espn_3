@@ -16,7 +16,7 @@ from resources.lib.addon_util import *
 from resources.lib import kodilogging
 import adobe_activate_api
 from ui.legacy import legacy_root_menu
-from page_api import page_api_url
+from page_api import page_api_url, parse_json
 
 
 TAG = 'ESPN3: '
@@ -24,6 +24,12 @@ ADDON = xbmcaddon.Addon()
 logger = logging.getLogger(ADDON.getAddonInfo('id'))
 kodilogging.config()
 
+@plugin.route('/new-index')
+def new_index():
+    # New index will have the channels listed and then the buckets from the watch
+    # web product
+    parse_json(WATCH_API_V3_WEB_HOME)
+    endOfDirectory(plugin.handle, True)
 
 @plugin.route('/')
 def index():
@@ -38,6 +44,11 @@ def index():
         include_premium = adobe_activate_api.is_authenticated()
         channel_list = events.get_channel_list(include_premium)
         util.clear_cache(events.get_live_events_url(channel_list))
+
+    # addDirectoryItem(plugin.handle,
+    #                  plugin.url_for(new_index),
+    #                  ListItem('New index (WIP)'), True)
+
     if not adobe_activate_api.is_authenticated():
         addDirectoryItem(plugin.handle,
                          plugin.url_for(authenticate),

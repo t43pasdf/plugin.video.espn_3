@@ -65,7 +65,7 @@ msgid "Upcoming Event"
 msgstr ""
 
 msgctxt "#30036"
-msgid "Event has not started."
+msgid "The event %s will start at %s."
 msgstr ""
 
 msgctxt "#30037"

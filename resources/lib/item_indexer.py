@@ -2,6 +2,9 @@ from plugin_routing import *
 from play_routes import *
 from xbmcplugin import addDirectoryItem
 
+def format_time(etime):
+    return etime
+
 def index_item(args):
     if args['type'] == 'over':
         return
@@ -25,14 +28,14 @@ def index_item(args):
             if selfAddon.getSetting('NoColors') == 'true':
                 ename = etime + ' ' + ename
             else:
-                ename = '[COLOR=FFB700EB]' + etime + '[/COLOR] ' + ename
+                ename = format_time(etime) + ' - ' + ename
         elif args['type'] == 'live':
             starttime_time = time.mktime(starttime)
             length -= (time.time() - starttime_time)
             if selfAddon.getSetting('NoColors') == 'true':
                 ename = ename + ' ' + etime
             else:
-                ename += ' [COLOR=FFB700EB]' + etime + '[/COLOR]'
+                ename += ' - ' + format_time(etime)
         else:
             now_time = time.localtime(now)
             if now_time.tm_year == starttime.tm_year and \
@@ -44,7 +47,7 @@ def index_item(args):
             if selfAddon.getSetting('NoColors') == 'true':
                 ename = etime + ' ' + ename
             else:
-                ename = '[COLOR=FFB700EB]' + etime + '[/COLOR] ' + ename
+                ename = format_time(etime) + ' ' + ename
         aired = time.strftime("%Y-%m-%d", starttime)
     else:
         aired = 0
@@ -98,7 +101,7 @@ def index_item(args):
     authurl = dict()
     if args['type'] == 'upcoming':
         addDirectoryItem(plugin.handle,
-                         plugin.url_for(upcoming_event),
+                         plugin.url_for(upcoming_event, event_id=args['eventId'], starttime=etime, event_name=ename),
                          make_list_item(ename, icon=fanart, infoLabels=infoLabels))
     else:
         adobeRSS = args['adobeRSS'] if 'adobeRSS' in args else None

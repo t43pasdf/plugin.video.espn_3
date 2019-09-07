@@ -173,9 +173,11 @@ def PLAY_TV(event_id):
         xbmcplugin.setResolvedUrl(plugin.handle, success, item)
 
 
-@plugin.route('/upcoming-event')
-def upcoming_event():
-    logging.debug('Upcoming event chosen')
+@plugin.route('/upcoming-event/<event_id>')
+def upcoming_event(event_id):
+    starttime = arg_as_string('starttime')
+    event_name = arg_as_string('eventname')
+    logging.debug('Upcoming event chosen for %s' % starttime)
     dialog = xbmcgui.Dialog()
-    dialog.ok(translation(30035), translation(30036))
+    dialog.ok(translation(30035), translation(30036) % (event_name, starttime))
     xbmcplugin.endOfDirectory(plugin.handle, succeeded=False, updateListing=True)

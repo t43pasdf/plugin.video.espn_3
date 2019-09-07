@@ -11,7 +11,6 @@ from item_indexer import index_item
 
 BUCKET = 'BUCKET'
 
-
 @plugin.route('/page-api')
 def page_api_url():
     url = arg_as_string('url')
@@ -77,6 +76,91 @@ def process_buckets(url, buckets, selected_buckets, current_bucket_path):
 
 
 def index_content(content):
+    if 'tracking' in 'content':
+        index_v1_content(content)
+    else:
+        index_v3_content(content)
+
+def parse_duration(duration_str):
+    formats = [
+        '%H:%M:%S',
+        '%M:%S',
+        '%S'
+    ]
+    for format in formats:
+        try:
+            duration = time.strptime(duration_str, format)
+            return duration
+        except:
+            pass
+    ret = time.localtime()
+    ret.tm_hour = 0
+    ret.tm_min = 0
+    ret.tm_sec = 0
+    return ret
+
+def get_rank_text(rank):
+    if rank is None or rank == '':
+        return ''
+    return str(rank) + ''
+
+def get_possesion_text(event):
+    if event['teamOnePossession'] or event['teamTwoPossession']:
+        return '%s has possession\n' % (event['teamOneName'] if event['teamOnePossession'] else event['teamTwoName'])
+    return ''
+
+def get_team_name(event, number):
+    key_name = 'team%sName' % number
+    if event['teamOneRank'] is not None and event['teamTwoRank'] is not None:
+        key_rank = 'team%sRank' % number
+        return '%s (%s)' % (event[key_name], get_rank_text(event[key_rank]))
+    return event[key_name]
+
+# TODO: Take into account blackout/packages
+def index_v3_content(content):
+    logging.debug('Indexing %s' % content)
+    stream = content['streams'][0]
+    duration = parse_duration(stream['duration'])
+    duration_seconds = duration.tm_hour * 3600 + duration.tm_min * 60 + duration.tm_sec
+
+    subtitle = content.get('subtitle', '')
+    plot = subtitle
+    if 'event' in content:
+        event = content['event']
+        if event['type'] == 'tvt':
+            plot = '%s\n%s vs. (%s)\n%s - %s\n%s%s' % \
+                   (subtitle,
+                    get_team_name(event, 'One'),
+                    get_team_name(event, 'Two'),
+                    event['teamOneScore'], event['teamTwoScore'],
+                    get_possesion_text(event),
+                    event['statusTextOne'])
+
+    starttime = get_time(content)
+    if 'date' in content and 'time' in content:
+        #  TODO: Include duration in plot
+        plot = content['date'] + ' ' + content['time'] + '\n' + plot
+    status = content['status'] if 'status' in content else 'live'
+    index_item({
+        'sport': '',
+        'eventName': content['name'],
+        'subcategory': subtitle,
+        'imageHref': content['imageHref'],
+        'parentalRating': 'U',
+        'starttime': starttime,
+        'duration': duration_seconds,
+        'type': status,
+        'networkId': content['source']['id'] if 'source' in content else '',
+        'networkName': content['source']['name'] if 'source' in content else '',
+        # TODO: Blackout check
+        'blackout': False,
+        'description': plot,
+        'eventId': content['eventId'] if 'eventId' in content else content['id'],
+        'sessionUrl': stream['links']['play'] if 'play' in stream['links'] else '',
+        'adobeRSS': stream['adobeRSS'] if 'adobeRSS' in stream else '',
+    })
+
+def index_v1_content(content):
     logging.debug('Indexing %s' % content)
     duration = 0
     if 'tracking' in content and 'duration' in content['tracking']:
@@ -105,14 +189,13 @@ def index_content(content):
         'type': content['status'] if 'status' in content else 'live',
         'networkId': networkId,
         'networkName': networkName,
-        #TODO: Blackout check
+        # TODO: Blackout check
         'blackout': False,
         'description': description,
         'eventId': content['id'],
         'sessionUrl': content['airings'][0]['videoHref'] if 'airings' in content else None,
         'adobeRSS': content['adobeRSS'] if 'adobeRSS' in content else None
     })
-
 
 def get_time(content):
     starttime = None
