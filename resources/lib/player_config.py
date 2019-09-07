@@ -13,8 +13,7 @@ PLAYER_CONFIG_URL = base64.b64decode('aHR0cHM6Ly9lc3BuLmdvLmNvbS93YXRjaGVzcG4vcG
 
 USER_DATA_FILE = 'user_data.json'
 USER_DATA_FILE = os.path.join(ADDON_PATH_PROFILE, USER_DATA_FILE)
-USER_DATA_URL = base64.b64decode(
-    'aHR0cDovL2Jyb2FkYmFuZC5lc3BuLmdvLmNvbS9lc3BuMy9hdXRoL3dhdGNoZXNwbi91c2VyRGF0YT9mb3JtYXQ9anNvbg==')
+USER_DATA_URL = 'http://broadband.espn.com/espn3/auth/watchespn/user'
 
 PROVIDERS_FILE = 'providers.xml'
 PROVIDERS_FILE = os.path.join(ADDON_PATH_PROFILE, PROVIDERS_FILE)
@@ -29,26 +28,18 @@ def get_config():
 def get_user_data():
     return util.get_url_as_json_cache(USER_DATA_URL, USER_DATA_FILE, TIME_DIFFERENCE)
 
+def get_user_location():
+    return get_user_data()['user']['location']
 
 def can_access_free_content():
-    return get_user_data()['affvalid'] == 'true'
-
+    return 'isp' in get_user_data()['user']['authentication']
 
 def get_timezone():
-    return get_user_data()['timezone']
+    return get_user_location()['timeZone']
 
 
 def get_dma():
-    return get_user_data()['dma']
-
-
-def get_can_sso():
-    return get_user_data()['canaddsso']
-
-
-def get_sso_abuse():
-    return get_user_data()['ssoabuse']
-
+    return get_user_location()['dma']
 
 def get_networks():
     networks = get_config().findall('.//network')
