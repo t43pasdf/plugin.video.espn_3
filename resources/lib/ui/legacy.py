@@ -177,7 +177,8 @@ def _index_event(event, live, upcoming, replay, chosen_sport):
     xbmc.log(TAG + ' networkName %s' % networkName, xbmc.LOGDEBUG)
 
     fanart = event.find('.//thumbnail/large').text
-    fanart = fanart.split('&')[0]
+    if fanart is not None:
+        fanart = fanart.split('&')[0]
     starttime = int(event.find('startTimeGmtMs').text) / 1000
     endtime = int(event.find('endTimeGmtMs').text) / 1000
     length = int(round((endtime - starttime)))
