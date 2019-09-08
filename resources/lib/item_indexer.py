@@ -86,7 +86,7 @@ def index_item(args):
                   'premiered': aired}
 
     fanart = args['imageHref']
-    authurl = dict()
+
     if args['type'] == 'upcoming':
         addDirectoryItem(plugin.handle,
                          plugin.url_for(upcoming_event),

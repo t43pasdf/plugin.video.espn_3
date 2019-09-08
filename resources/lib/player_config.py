@@ -48,10 +48,6 @@ def get_networks():
         'id':'n821',
         'name':'acc'
     })
-    networks.append({
-        'id': 'n25',
-        'name': 'goalline'
-    })
     return networks
 
 
@@ -80,6 +76,9 @@ def get_upcoming_event_url():
 
 
 def get_network_name(network_id):
+    # Manual fix for goal line network_id
+    if network_id == 'n25':
+        network_id = 'ngl'
     network = get_network(network_id)
     if network is None:
         return 'Unknown network %s' % network_id
