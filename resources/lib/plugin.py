@@ -70,7 +70,7 @@ def index():
     if adobe_activate_api.is_authenticated():
         addDirectoryItem(plugin.handle,
            plugin.url_for(authentication_details),
-           ListItem('[COLOR=FF00FF00]' + translation(30380) + '[/COLOR]'))
+           ListItem(translation(30380)))
     endOfDirectory(plugin.handle, updateListing=refresh, cacheToDisc=False)
 
 
