@@ -151,22 +151,22 @@ def index_legacy_live_events(espn_url, sport=None, network_id=None):
     elif chosen_network is None:
         if num_espn3 > 0 and selfAddon.getSetting('ShowEspn3') == 'true':
             translation_number = 30191 if num_espn3 == 1 else 30190
-            name = '[COLOR=FFCC0000]' + (translation(translation_number) % num_espn3) + '[/COLOR]'
+            name = (translation(translation_number) % num_espn3)
             addDirectoryItem(plugin.handle,
                              plugin.url_for(live_network_events_mode, espn_url=espn_url, network_id=ESPN3_ID),
-                             make_list_item(name, icon=defaultlive), True)
+                             make_list_item(name), True)
         if num_secplus > 0 and selfAddon.getSetting('ShowSecPlus') == 'true':
             translation_number = 30201 if num_secplus == 1 else 30200
-            name = '[COLOR=FF004C8D]' + (translation(translation_number) % num_secplus) + '[/COLOR]'
+            name = (translation(translation_number) % num_secplus)
             addDirectoryItem(plugin.handle,
                              plugin.url_for(live_network_events_mode, espn_url=espn_url, network_id=SECPLUS_ID),
-                             make_list_item(name, icon=defaultlive), True)
+                             make_list_item(name), True)
         if num_accextra > 0 and selfAddon.getSetting('ShowAccExtra') == 'true':
             translation_number = 30203 if num_accextra == 1 else 30202
-            name = '[COLOR=FF013ca6]' + (translation(translation_number) % num_accextra) + '[/COLOR]'
+            name = (translation(translation_number) % num_accextra)
             addDirectoryItem(plugin.handle,
                              plugin.url_for(live_network_events_mode, espn_url=espn_url, network_id=ACC_EXTRA_ID),
-                             make_list_item(name, icon=defaultlive), True)
+                             make_list_item(name), True)
 
 def _index_event(event, live, upcoming, replay, chosen_sport):
     xbmc.log(TAG + ' processing event %s' % event.get('id'), xbmc.LOGDEBUG)
@@ -177,7 +177,8 @@ def _index_event(event, live, upcoming, replay, chosen_sport):
     xbmc.log(TAG + ' networkName %s' % networkName, xbmc.LOGDEBUG)
 
     fanart = event.find('.//thumbnail/large').text
-    fanart = fanart.split('&')[0]
+    if fanart is not None:
+        fanart = fanart.split('&')[0]
     starttime = int(event.find('startTimeGmtMs').text) / 1000
     endtime = int(event.find('endTimeGmtMs').text) / 1000
     length = int(round((endtime - starttime)))

@@ -354,3 +354,7 @@ msgstr ""
 msgctxt "#32001"
 msgid "Debug"
 msgstr""
+
+msgctxt "#31000"
+msgid "ACC"
+msgstr ""

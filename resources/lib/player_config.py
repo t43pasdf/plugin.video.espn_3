@@ -43,6 +43,11 @@ def get_dma():
 
 def get_networks():
     networks = get_config().findall('.//network')
+    # Manually append the ACC network because their config file isn't up to date
+    networks.append({
+        'id':'n821',
+        'name':'acc'
+    })
     return networks
 
 
@@ -71,6 +76,9 @@ def get_upcoming_event_url():
 
 
 def get_network_name(network_id):
+    # Manual fix for goal line network_id
+    if network_id == 'n25':
+        network_id = 'ngl'
     network = get_network(network_id)
     if network is None:
         return 'Unknown network %s' % network_id
