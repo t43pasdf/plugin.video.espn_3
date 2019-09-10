@@ -35,6 +35,12 @@ def does_requires_auth(network_name):
             requires_auth = True
     return requires_auth
 
+def check_auth_types(auth_types):
+    if 'mpvd' in auth_types:
+        return True
+    if 'isp' in auth_types:
+        return player_config.can_access_free_content()
+
 def get_url(url):
     if 'listingsUrl' not in url and 'tz' not in url:
         tz = player_config.get_timezone()

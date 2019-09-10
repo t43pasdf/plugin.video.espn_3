@@ -1,2 +1,10 @@
+1. Page API v3
+- Update item indexer to only pass the event id to play-tv, the response contains the necessary information to start the stream
+- Update play-tv to work with page API v3 urls
+
 1. Add in a search feature
 2. Use the graphql API for live airings
+
+
+Test
+1. Playback when to logged in

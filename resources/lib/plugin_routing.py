@@ -24,3 +24,8 @@ def arg_as_number(arg):
         return int(float(val))
     except:
         return None
+
+def arg_as_list(arg):
+    if arg in plugin.args:
+        return plugin.args[arg]
+    return []

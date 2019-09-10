@@ -7,7 +7,8 @@ from xbmcplugin import addDirectoryItem, setContent, endOfDirectory
 
 from plugin_routing import *
 from addon_util import get_url, compare
-from item_indexer import index_item
+from item_indexer import index_item, get_item_listing_text
+from play_routes import *
 
 BUCKET = 'BUCKET'
 
@@ -21,7 +22,8 @@ def page_api_url():
 @plugin.route('/page-api/buckets/<path:bucket_path>')
 def page_api_buckets(bucket_path):
     url = arg_as_string('url')
-    parse_json(url, bucket_path)
+    bucket_url = arg_as_string('bucket_url')
+    parse_json(bucket_url)
     endOfDirectory(plugin.handle)
 
 
@@ -49,7 +51,8 @@ def process_buckets(url, buckets, selected_buckets, current_bucket_path):
         if ('contents' in bucket or 'buckets' in bucket) and selected_bucket is None and len(buckets) > 1:
             if bucket['type'] != 'images':
                 bucket_path = '/'.join(current_bucket_path)
-                addDirectoryItem(plugin.handle, plugin.url_for(page_api_buckets, bucket_path=bucket_path, url=url),
+                bucket_url = bucket['links']['self']
+                addDirectoryItem(plugin.handle, plugin.url_for(page_api_buckets, bucket_path=bucket_path, url=url, bucket_url=bucket_url),
                                  ListItem(bucket['name']), True)
         else:
             if 'buckets' in bucket:
@@ -119,6 +122,14 @@ def get_team_name(event, number):
 # TODO: Take into account blackout/packages
 def index_v3_content(content):
     logging.debug('Indexing %s' % content)
+    type = content['type']
+    if type == 'show'or type == 'film':
+        index_v3_show(content)
+        return
+    if type == 'vod':
+        index_v3_vod(content)
+        return
+
     stream = content['streams'][0]
     duration = parse_duration(stream['duration'])
     duration_seconds = duration.tm_hour * 3600 + duration.tm_min * 60 + duration.tm_sec
@@ -140,25 +151,31 @@ def index_v3_content(content):
     if 'date' in content and 'time' in content:
         #  TODO: Include duration in plot
         plot = content['date'] + ' ' + content['time'] + '\n' + plot
-    status = content['status'] if 'status' in content else 'live'
-    index_item({
-        'sport': '',
-        'eventName': content['name'],
-        'subcategory': subtitle,
-        'imageHref': content['imageHref'],
-        'parentalRating': 'U',
-        'starttime': starttime,
-        'duration': duration_seconds,
-        'type': status,
-        'networkId': content['source']['id'] if 'source' in content else '',
-        'networkName': content['source']['name'] if 'source' in content else '',
-        # TODO: Blackout check
-        'blackout': False,
-        'description': plot,
-        'eventId': content['eventId'] if 'eventId' in content else content['id'],
-        'sessionUrl': stream['links']['play'] if 'play' in stream['links'] else '',
-        'adobeRSS': stream['adobeRSS'] if 'adobeRSS' in stream else '',
-    })
+
+    event_id = content['eventId'] if 'eventId' in content else content['id']
+
+    ename, length = get_item_listing_text(content['name'], starttime, duration_seconds, content['status'],
+                                  stream['source']['name'], 'blackoutText' in content,
+                                  stream['authTypes'])
+
+    infoLabels = {'title': ename,
+                  'genre': subtitle,
+                  'duration': length,
+                  'studio': stream['source']['name'],
+                  'plot': plot}
+
+    addDirectoryItem(plugin.handle,
+                     plugin.url_for(play_event, event_id=event_id,
+                                    event_url=stream['links']['play'],
+                                    auth_types=stream['authTypes']),
+                     make_list_item(ename, infoLabels=infoLabels))
+
+# TODO: Implement
+def index_v3_show(content):
+    pass
+
+def index_v3_vod(content):
+    pass
 
 def index_v1_content(content):
     logging.debug('Indexing %s' % content)

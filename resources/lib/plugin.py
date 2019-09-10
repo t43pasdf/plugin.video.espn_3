@@ -28,6 +28,7 @@ kodilogging.config()
 def new_index():
     # New index will have the channels listed and then the buckets from the watch
     # web product
+    # TODO: Group ESPN+, ESPN3, ACCNX, SECEXTRA into their own folders
     parse_json(WATCH_API_V3_WEB_HOME)
     endOfDirectory(plugin.handle, True)
 
@@ -45,9 +46,9 @@ def index():
         channel_list = events.get_channel_list(include_premium)
         util.clear_cache(events.get_live_events_url(channel_list))
 
-    # addDirectoryItem(plugin.handle,
-    #                  plugin.url_for(new_index),
-    #                  ListItem('New index (WIP)'), True)
+    addDirectoryItem(plugin.handle,
+                     plugin.url_for(new_index),
+                     ListItem('New index (WIP)'), True)
 
     if not adobe_activate_api.is_authenticated():
         addDirectoryItem(plugin.handle,

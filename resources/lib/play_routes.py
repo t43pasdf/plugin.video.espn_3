@@ -10,22 +10,7 @@ from resources.lib.addon_util import *
 from resources.lib.globals import UA_PC
 import adobe_activate_api
 
-@plugin.route('/play-item')
-def PLAY_ITEM():
-    url = arg_as_string('url')
-    item = xbmcgui.ListItem(path=url)
-    return setResolvedUrl(plugin.handle, True, item)
-
-
-# Cookie is only needed when authenticating with espn broadband as opposed to uplynk
-#ua UA_PC
-#finalurl = finalurl + '|Connection=keep-alive&User-Agent=' + urllib.quote(ua) + '&Cookie=_mediaAuth=' + urllib.quote(base64.b64encode(pkan))
-@plugin.route('/play-tv/<event_id>')
-def PLAY_TV(event_id):
-    resource = arg_as_string('resource')
-    network_name = arg_as_string('network_name')
-
-    requires_auth = does_requires_auth(network_name)
+def handle_auth_status(requires_auth, resource, network_name):
     if not requires_auth:
         logging.debug(TAG + ' Forcing auth')
         requires_auth = adobe_activate_api.is_authenticated()
@@ -34,7 +19,7 @@ def PLAY_TV(event_id):
         if not adobe_activate_api.is_authenticated():
             dialog = xbmcgui.Dialog()
             dialog.ok(translation(30037), translation(30410))
-            return
+            return None
         try:
             # testing code raise urllib2.HTTPError(url='test', code=403, msg='no', hdrs=dict(), fp=None)
             xbmc.log(TAG + ' getting media token for resource %s' % resource, xbmc.LOGDEBUG)
@@ -46,7 +31,7 @@ def PLAY_TV(event_id):
                 dialog.ok(translation(30037), translation(30840))
                 adobe_activate_api.deauthorize()
                 xbmcplugin.endOfDirectory(plugin.handle, succeeded=False, updateListing=True)
-                return
+                return None
             elif http_exception.code == 403:
                 # Check for blackout
                 dialog = xbmcgui.Dialog()
@@ -55,7 +40,7 @@ def PLAY_TV(event_id):
                     setting = get_setting_from_channel(network_name)
                     if setting is not None:
                         selfAddon.setSetting(setting, 'false')
-                return
+                return None
             else:
                 raise http_exception
         except adobe_activate_api.AuthorizationException as exception:
@@ -64,23 +49,22 @@ def PLAY_TV(event_id):
             dialog.ok(translation(30037), translation(30840))
             adobe_activate_api.deauthorize()
             xbmcplugin.endOfDirectory(plugin.handle, succeeded=False, updateListing=True)
-            return
+            return None
 
         token_type = 'ADOBEPASS'
     else:
         media_token = adobe_activate_api.get_device_id()
         token_type = 'DEVICE'
 
+    return token_type, media_token
 
-    # see aHR0cDovL2FwaS1hcHAuZXNwbi5jb20vdjEvd2F0Y2gvY2xpZW50cy93YXRjaGVzcG4tdHZvcw== for details
-    # see aHR0cDovL2VzcG4uZ28uY29tL3dhdGNoZXNwbi9hcHBsZXR2L2ZlYXR1cmVk for details
-    start_session_url = arg_as_string('session_url')
-    params = urllib.urlencode({'partner':'watchespn',
-                               'playbackScenario':'HTTP_CLOUD_HIGH',
-                               'platform':'chromecast_uplynk',
-                               'token':media_token,
-                               'tokenType':token_type,
-                               'resource':base64.b64encode(resource),
+def start_session(media_token, token_type, resource, start_session_url):
+    params = urllib.urlencode({'partner': 'watchespn',
+                               'playbackScenario': 'HTTP_CLOUD_HIGH',
+                               'platform': 'chromecast_uplynk',
+                               'token': media_token,
+                               'tokenType': token_type,
+                               'resource': base64.b64encode(resource),
                                'v': '2.0.0'
                                })
     start_session_url += '&' + params
@@ -107,7 +91,7 @@ def PLAY_TV(event_id):
     try:
         m3u8_obj = m3u8.load(playback_url)
     except:
-        playback_url += '|Connection=keep-alive&User-Agent=' + urllib.quote(UA_PC) + '&Cookie=_mediaAuth=' +\
+        playback_url += '|Connection=keep-alive&User-Agent=' + urllib.quote(UA_PC) + '&Cookie=_mediaAuth=' + \
                         urllib.quote(session_json['session']['token'])
         item = xbmcgui.ListItem(path=playback_url)
         return xbmcplugin.setResolvedUrl(plugin.handle, True, item)
@@ -121,7 +105,8 @@ def PLAY_TV(event_id):
             stream_options = list()
             bandwidth_key = 'bandwidth'
             m3u8_obj.playlists.sort(key=lambda playlist: playlist.stream_info.bandwidth, reverse=True)
-            m3u8_obj.data['playlists'].sort(key=lambda playlist: int(playlist['stream_info'][bandwidth_key]), reverse=True)
+            m3u8_obj.data['playlists'].sort(key=lambda playlist: int(playlist['stream_info'][bandwidth_key]),
+                                            reverse=True)
             stream_quality_index = str(selfAddon.getSetting('StreamQualityIndex'))
             stream_index = None
             should_ask = False
@@ -140,7 +125,7 @@ def PLAY_TV(event_id):
                     if bandwidth <= bitrate_limit:
                         break
                     stream_index += 1
-            elif '2' == stream_quality: #Ask everytime
+            elif '2' == stream_quality:  # Ask everytime
                 should_ask = True
             if should_ask:
                 for playlist in m3u8_obj.data['playlists']:
@@ -150,7 +135,7 @@ def PLAY_TV(event_id):
                     bandwidth = int(stream_info[bandwidth_key]) / 1024
                     if 'average_bandwidth' in stream_info:
                         logging.debug('bandwidth: %s average bandwidth: %s' %
-                                 (stream_info['bandwidth'], stream_info['average_bandwidth']))
+                                      (stream_info['bandwidth'], stream_info['average_bandwidth']))
                     stream_options.append(translation(30450) % (resolution, frame_rate, bandwidth))
                 dialog = xbmcgui.Dialog()
                 stream_index = dialog.select(translation(30440), stream_options)
@@ -172,6 +157,48 @@ def PLAY_TV(event_id):
         item.setProperty('inputstream.hls.manifest_type', 'hls')
         xbmcplugin.setResolvedUrl(plugin.handle, success, item)
 
+@plugin.route('/play-item')
+def PLAY_ITEM():
+    url = arg_as_string('url')
+    item = xbmcgui.ListItem(path=url)
+    return setResolvedUrl(plugin.handle, True, item)
+
+# Used for V3 Page api play requests
+@plugin.route('/play-event/<event_id>')
+def play_event(event_id):
+    event_url = arg_as_string('event_url')
+    auth_types = arg_as_list('auth_types')
+
+    session_json = util.get_url_as_json(event_url)
+    resource = session_json['adobeRSS']
+    network_name = session_json['tracking']['network']
+
+    token_type, media_token = handle_auth_status(check_auth_types(auth_types), resource, network_name)
+
+    start_session_url = session_json['playbackState']['videoHref']
+    start_session(media_token, token_type, resource, start_session_url)
+
+
+# Cookie is only needed when authenticating with espn broadband as opposed to uplynk
+#ua UA_PC
+#finalurl = finalurl + '|Connection=keep-alive&User-Agent=' + urllib.quote(ua) + '&Cookie=_mediaAuth=' + urllib.quote(base64.b64encode(pkan))
+@plugin.route('/play-tv/<event_id>')
+def PLAY_TV(event_id):
+    resource = arg_as_string('resource')
+    network_name = arg_as_string('network_name')
+
+    requires_auth = does_requires_auth(network_name)
+    auth_ret = handle_auth_status(requires_auth, resource, network_name)
+    if auth_ret is None:
+        return
+    token_type, media_token = auth_ret
+
+
+    # see aHR0cDovL2FwaS1hcHAuZXNwbi5jb20vdjEvd2F0Y2gvY2xpZW50cy93YXRjaGVzcG4tdHZvcw== for details
+    # see aHR0cDovL2VzcG4uZ28uY29tL3dhdGNoZXNwbi9hcHBsZXR2L2ZlYXR1cmVk for details
+    start_session_url = arg_as_string('session_url')
+
+    start_session(media_token, token_type, resource, start_session_url)
 
 @plugin.route('/upcoming-event/<event_id>')
 def upcoming_event(event_id):

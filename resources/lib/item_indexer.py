@@ -5,6 +5,56 @@ from xbmcplugin import addDirectoryItem
 def format_time(etime):
     return etime
 
+def get_item_listing_text(event_name, starttime, duration, status, network, blackout, auth_types, sport=None, sport2=None):
+    if sport != sport2 and len(sport2) > 0:
+        sport += ' (' + sport2 + ')'
+    length = duration
+    ename = event_name
+
+    if starttime is not None:
+        now = time.time()
+        etime = time.strftime("%I:%M %p", starttime)
+        if status == 'replay':
+            etime_local = starttime
+            if etime_local.tm_hour == 0 and etime_local.tm_min == 0:
+                etime = time.strftime("%m/%d/%Y", starttime)
+            else:
+                etime = time.strftime("%m/%d %I:%M %p", starttime)
+            ename = etime + ' - ' + ename
+        elif status == 'live':
+            starttime_time = time.mktime(starttime)
+            length -= (time.time() - starttime_time)
+            ename = ename + ' - ' + etime
+        else:
+            now_time = time.localtime(now)
+            if now_time.tm_year == starttime.tm_year and \
+                    now_time.tm_mon == starttime.tm_mon and \
+                    now_time.tm_mday == starttime.tm_mday:
+                etime = time.strftime("%I:%M %p", starttime)
+            else:
+                etime = time.strftime("%m/%d %I:%M %p", starttime)
+            ename = etime + ' - ' + ename
+        aired = time.strftime("%Y-%m-%d", starttime)
+    else:
+        aired = 0
+
+    blackout_text = ''
+    if blackout:
+        blackout_text = translation(30580)
+    if len(blackout_text) > 0:
+        ename = blackout_text + ' ' + ename
+    if len(network) > 0:
+        if selfAddon.getSetting('NoColors') == 'true':
+            ename = network + ' ' + ename
+        else:
+            ename = '[B]%s[/B] ' % (network) + ename
+
+    requires_auth = check_auth_types(auth_types)
+    if requires_auth and not adobe_activate_api.is_authenticated():
+        ename = 'Requires Authentication - ' + ename
+    return ename, length
+
+# TODO: Make use of get_item_listing_text
 def index_item(args):
     if args['type'] == 'over':
         return
@@ -111,10 +161,11 @@ def index_item(args):
 
             if include_item(network_id):
                 logging.debug('Adding %s with handle %d and id %s' % (ename, plugin.handle, args['eventId']))
+                logging.debug(adobe_rss)
                 addDirectoryItem(plugin.handle,
                                  plugin.url_for(PLAY_TV, event_id=args['eventId'],
                                                 session_url=args['sessionUrl'], network_name=args['networkId'],
-                                                resource=adobe_rss),
+                                                resource=urllib.quote_plus(adobe_rss.encode('utf-8'))),
                                  make_list_item(ename, icon=fanart, infoLabels=infoLabels))
             else:
                 logging.debug('Skipping %s' % args['networkId'])

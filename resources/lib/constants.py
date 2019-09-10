@@ -65,6 +65,7 @@ NETWORK_ID_TO_NETWORK_NAME = {
     'goalline': 30988,
     'secplus': 30997,
     'acc': 31000,
+    'espn_dtc': 31100,
 }
 
 ID = 'id'
