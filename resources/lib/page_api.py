@@ -123,11 +123,15 @@ def get_team_name(event, number):
 def index_v3_content(content):
     logging.debug('Indexing %s' % content)
     type = content['type']
+    status = content['status']
     if type == 'show'or type == 'film':
         index_v3_show(content)
         return
     if type == 'vod':
         index_v3_vod(content)
+        return
+    if status == 'upcoming':
+        index_v3_upcoming(content)
         return
 
     stream = content['streams'][0]
@@ -175,6 +179,9 @@ def index_v3_show(content):
     pass
 
 def index_v3_vod(content):
+    pass
+
+def index_v3_upcoming(content):
     pass
 
 def index_v1_content(content):
@@ -228,8 +235,16 @@ def get_time(content):
 
 
 def compare_contents(l, r):
-    lnetwork = l['source'] if 'source' in l else None
-    rnetwork = r['source'] if 'source' in r else None
+    lnetwork = util.get_nested_value(l, ['streams', 0, 'source', 'id'])
+    rnetwork = util.get_nested_value(r, ['streams', 0, 'source', 'id'])
+    try:
+        lnetwork_sort = NETWORK_ID_SORT_ORDER.index(lnetwork.lower())
+    except:
+        lnetwork_sort = 1000
+    try:
+        rnetwork_sort = NETWORK_ID_SORT_ORDER.index(rnetwork.lower())
+    except:
+        rnetwork_sort = 1000
     ltype = l['status'] if 'status' in l else 'clip'
     rtype = r['status'] if 'status' in r else 'clip'
-    return compare(get_time(l), lnetwork, ltype, get_time(r), rnetwork, rtype)
+    return compare(get_time(l), lnetwork_sort, ltype, get_time(r), rnetwork_sort, rtype)

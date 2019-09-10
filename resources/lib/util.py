@@ -117,3 +117,13 @@ def parse_url_from_method(method):
 def parse_method_call(method):
     p = re.compile('([\\w\\.:/&\\?=%,-]{2,})')
     return p.findall(method)
+
+
+def get_nested_value(dict_val, keys):
+    local_dict = dict_val
+    for key in keys:
+        try:
+            local_dict = local_dict[key]
+        except:
+            return None
+    return local_dict

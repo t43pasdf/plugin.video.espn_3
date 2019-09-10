@@ -68,6 +68,25 @@ NETWORK_ID_TO_NETWORK_NAME = {
     'espn_dtc': 31100,
 }
 
+NETWORK_ID_SORT_ORDER = [
+    'espn1',
+    'espn2',
+    'espnu',
+    'espnews',
+    'espndeportes',
+    'sec',
+    'acc',
+    'longhorn',
+    'goalline',
+]
+
+GROUPED_NETWORK_IDS = [
+    'espn3',
+    'accextra',
+    'secplus',
+    'espn_dtc'
+]
+
 ID = 'id'
 URL = 'url'
 
