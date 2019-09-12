@@ -34,7 +34,7 @@ def page_api_channel():
 def page_api_buckets(bucket_path):
     url = arg_as_string('url')
     bucket_url = arg_as_string('bucket_url')
-    parse_json(bucket_url)
+    parse_json(bucket_url, bucket_path)
     endOfDirectory(plugin.handle)
 
 
@@ -60,11 +60,17 @@ def process_buckets(url, buckets, selected_buckets, current_bucket_path, channel
         if selected_bucket is not None and str(bucket['id']) != selected_bucket:
             continue
         if ('contents' in bucket or 'buckets' in bucket) and selected_bucket is None and len(buckets) > 1:
-            if bucket['type'] != 'images':
+            if bucket.get('type', '') != 'images':
                 bucket_path = '/'.join(current_bucket_path)
-                bucket_url = bucket['links']['self']
-                addDirectoryItem(plugin.handle, plugin.url_for(page_api_buckets, bucket_path=bucket_path, url=url, bucket_url=bucket_url),
-                                 ListItem(bucket['name']), True)
+                if 'links' in bucket:
+                    bucket_url = bucket['links']['self']
+                    addDirectoryItem(plugin.handle, plugin.url_for(page_api_buckets, bucket_path=bucket_path, url=url, bucket_url=bucket_url),
+                                     ListItem(bucket['name']), True)
+                else:
+                    # The items are listed directly in the bucket, not in a sub-url
+                    addDirectoryItem(plugin.handle, plugin.url_for(page_api_buckets, bucket_path=bucket_path, url=url,
+                                                                   bucket_url=url),
+                                     ListItem(bucket['name']), True)
         else:
             if 'buckets' in bucket:
                 if selected_buckets is not None and len(selected_buckets) > 0:
@@ -161,13 +167,14 @@ def get_team_name(event, number):
 def index_v3_content(content):
     logging.debug('Indexing %s' % content)
     type = content['type']
-    status = content['status']
     if type == 'show'or type == 'film':
         index_v3_show(content)
         return
     if type == 'vod':
         index_v3_vod(content)
         return
+    
+    status = content['status']
 
     stream = content['streams'][0]
     duration = parse_duration(stream['duration'])
@@ -200,7 +207,7 @@ def index_v3_content(content):
     infoLabels = {'title': ename,
                   'genre': subtitle,
                   'duration': length,
-                  'studio': stream['source']['name'],
+                  'studio': stream['sSeriesource']['name'],
                   'plot': plot}
 
     if status == 'upcoming':
@@ -215,8 +222,25 @@ def index_v3_content(content):
                          make_list_item(ename, infoLabels=infoLabels))
 
 # TODO: Implement
+# {
+# "id": "d2ecb4c1-8fd1-4008-906d-e066e5170cd0",
+# "name": "Indianapolis 500 On Demand",
+# "type": "show",
+# "imageFormat": "5x2",
+# "size": "md",
+# "imageHref": "http://s.espncdn.com/stitcher/artwork/5x2.jpg?width=400&source=https://artwork.espncdn.com/series/d2ecb4c1-8fd1-4008-906d-e066e5170cd0/5x2/960x384_201804161812.jpg&cb=12&showBadge=true&package=ESPN_PLUS",
+# "links": {
+#     "self": "https://watch.product.api.espn.com/api/product/v3/watchespn/web/series/d2ecb4c1-8fd1-4008-906d-e066e5170cd0?tz=America%2FPuerto_Rico&lang=en",
+#     "web": "http://www.espn.com/watch/series/d2ecb4c1-8fd1-4008-906d-e066e5170cd0/indianapolis-500-on-demand",
+#     "shareUrl": "http://www.espn.com/watch/series/d2ecb4c1-8fd1-4008-906d-e066e5170cd0/indianapolis-500-on-demand"
+#     }
+# },
 def index_v3_show(content):
-    pass
+    content_url = content['links']['self']
+    name = content['name']
+    fanart = content['imageHref']
+    addDirectoryItem(plugin.handle, plugin.url_for(page_api_url, url=content_url),
+                     ListItem(name, iconImage=fanart), True)
 
 def index_v3_vod(content):
     pass

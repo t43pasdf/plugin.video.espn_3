@@ -1,6 +1,5 @@
 1. Page API v3
-- Update item indexer to only pass the event id to play-tv, the response contains the necessary information to start the stream
-- Update play-tv to work with page API v3 urls
+- fix navigating through ESPN+ shows, the bucket filtering doesn't work properly
 - ESPN+ events have mulitple streams, for example home/away broadcasts
 1. Add in a search feature
 2. Use the graphql API for live airings
