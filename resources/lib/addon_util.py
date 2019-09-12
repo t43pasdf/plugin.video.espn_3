@@ -106,8 +106,8 @@ def check_event_blackout(event_id):
     return blackout == 'true'
 
 def compare(lstart, lnetwork, lstatus, rstart, rnetwork, rstatus):
-    xbmc.log(TAG + 'lstart %s lnetwork %s lstatus %s rstart %s rnetwork %s rstatus %s' %
-             (lstart, lnetwork, lstatus, rstart, rnetwork, rstatus), xbmc.LOGDEBUG)
+    # xbmc.log(TAG + 'lstart %s lnetwork %s lstatus %s rstart %s rnetwork %s rstatus %s' %
+    #          (lstart, lnetwork, lstatus, rstart, rnetwork, rstatus), xbmc.LOGDEBUG)
     if lnetwork < rnetwork:
         return -1
     if rnetwork < lnetwork:

@@ -72,6 +72,7 @@ def process_buckets(url, buckets, selected_buckets, current_bucket_path, channel
                                                                    bucket_url=url),
                                      ListItem(bucket['name']), True)
         else:
+            logging.debug('Processing bucket %s' % bucket['id'])
             if 'buckets' in bucket:
                 if selected_buckets is not None and len(selected_buckets) > 0:
                     process_buckets(url, bucket['buckets'], selected_buckets[1:], current_bucket_path)
@@ -82,6 +83,7 @@ def process_buckets(url, buckets, selected_buckets, current_bucket_path, channel
                     bucket['contents'].sort(cmp=compare_contents)
                     grouped_events = dict()
                     source_id_data = dict()
+                    content_indexed = 0
                     for content in bucket['contents']:
                         content_type = content['type']
                         if content_type == 'network' or content_type == 'subcategory' or content_type == 'category' or content_type == 'program':
@@ -106,19 +108,24 @@ def process_buckets(url, buckets, selected_buckets, current_bucket_path, channel
                                     source_id_data[channel_id] = {'name': source_name}
                                 else:
                                     index_content(content)
+                                    content_indexed = content_indexed + 1
                             elif channel_filter == channel_id:
                                 index_content(content)
+                                content_indexed = content_indexed + 1
 
-                    # TODO: Process grouped events and handle the directory
+                    # Handle grouped contents
                     group_source_ids = list(grouped_events.keys())
                     group_source_ids.sort(cmp=compare_network_ids)
                     for group_source_id in group_source_ids:
                         contents = grouped_events[group_source_id]
                         source_data = source_id_data[group_source_id]
-                        print(group_source_id)
-                        print(source_data)
-                        addDirectoryItem(plugin.handle, plugin.url_for(page_api_channel, channel_id=group_source_id, url=url),
-                                         ListItem(source_data['name']), True)
+                        # Index the content directly if he haven't indexed a lot of things
+                        if content_indexed <= 3:
+                            for content in contents:
+                                index_content(content)
+                        else:
+                            addDirectoryItem(plugin.handle, plugin.url_for(page_api_channel, channel_id=group_source_id, url=url),
+                                             ListItem(source_data['name']), True)
 
 
 
@@ -167,7 +174,7 @@ def get_team_name(event, number):
 def index_v3_content(content):
     logging.debug('Indexing %s' % content)
     type = content['type']
-    if type == 'show'or type == 'film':
+    if type == 'show'or type == 'film' or type == 'product':
         index_v3_show(content)
         return
     if type == 'vod':
@@ -175,10 +182,6 @@ def index_v3_content(content):
         return
     
     status = content['status']
-
-    stream = content['streams'][0]
-    duration = parse_duration(stream['duration'])
-    duration_seconds = duration.tm_hour * 3600 + duration.tm_min * 60 + duration.tm_sec
 
     subtitle = content.get('subtitle', '')
     plot = subtitle
@@ -200,26 +203,40 @@ def index_v3_content(content):
 
     event_id = content['eventId'] if 'eventId' in content else content['id']
 
-    ename, length = get_item_listing_text(content['name'], starttime, duration_seconds, content['status'],
-                                  stream['source']['name'], 'blackoutText' in content,
-                                  stream['authTypes'])
+    more_than_one_stream = len(content['streams']) > 1
+    for stream in content['streams']:
+        duration = parse_duration(stream['duration'])
+        duration_seconds = duration.tm_hour * 3600 + duration.tm_min * 60 + duration.tm_sec
 
-    infoLabels = {'title': ename,
-                  'genre': subtitle,
-                  'duration': length,
-                  'studio': stream['sSeriesource']['name'],
-                  'plot': plot}
+        name = content['name']
+        if more_than_one_stream:
+            name = name + ' - ' + stream['name']
 
-    if status == 'upcoming':
-        addDirectoryItem(plugin.handle,
-                         plugin.url_for(upcoming_event, event_id=event_id, event_name=ename, starttime=starttime),
-                         make_list_item(ename, infoLabels=infoLabels))
-    else:
-        addDirectoryItem(plugin.handle,
-                         plugin.url_for(play_event, event_id=event_id,
-                                        event_url=stream['links']['play'],
-                                        auth_types=stream['authTypes']),
-                         make_list_item(ename, infoLabels=infoLabels))
+        ename, length = get_item_listing_text(name, starttime, duration_seconds, content['status'],
+                                      stream['source']['name'], 'blackoutText' in content,
+                                      stream['authTypes'])
+
+        source_name = util.get_nested_value(content, ['stream', 0, 'source', 'name'])
+
+        fanart = util.get_nested_value(content, ['imageHref'])
+
+
+        infoLabels = {'title': ename,
+                      'genre': subtitle,
+                      'duration': length,
+                      'studio': source_name,
+                      'plot': plot}
+
+        if status == 'upcoming':
+            addDirectoryItem(plugin.handle,
+                             plugin.url_for(upcoming_event, event_id=event_id, event_name=ename, starttime=starttime),
+                             make_list_item(ename, infoLabels=infoLabels))
+        else:
+            addDirectoryItem(plugin.handle,
+                             plugin.url_for(play_event, event_id=event_id,
+                                            event_url=stream['links']['play'],
+                                            auth_types=stream['authTypes']),
+                             make_list_item(ename, infoLabels=infoLabels, icon=fanart))
 
 # TODO: Implement
 # {
