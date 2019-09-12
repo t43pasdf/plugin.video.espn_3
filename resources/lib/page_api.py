@@ -9,13 +9,24 @@ from plugin_routing import *
 from addon_util import get_url, compare
 from item_indexer import index_item, get_item_listing_text
 from play_routes import *
+import util
 
 BUCKET = 'BUCKET'
+
+def make_channel_id(id, name):
+    return '%s' % (name)
 
 @plugin.route('/page-api')
 def page_api_url():
     url = arg_as_string('url')
     parse_json(url)
+    endOfDirectory(plugin.handle)
+
+@plugin.route('/page-api/channel')
+def page_api_channel():
+    url = arg_as_string('url')
+    channel_id = arg_as_string('channel_id')
+    parse_json(url, channel_id=channel_id)
     endOfDirectory(plugin.handle)
 
 
@@ -27,7 +38,7 @@ def page_api_buckets(bucket_path):
     endOfDirectory(plugin.handle)
 
 
-def parse_json(url, bucket_path=None):
+def parse_json(url, bucket_path=None, channel_id=None):
     logging.debug('Looking at url %s %s' % (url, bucket_path))
     selected_bucket = bucket_path
     if selected_bucket is not None:
@@ -36,10 +47,10 @@ def parse_json(url, bucket_path=None):
     json_data = util.get_url_as_json_cache(get_url(url))
     if 'buckets' in json_data['page']:
         buckets = json_data['page']['buckets']
-        process_buckets(url, buckets, selected_bucket, list())
+        process_buckets(url, buckets, selected_bucket, list(), channel_filter=channel_id)
 
 
-def process_buckets(url, buckets, selected_buckets, current_bucket_path):
+def process_buckets(url, buckets, selected_buckets, current_bucket_path, channel_filter=None):
     selected_bucket = None if selected_buckets is None or len(selected_buckets) == 0 else selected_buckets[0]
     logging.debug('Selected buckets: %s Current Path: %s' % (selected_buckets, current_bucket_path))
     original_bucket_path = current_bucket_path
@@ -63,6 +74,8 @@ def process_buckets(url, buckets, selected_buckets, current_bucket_path):
             else:
                 if 'contents' in bucket:
                     bucket['contents'].sort(cmp=compare_contents)
+                    grouped_events = dict()
+                    source_id_data = dict()
                     for content in bucket['contents']:
                         content_type = content['type']
                         if content_type == 'network' or content_type == 'subcategory' or content_type == 'category' or content_type == 'program':
@@ -74,8 +87,33 @@ def process_buckets(url, buckets, selected_buckets, current_bucket_path):
                             addDirectoryItem(plugin.handle, plugin.url_for(page_api_url, url=content_url),
                                              ListItem(content['name'], iconImage=fanart), True)
                         else:
-                            index_content(content)
                             setContent(plugin.handle, 'episodes')
+                            source_id = util.get_nested_value(content, ['streams', 0, 'source', 'id'])
+                            source_name = util.get_nested_value(content, ['streams', 0, 'source', 'name'])
+                            channel_id = make_channel_id(source_id, source_name)
+                            if channel_filter is None:
+                                source_type = util.get_nested_value(content, ['streams', 0, 'source', 'type'])
+                                if source_type == 'online':
+                                    if channel_id not in grouped_events:
+                                        grouped_events[channel_id] = []
+                                    grouped_events[channel_id].append(content)
+                                    source_id_data[channel_id] = {'name': source_name}
+                                else:
+                                    index_content(content)
+                            elif channel_filter == channel_id:
+                                index_content(content)
+
+                    # TODO: Process grouped events and handle the directory
+                    group_source_ids = list(grouped_events.keys())
+                    group_source_ids.sort(cmp=compare_network_ids)
+                    for group_source_id in group_source_ids:
+                        contents = grouped_events[group_source_id]
+                        source_data = source_id_data[group_source_id]
+                        print(group_source_id)
+                        print(source_data)
+                        addDirectoryItem(plugin.handle, plugin.url_for(page_api_channel, channel_id=group_source_id, url=url),
+                                         ListItem(source_data['name']), True)
+
 
 
 def index_content(content):
@@ -130,9 +168,6 @@ def index_v3_content(content):
     if type == 'vod':
         index_v3_vod(content)
         return
-    if status == 'upcoming':
-        index_v3_upcoming(content)
-        return
 
     stream = content['streams'][0]
     duration = parse_duration(stream['duration'])
@@ -143,7 +178,7 @@ def index_v3_content(content):
     if 'event' in content:
         event = content['event']
         if event['type'] == 'tvt':
-            plot = '%s\n%s vs. (%s)\n%s - %s\n%s%s' % \
+            plot = '%s\n%s vs. %s\n%s - %s\n%s%s' % \
                    (subtitle,
                     get_team_name(event, 'One'),
                     get_team_name(event, 'Two'),
@@ -168,11 +203,16 @@ def index_v3_content(content):
                   'studio': stream['source']['name'],
                   'plot': plot}
 
-    addDirectoryItem(plugin.handle,
-                     plugin.url_for(play_event, event_id=event_id,
-                                    event_url=stream['links']['play'],
-                                    auth_types=stream['authTypes']),
-                     make_list_item(ename, infoLabels=infoLabels))
+    if status == 'upcoming':
+        addDirectoryItem(plugin.handle,
+                         plugin.url_for(upcoming_event, event_id=event_id, event_name=ename, starttime=starttime),
+                         make_list_item(ename, infoLabels=infoLabels))
+    else:
+        addDirectoryItem(plugin.handle,
+                         plugin.url_for(play_event, event_id=event_id,
+                                        event_url=stream['links']['play'],
+                                        auth_types=stream['authTypes']),
+                         make_list_item(ename, infoLabels=infoLabels))
 
 # TODO: Implement
 def index_v3_show(content):
@@ -181,8 +221,6 @@ def index_v3_show(content):
 def index_v3_vod(content):
     pass
 
-def index_v3_upcoming(content):
-    pass
 
 def index_v1_content(content):
     logging.debug('Indexing %s' % content)
@@ -248,3 +286,14 @@ def compare_contents(l, r):
     ltype = l['status'] if 'status' in l else 'clip'
     rtype = r['status'] if 'status' in r else 'clip'
     return compare(get_time(l), lnetwork_sort, ltype, get_time(r), rnetwork_sort, rtype)
+
+def compare_network_ids(l, r):
+    try:
+        lnetwork_sort = NETWORK_ID_SORT_ORDER.index(lnetwork.lower())
+    except:
+        lnetwork_sort = 1000
+    try:
+        rnetwork_sort = NETWORK_ID_SORT_ORDER.index(rnetwork.lower())
+    except:
+        rnetwork_sort = 1000
+    return lnetwork_sort - rnetwork_sort

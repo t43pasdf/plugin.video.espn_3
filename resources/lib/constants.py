@@ -78,13 +78,10 @@ NETWORK_ID_SORT_ORDER = [
     'acc',
     'longhorn',
     'goalline',
-]
-
-GROUPED_NETWORK_IDS = [
+    # grouped
     'espn3',
-    'accextra',
-    'secplus',
-    'espn_dtc'
+    'sec',
+    'bam_dtc',
 ]
 
 ID = 'id'
