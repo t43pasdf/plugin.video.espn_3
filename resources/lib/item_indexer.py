@@ -1,6 +1,9 @@
-from plugin_routing import *
 from play_routes import *
 from xbmcplugin import addDirectoryItem
+from xbmcplugin import addDirectoryItem
+
+from play_routes import *
+
 
 def format_time(etime):
     return etime
@@ -122,7 +125,8 @@ def index_item(args):
             ename = '[B]%s[/B] ' % (network) + ename
 
     description = args['description']
-    requires_auth = does_requires_auth(network_id)
+    auth_types = get_auth_types_from_network(network_id)
+    requires_auth = check_auth_types(auth_types)
     if requires_auth and not adobe_activate_api.is_authenticated():
         ename = '*' + ename
 

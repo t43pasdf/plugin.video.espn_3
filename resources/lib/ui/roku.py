@@ -1,9 +1,9 @@
-from xbmcplugin import addDirectoryItem, endOfDirectory
+from xbmcplugin import endOfDirectory
 
-from resources.lib.item_indexer import *
-from resources.lib.addon_util import *
-from resources.lib.plugin_routing import *
 from resources.lib import adobe_activate_api
+from resources.lib.addon_util import *
+from resources.lib.item_indexer import *
+from resources.lib.plugin_routing import *
 
 ROOT = '/roku'
 MIN_THUMBNAIL_WIDTH = 500

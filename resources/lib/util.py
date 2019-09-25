@@ -81,7 +81,7 @@ def get_url_as_json(url):
     return global_session.get(url).json()
 
 
-def get_url_as_json_cache(url, cache_file=None, timeout=300):
+def get_url_as_json_cache(url, cache_file=None, timeout=180):
     if cache_file is None:
         cache_file = hashlib.sha224(url).hexdigest()
         cache_file = os.path.join(ADDON_PATH_PROFILE, cache_file + '.json')

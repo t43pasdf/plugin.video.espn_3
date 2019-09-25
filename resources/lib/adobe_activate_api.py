@@ -7,10 +7,7 @@ import base64
 import urllib2
 import time
 import json
-import gzip
 import os
-import cookielib
-from StringIO import StringIO
 import requests
 
 import xbmc
@@ -196,7 +193,7 @@ def authorize(resource):
     settings = load_settings()
     if 'authorize' not in settings:
         settings['authorize'] = dict()
-    xbmc.log(TAG + 'resource %s' % resource, xbmc.LOGDEBUG)
+    xbmc.log(TAG + 'resource %s resp %s' % (resource, resp), xbmc.LOGDEBUG)
     if 'status' in resp and resp['status'] == 403:
         raise AuthorizationException()
     settings['authorize'][resource.decode('iso-8859-1').encode('utf-8')] = resp
@@ -259,7 +256,7 @@ def get_short_media_token(resource):
             xbmc.log(TAG + 'Rethrowing exception %s' % exception, xbmc.LOGDEBUG)
             raise exception
     except AuthorizationException as exception:
-        xbmc.log(TAG + 'Authorization exception, trying again', xbmc.LOGDEBUG)
+        xbmc.log(TAG + 'Authorization exception, trying again %s' % exception, xbmc.LOGDEBUG)
         re_authenticate()
         authorize(resource)
         resp = get_url_response(url, message)

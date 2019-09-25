@@ -1,14 +1,3 @@
-OLD_LISTING_MODE = 'OLD_LISTING_MODE'
-LIVE_EVENTS_MODE = 'LIVE_EVENTS'
-PLAY_MODE = 'PLAY'
-PLAY_ITEM_MODE = 'PLAY_ITEM'
-PLAY_TV_MODE = 'PLAY_TV'
-
-UPCOMING_MODE = 'UPCOMING'
-AUTHENTICATE_MODE = 'AUTHENTICATE'
-AUTHENTICATION_DETAILS_MODE = 'AUTHENTICATION_DETAILS'
-
-
 NETWORK_ID = 'NETWORK_ID'
 EVENT_ID = 'EVENT_ID'
 SIMULCAST_AIRING_ID = 'SIMULCAST_AIRING_ID'
@@ -65,7 +54,7 @@ NETWORK_ID_TO_NETWORK_NAME = {
     'goalline': 30988,
     'secplus': 30997,
     'acc': 31000,
-    'espn_dtc': 31100,
+    'espn_dtc': 40000,
 }
 
 NETWORK_ID_SORT_ORDER = [
@@ -98,3 +87,4 @@ APPLE_TV_CHANNELS = 'http://espn.go.com/watchespn/appletv/channels'
 WATCH_API_V1_TRENDING = 'http://watch.api.espn.com/v1/trending'
 
 WATCH_API_V3_WEB_HOME = 'https://watch.product.api.espn.com/api/product/v3/watchespn/web/home'
+WATCH_API_V3_LIVE = 'https://watch.product.api.espn.com/api/product/v3/watchespn/web/bucket?bucketId=5060'

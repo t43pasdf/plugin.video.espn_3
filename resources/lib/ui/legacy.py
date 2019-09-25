@@ -2,7 +2,7 @@
 from datetime import datetime, timedelta
 
 from resources.lib import events
-from resources.lib.globals import defaultlive, defaultreplay, \
+from resources.lib.globals import defaultreplay, \
     defaultupcoming
 from resources.lib.item_indexer import *
 from resources.lib.kodiutils import get_setting_as_int

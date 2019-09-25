@@ -1,15 +1,10 @@
-import logging
-import util
-import time
+import urlparse
 
-from xbmcgui import ListItem
 from xbmcplugin import addDirectoryItem, setContent, endOfDirectory
 
-from plugin_routing import *
-from addon_util import get_url, compare
+import util
 from item_indexer import index_item, get_item_listing_text
 from play_routes import *
-import util
 
 BUCKET = 'BUCKET'
 
@@ -18,6 +13,12 @@ def make_channel_id(id, name):
 
 @plugin.route('/page-api')
 def page_api_url():
+    url = arg_as_string('url')
+    parse_json(url)
+    endOfDirectory(plugin.handle)
+
+@plugin.route('/page-api/bucket/<bucket_id>')
+def page_api_url_bucket(bucket_id):
     url = arg_as_string('url')
     parse_json(url)
     endOfDirectory(plugin.handle)
@@ -37,6 +38,20 @@ def page_api_buckets(bucket_path):
     parse_json(bucket_url, bucket_path)
     endOfDirectory(plugin.handle)
 
+def get_v3_url(url):
+    components = urlparse.urlparse(url)
+    current_qs = components.query
+    if current_qs is None:
+        current_qs = ''
+    qs = urlparse.parse_qs(current_qs)
+    # TODO: Add tz, features, zipcode
+    entitlements = ','.join(espnplus.get_entitlements())
+    logging.debug('QS: %s' % qs)
+    qs['entitlements'] = entitlements
+    qs['countryCode'] = 'US'
+    qs['lang'] = 'en'
+    new_components = (components.scheme, components.netloc, components.path, components.params, urllib.urlencode(qs, doseq=True), components.fragment)
+    return urlparse.urlunparse(new_components)
 
 def parse_json(url, bucket_path=None, channel_id=None):
     logging.debug('Looking at url %s %s' % (url, bucket_path))
@@ -44,16 +59,22 @@ def parse_json(url, bucket_path=None, channel_id=None):
     if selected_bucket is not None:
         selected_bucket = selected_bucket.split('/')
         logging.debug('Looking at bucket %s' % selected_bucket)
-    json_data = util.get_url_as_json_cache(get_url(url))
+    json_data = util.get_url_as_json_cache(get_v3_url(url))
+    buckets = []
+    header_bucket = None
+    if 'header' in json_data['page'] and 'bucket' in json_data['page']['header']:
+        header_bucket = json_data['page']['header']['bucket']
     if 'buckets' in json_data['page']:
-        buckets = json_data['page']['buckets']
-        process_buckets(url, buckets, selected_bucket, list(), channel_filter=channel_id)
+        buckets = buckets + json_data['page']['buckets']
+    process_buckets(url, header_bucket, buckets, selected_bucket, list(), channel_filter=channel_id)
 
 
-def process_buckets(url, buckets, selected_buckets, current_bucket_path, channel_filter=None):
+def process_buckets(url, header_bucket, buckets, selected_buckets, current_bucket_path, channel_filter=None):
     selected_bucket = None if selected_buckets is None or len(selected_buckets) == 0 else selected_buckets[0]
     logging.debug('Selected buckets: %s Current Path: %s' % (selected_buckets, current_bucket_path))
     original_bucket_path = current_bucket_path
+    if header_bucket is not None and selected_bucket is None:
+        index_bucket_content(url, header_bucket, channel_filter)
     for bucket in buckets:
         current_bucket_path = list(original_bucket_path)
         current_bucket_path.append(str(bucket['id']))
@@ -62,12 +83,13 @@ def process_buckets(url, buckets, selected_buckets, current_bucket_path, channel
         if ('contents' in bucket or 'buckets' in bucket) and selected_bucket is None and len(buckets) > 1:
             if bucket.get('type', '') != 'images':
                 bucket_path = '/'.join(current_bucket_path)
-                if 'links' in bucket:
+                if 'links' in bucket and 'self' in bucket['links']:
                     bucket_url = bucket['links']['self']
-                    addDirectoryItem(plugin.handle, plugin.url_for(page_api_buckets, bucket_path=bucket_path, url=url, bucket_url=bucket_url),
+                    # bucket_path shouldn't be needed because we are using the full url to it
+                    addDirectoryItem(plugin.handle, plugin.url_for(page_api_url_bucket, bucket_id=bucket['id'], url=bucket_url),
                                      ListItem(bucket['name']), True)
                 else:
-                    # The items are listed directly in the bucket, not in a sub-url
+                    # The items are listed directly in the bucket, not in a sub-url, so use the bucket_path
                     addDirectoryItem(plugin.handle, plugin.url_for(page_api_buckets, bucket_path=bucket_path, url=url,
                                                                    bucket_url=url),
                                      ListItem(bucket['name']), True)
@@ -75,58 +97,60 @@ def process_buckets(url, buckets, selected_buckets, current_bucket_path, channel
             logging.debug('Processing bucket %s' % bucket['id'])
             if 'buckets' in bucket:
                 if selected_buckets is not None and len(selected_buckets) > 0:
-                    process_buckets(url, bucket['buckets'], selected_buckets[1:], current_bucket_path)
+                    process_buckets(url, None, bucket['buckets'], selected_buckets[1:], current_bucket_path)
                 else:
-                    process_buckets(url, bucket['buckets'], list(), current_bucket_path)
+                    process_buckets(url, None, bucket['buckets'], list(), current_bucket_path)
             else:
-                if 'contents' in bucket:
-                    bucket['contents'].sort(cmp=compare_contents)
-                    grouped_events = dict()
-                    source_id_data = dict()
-                    content_indexed = 0
-                    for content in bucket['contents']:
-                        content_type = content['type']
-                        if content_type == 'network' or content_type == 'subcategory' or content_type == 'category' or content_type == 'program':
-                            content_url = content['links']['self']
-                            if 'imageHref' in content:
-                                fanart = content['imageHref']
-                            else:
-                                fanart = None
-                            addDirectoryItem(plugin.handle, plugin.url_for(page_api_url, url=content_url),
-                                             ListItem(content['name'], iconImage=fanart), True)
-                        else:
-                            setContent(plugin.handle, 'episodes')
-                            source_id = util.get_nested_value(content, ['streams', 0, 'source', 'id'])
-                            source_name = util.get_nested_value(content, ['streams', 0, 'source', 'name'])
-                            channel_id = make_channel_id(source_id, source_name)
-                            if channel_filter is None:
-                                source_type = util.get_nested_value(content, ['streams', 0, 'source', 'type'])
-                                if source_type == 'online':
-                                    if channel_id not in grouped_events:
-                                        grouped_events[channel_id] = []
-                                    grouped_events[channel_id].append(content)
-                                    source_id_data[channel_id] = {'name': source_name}
-                                else:
-                                    index_content(content)
-                                    content_indexed = content_indexed + 1
-                            elif channel_filter == channel_id:
-                                index_content(content)
-                                content_indexed = content_indexed + 1
+                index_bucket_content(url, bucket, channel_filter)
 
-                    # Handle grouped contents
-                    group_source_ids = list(grouped_events.keys())
-                    group_source_ids.sort(cmp=compare_network_ids)
-                    for group_source_id in group_source_ids:
-                        contents = grouped_events[group_source_id]
-                        source_data = source_id_data[group_source_id]
-                        # Index the content directly if he haven't indexed a lot of things
-                        if content_indexed <= 3:
-                            for content in contents:
-                                index_content(content)
-                        else:
-                            addDirectoryItem(plugin.handle, plugin.url_for(page_api_channel, channel_id=group_source_id, url=url),
-                                             ListItem(source_data['name']), True)
+def index_bucket_content(url, bucket, channel_filter):
+    if 'contents' in bucket:
+        bucket['contents'].sort(cmp=compare_contents)
+        grouped_events = dict()
+        source_id_data = dict()
+        content_indexed = 0
+        for content in bucket['contents']:
+            content_type = content['type']
+            if content_type == 'network' or content_type == 'subcategory' or content_type == 'category' or content_type == 'program':
+                content_url = content['links']['self']
+                if 'imageHref' in content:
+                    fanart = content['imageHref']
+                else:
+                    fanart = None
+                addDirectoryItem(plugin.handle, plugin.url_for(page_api_url, url=content_url),
+                                 ListItem(content['name'], iconImage=fanart), True)
+            else:
+                setContent(plugin.handle, 'episodes')
+                source_id = util.get_nested_value(content, ['streams', 0, 'source', 'id'])
+                source_name = util.get_nested_value(content, ['streams', 0, 'source', 'name'])
+                channel_id = make_channel_id(source_id, source_name)
+                if channel_filter is None:
+                    source_type = util.get_nested_value(content, ['streams', 0, 'source', 'type'])
+                    if source_type == 'online':
+                        if channel_id not in grouped_events:
+                            grouped_events[channel_id] = []
+                        grouped_events[channel_id].append(content)
+                        source_id_data[channel_id] = {'name': source_name}
+                    else:
+                        index_content(content)
+                        content_indexed = content_indexed + 1
+                elif channel_filter == channel_id:
+                    index_content(content)
+                    content_indexed = content_indexed + 1
 
+        # Handle grouped contents
+        group_source_ids = list(grouped_events.keys())
+        group_source_ids.sort(cmp=compare_network_ids)
+        for group_source_id in group_source_ids:
+            contents = grouped_events[group_source_id]
+            source_data = source_id_data[group_source_id]
+            # Index the content directly if he haven't indexed a lot of things
+            if content_indexed <= 3:
+                for content in contents:
+                    index_content(content)
+            else:
+                addDirectoryItem(plugin.handle, plugin.url_for(page_api_channel, channel_id=group_source_id, url=url),
+                                 ListItem(source_data['name']), True)
 
 
 def index_content(content):
@@ -170,7 +194,7 @@ def get_team_name(event, number):
         return '%s (%s)' % (event[key_name], get_rank_text(event[key_rank]))
     return event[key_name]
 
-# TODO: Take into account blackout/packages
+
 def index_v3_content(content):
     logging.debug('Indexing %s' % content)
     type = content['type']
@@ -228,8 +252,10 @@ def index_v3_content(content):
                       'plot': plot}
 
         if status == 'upcoming':
+            starttime_text = time.strftime("%m/%d/%Y %I:%M %p", starttime)
             addDirectoryItem(plugin.handle,
-                             plugin.url_for(upcoming_event, event_id=event_id, event_name=ename, starttime=starttime),
+                             plugin.url_for(upcoming_event, event_id=event_id,
+                                            event_name=urllib.quote_plus(ename.encode('utf-8')), starttime=starttime_text),
                              make_list_item(ename, infoLabels=infoLabels))
         else:
             addDirectoryItem(plugin.handle,
@@ -238,7 +264,6 @@ def index_v3_content(content):
                                             auth_types=stream['authTypes']),
                              make_list_item(ename, infoLabels=infoLabels, icon=fanart))
 
-# TODO: Implement
 # {
 # "id": "d2ecb4c1-8fd1-4008-906d-e066e5170cd0",
 # "name": "Indianapolis 500 On Demand",
@@ -260,7 +285,36 @@ def index_v3_show(content):
                      ListItem(name, iconImage=fanart), True)
 
 def index_v3_vod(content):
-    pass
+    plot = content.get('description', '')
+
+    event_id = content['eventId'] if 'eventId' in content else content['id']
+
+    more_than_one_stream = len(content['streams']) > 1
+    for stream in content['streams']:
+        duration = parse_duration(stream['duration'])
+        duration_seconds = duration.tm_hour * 3600 + duration.tm_min * 60 + duration.tm_sec
+
+        name = content['name']
+        if more_than_one_stream:
+            name = name + ' - ' + stream['name']
+
+        ename, length = get_item_listing_text(name, None, duration_seconds, None,
+                                              '', 'blackoutText' in content,
+                                              [])
+
+        source_name = util.get_nested_value(content, ['stream', 0, 'source', 'name'])
+
+        fanart = util.get_nested_value(content, ['imageHref'])
+
+        infoLabels = {'title': ename,
+                      'duration': length,
+                      'studio': source_name,
+                      'plot': plot}
+
+        addDirectoryItem(plugin.handle,
+                         plugin.url_for(play_vod, event_id=event_id,
+                                        url=stream['links']['play']),
+                         make_list_item(ename, infoLabels=infoLabels, icon=fanart))
 
 
 def index_v1_content(content):
@@ -329,6 +383,8 @@ def compare_contents(l, r):
     return compare(get_time(l), lnetwork_sort, ltype, get_time(r), rnetwork_sort, rtype)
 
 def compare_network_ids(l, r):
+    lnetwork = util.get_nested_value(l, ['streams', 0, 'source', 'id'])
+    rnetwork = util.get_nested_value(r, ['streams', 0, 'source', 'id'])
     try:
         lnetwork_sort = NETWORK_ID_SORT_ORDER.index(lnetwork.lower())
     except:

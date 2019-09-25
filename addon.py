@@ -17,3 +17,5 @@ from resources.lib import plugin
 # doesn't keep a compiled copy of this
 
 plugin.run()
+
+

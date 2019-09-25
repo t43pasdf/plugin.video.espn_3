@@ -1,18 +1,16 @@
 import base64
 import re
-import sys
 import time
 import urllib
 
 import xbmc
 import xbmcgui
-import xbmcplugin
 from xbmcgui import ListItem
 
 import player_config
 import util
 from constants import *
-from globals import defaultfanart, selfAddon, translation
+from globals import selfAddon, translation
 from resources.lib.kodiutils import get_setting_as_bool
 
 TAG = 'Addon_Util: '
@@ -25,21 +23,26 @@ def check_error(session_json):
         return True
     return False
 
-def does_requires_auth(network_name):
+def get_auth_types_from_network(network_name):
     xbmc.log(TAG + 'Checking auth of ' + network_name, xbmc.LOGDEBUG)
     requires_auth = not (network_name == 'espn3' or network_name == 'accextra' or network_name.find('free') >= 0 or network_name == '')
-    if not requires_auth:
-        free_content_check = player_config.can_access_free_content()
-        if not free_content_check:
-            xbmc.log('ESPN3: User needs login to ESPN3', xbmc.LOGDEBUG)
-            requires_auth = True
-    return requires_auth
+    if requires_auth:
+        return ['mvpd']
+    return ['isp']
 
-def check_auth_types(auth_types):
-    if 'mpvd' in auth_types:
+def requires_adobe_auth(auth_types):
+    if 'mvpd' in auth_types:
         return True
     if 'isp' in auth_types:
         return player_config.can_access_free_content()
+    return False
+
+def check_auth_types(auth_types):
+    if 'mvpd' in auth_types or 'direct' in auth_types:
+        return True
+    if 'isp' in auth_types:
+        return player_config.can_access_free_content()
+    return False
 
 def get_url(url):
     if 'listingsUrl' not in url and 'tz' not in url:

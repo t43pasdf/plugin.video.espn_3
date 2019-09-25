@@ -1,9 +1,7 @@
-import logging
+from xbmcplugin import setContent
 
-from xbmcplugin import addDirectoryItem, endOfDirectory, setContent
-
-from resources.lib.plugin import *
 from resources.lib.item_indexer import *
+from resources.lib.plugin import *
 
 ROOT = '/appletv'
 

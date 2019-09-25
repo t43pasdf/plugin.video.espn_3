@@ -72,8 +72,28 @@ msgctxt "#30037"
 msgid "Error"
 msgstr ""
 
+msgctxt "#30038"
+msgid "Requires Authorization"
+msgstr ""
+
 msgctxt "#30040"
 msgid "Blacked Out"
+msgstr ""
+
+msgctxt "#30050"
+msgid "You must sign into your TV Provider in order to view this content"
+msgstr ""
+
+msgctxt "#30051"
+msgid "Sign In to TV Provider"
+msgstr ""
+
+msgctxt "#30060"
+msgid "You must sign into ESPN+ in order to view this content"
+msgstr ""
+
+msgctxt "#30061"
+msgid "Sign In to ESPN+"
 msgstr ""
 
 msgctxt "#30170"
@@ -116,6 +136,10 @@ msgctxt "#30300"
 msgid "Authenticate with provider to access premium content"
 msgstr ""
 
+msgctxt "#30301"
+msgid "You are already logged into a TV provider"
+msgstr ""
+
 msgctxt "#30310"
 msgid "Authentication Process"
 msgstr ""
@@ -146,6 +170,14 @@ msgstr ""
 
 msgctxt "#30380"
 msgid "Authentication Details"
+msgstr ""
+
+msgctxt "#30381"
+msgid "Sign Out"
+msgstr ""
+
+msgctxt "#30382"
+msgid "Are you sure you want to sign out of your TV Provider?"
 msgstr ""
 
 msgctxt "#30390"
@@ -359,6 +391,54 @@ msgctxt "#31000"
 msgid "ACC"
 msgstr ""
 
-msgctxt "#31100"
+msgctxt "#40000"
 msgid "ESPN+"
+msgstr ""
+
+msgctxt "#40100"
+msgid "ESPN+ Login"
+msgstr ""
+
+msgctxt "#40101"
+msgid "Your device has been authenticated for ESPN+ content"
+msgstr ""
+
+msgctxt "#40110"
+msgid "In order to login navigate to https://espn.com/activate and enter the code"
+msgstr ""
+
+msgctxt "#40120"
+msgid "%d:%02d until we cancel automatically cancel"
+msgstr ""
+
+msgctxt "#40130"
+msgid "Unable to login to ESPN+"
+msgstr ""
+
+msgctxt "#40200"
+msgid "Sign In to TV Provider"
+msgstr ""
+
+msgctxt "#40210"
+msgid "View TV Provider Details"
+msgstr ""
+
+msgctxt "#40220"
+msgid "Sign Out of TV Provider"
+msgstr ""
+
+msgctxt "#40230"
+msgid "Sign In to ESPN+"
+msgstr ""
+
+msgctxt "#40240"
+msgid "View ESPN+ Details"
+msgstr ""
+
+msgctxt "#40250"
+msgid "Sign Out of ESPN+"
+msgstr ""
+
+msgctxt "#40260"
+msgid "ESPN+ Details"
 msgstr ""

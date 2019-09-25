@@ -1,9 +1,9 @@
+import json
 import os
-import sys
+
+import requests
 import xbmc
 import xbmcaddon
-import requests
-import json
 
 selfAddon = xbmcaddon.Addon()
 addon_data_path = xbmc.translatePath(selfAddon.getAddonInfo('path')).decode('utf-8')
