@@ -2,9 +2,9 @@ import urlparse
 
 from xbmcplugin import addDirectoryItem, setContent, endOfDirectory
 
-import util
 from item_indexer import index_item, get_item_listing_text
 from play_routes import *
+import espnplus
 
 BUCKET = 'BUCKET'
 
@@ -50,6 +50,8 @@ def get_v3_url(url):
     qs['entitlements'] = entitlements
     qs['countryCode'] = 'US'
     qs['lang'] = 'en'
+    qs['zipcode'] = player_config.get_zipcode()
+    qs['tz'] = player_config.get_timezone_utc_offest()
     new_components = (components.scheme, components.netloc, components.path, components.params, urllib.urlencode(qs, doseq=True), components.fragment)
     return urlparse.urlunparse(new_components)
 
@@ -63,7 +65,12 @@ def parse_json(url, bucket_path=None, channel_id=None):
     buckets = []
     header_bucket = None
     if 'header' in json_data['page'] and 'bucket' in json_data['page']['header']:
+        description = util.get_nested_value(json_data, ['page', 'header', 'description'])
+        subtitle = util.get_nested_value(json_data, ['page', 'header', 'subtitle'])
+        director = util.get_nested_value(json_data, ['page', 'header', 'director'])
+        plot = '%s\n%s\n%s\n' % (subtitle, description, director)
         header_bucket = json_data['page']['header']['bucket']
+        header_bucket['contents'][0]['plot'] = plot
     if 'buckets' in json_data['page']:
         buckets = buckets + json_data['page']['buckets']
     process_buckets(url, header_bucket, buckets, selected_bucket, list(), channel_filter=channel_id)
@@ -130,7 +137,7 @@ def index_bucket_content(url, bucket, channel_filter):
                         if channel_id not in grouped_events:
                             grouped_events[channel_id] = []
                         grouped_events[channel_id].append(content)
-                        source_id_data[channel_id] = {'name': source_name}
+                        source_id_data[channel_id] = {'name': source_name, 'id': source_id}
                     else:
                         index_content(content)
                         content_indexed = content_indexed + 1
@@ -149,8 +156,14 @@ def index_bucket_content(url, bucket, channel_filter):
                 for content in contents:
                     index_content(content)
             else:
+                name = source_data['name']
+                id = source_data['id']
+                if len(name) == 0 and id == 'ESPN_PPV':
+                    name = 'ESPN+ PPV'
+                elif len(name) == 0:
+                    name = id
                 addDirectoryItem(plugin.handle, plugin.url_for(page_api_channel, channel_id=group_source_id, url=url),
-                                 ListItem(source_data['name']), True)
+                                 ListItem(name), True)
 
 
 def index_content(content):
@@ -219,6 +232,8 @@ def index_v3_content(content):
                     event['teamOneScore'], event['teamTwoScore'],
                     get_possesion_text(event),
                     event['statusTextOne'])
+    if 'plot' in content:
+        plot = content['plot']
 
     starttime = get_time(content)
     if 'date' in content and 'time' in content:
@@ -236,9 +251,12 @@ def index_v3_content(content):
         if more_than_one_stream:
             name = name + ' - ' + stream['name']
 
+        entitlements = espnplus.get_entitlements()
+        packages = util.get_nested_value(stream, ['packages'], [])
+        has_entitlement = is_entitled(packages, entitlements)
         ename, length = get_item_listing_text(name, starttime, duration_seconds, content['status'],
                                       stream['source']['name'], 'blackoutText' in content,
-                                      stream['authTypes'])
+                                      stream['authTypes'], requires_package=not has_entitlement)
 
         source_name = util.get_nested_value(content, ['stream', 0, 'source', 'name'])
 
@@ -255,13 +273,14 @@ def index_v3_content(content):
             starttime_text = time.strftime("%m/%d/%Y %I:%M %p", starttime)
             addDirectoryItem(plugin.handle,
                              plugin.url_for(upcoming_event, event_id=event_id,
-                                            event_name=urllib.quote_plus(ename.encode('utf-8')), starttime=starttime_text),
+                                            event_name=urllib.quote_plus(name.encode('utf-8')), starttime=starttime_text,
+                                            packages='|'.join(packages)),
                              make_list_item(ename, infoLabels=infoLabels))
         else:
             addDirectoryItem(plugin.handle,
                              plugin.url_for(play_event, event_id=event_id,
                                             event_url=stream['links']['play'],
-                                            auth_types=stream['authTypes']),
+                                            auth_types='|'.join(stream['authTypes'])),
                              make_list_item(ename, infoLabels=infoLabels, icon=fanart))
 
 # {

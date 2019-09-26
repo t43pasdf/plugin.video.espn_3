@@ -119,11 +119,11 @@ def parse_method_call(method):
     return p.findall(method)
 
 
-def get_nested_value(dict_val, keys):
+def get_nested_value(dict_val, keys, defaultvalue=None):
     local_dict = dict_val
     for key in keys:
         try:
             local_dict = local_dict[key]
         except:
-            return None
+            return defaultvalue
     return local_dict

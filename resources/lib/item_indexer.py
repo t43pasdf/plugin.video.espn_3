@@ -1,5 +1,3 @@
-from play_routes import *
-from xbmcplugin import addDirectoryItem
 from xbmcplugin import addDirectoryItem
 
 from play_routes import *
@@ -8,7 +6,7 @@ from play_routes import *
 def format_time(etime):
     return etime
 
-def get_item_listing_text(event_name, starttime, duration, status, network, blackout, auth_types, sport=None, sport2=None):
+def get_item_listing_text(event_name, starttime, duration, status, network, blackout, auth_types, requires_package=False, sport=None, sport2=None):
     if sport != sport2 and len(sport2) > 0:
         sport += ' (' + sport2 + ')'
     length = duration
@@ -55,6 +53,8 @@ def get_item_listing_text(event_name, starttime, duration, status, network, blac
     requires_auth = check_auth_types(auth_types)
     if requires_auth and not adobe_activate_api.is_authenticated():
         ename = 'Requires Authentication - ' + ename
+    if requires_package:
+        ename = 'Requires ESPN+ Package - ' + ename
     return ename, length
 
 # TODO: Make use of get_item_listing_text

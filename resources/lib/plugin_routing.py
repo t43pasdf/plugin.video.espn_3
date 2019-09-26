@@ -27,5 +27,5 @@ def arg_as_number(arg):
 
 def arg_as_list(arg):
     if arg in plugin.args:
-        return plugin.args[arg][0]
+        return plugin.args[arg][0].split('|')
     return []

@@ -2,7 +2,7 @@ import json
 import urllib2
 
 import m3u8
-from xbmcplugin import setResolvedUrl
+from xbmcplugin import setResolvedUrl, endOfDirectory
 
 import adobe_activate_api
 import auth_routes
@@ -67,20 +67,19 @@ def check_auth_status(auth_types, resource, network_name):
             return None
     elif 'direct' in auth_types:
         # bam authentication
-        if not espnplus.has_valid_bam_account_access_token():
-            if not espnplus.has_valid_login_id_token():
-                dialog = xbmcgui.Dialog()
-                ret = dialog.yesno(translation(30038), translation(30060),
-                                   yeslabel=translation(30061),
-                                   nolabel=translation(30360))
-                if ret:
-                    authed = auth_routes.login_espn_plus()
-                    if not authed:
-                        return None
-                else:
+        if not espnplus.can_we_access_without_prompt():
+            logging.debug('Invalid token')
+            dialog = xbmcgui.Dialog()
+            ret = dialog.yesno(translation(30038), translation(30060),
+                               yeslabel=translation(30061),
+                               nolabel=translation(30360))
+            if ret:
+                authed = auth_routes.login_espn_plus()
+                if not authed:
                     return None
             else:
-                espnplus.request_bam_account_access_token()
+                return None
+        espnplus.ensure_valid_access_token()
 
         return espnplus.get_bam_account_access_token()
 
@@ -100,7 +99,7 @@ def process_playback_url(playback_url, auth_string):
         logging.error('Unable to lead m3u8 %s' % e)
         playback_url += '|' + auth_string
         item = xbmcgui.ListItem(path=playback_url)
-        return xbmcplugin.setResolvedUrl(plugin.handle, True, item)
+        return setResolvedUrl(plugin.handle, True, item)
 
     success = True
 
@@ -156,16 +155,16 @@ def process_playback_url(playback_url, auth_string):
                 index_of_last_slash = playback_url.rfind('/')
                 uri = playback_url[0:index_of_last_slash] + '/' + uri
             item = xbmcgui.ListItem(path=uri + '|' + auth_string)
-            xbmcplugin.setResolvedUrl(plugin.handle, success, item)
+            setResolvedUrl(plugin.handle, success, item)
         else:
             item = xbmcgui.ListItem(path=playback_url)
-            xbmcplugin.setResolvedUrl(plugin.handle, success, item)
+            setResolvedUrl(plugin.handle, success, item)
     else:
         xbmc.log(TAG + 'Using inputstream.hls addon', xbmc.LOGDEBUG)
         item = xbmcgui.ListItem(path=playback_url)
         item.setProperty('inputstreamaddon', 'inputstream.hls')
         item.setProperty('inputstream.hls.manifest_type', 'hls')
-        xbmcplugin.setResolvedUrl(plugin.handle, success, item)
+        setResolvedUrl(plugin.handle, success, item)
 
 
 def start_adobe_session(media_token, token_type, resource, start_session_url):
@@ -216,7 +215,9 @@ def start_espn_plus_session(start_session_url):
         else:
             raise exception
 
-    logging.debug(session_json)
+    logging.debug('Session JSON %s' % session_json)
+    if check_espn_plus_error(session_json):
+        return
     playback_url = session_json['stream']['complete']
 
     process_playback_url(playback_url, auth_string='Authorization=' + espnplus.get_bam_account_access_token())
@@ -256,7 +257,7 @@ def play_event(event_id):
     token_type = get_token_type(auth_types)
 
     if token_type is None or media_token is None:
-        xbmcplugin.endOfDirectory(plugin.handle, succeeded=False, updateListing=True)
+        endOfDirectory(plugin.handle, succeeded=False, updateListing=True)
     else:
         start_session_url = session_json['playbackState']['videoHref']
         start_session(media_token, token_type, resource, start_session_url)
@@ -287,7 +288,15 @@ def PLAY_TV(event_id):
 def upcoming_event(event_id):
     starttime = arg_as_string('starttime')
     event_name = urllib.unquote_plus(arg_as_string('event_name'))
-    logging.debug('Upcoming event chosen for %s' % starttime)
+    packages = arg_as_list('packages')
+    entitlements = espnplus.get_entitlements()
+    logging.debug('Upcoming event chosen for %s, %s, %s' % (starttime, packages, entitlements))
+    has_entitlement = is_entitled(packages, entitlements)
+    logging.debug('Entitled for content? %s' % has_entitlement)
+    extra = ''
+    if not has_entitlement:
+        extra = translation(40270) % (', '.join(packages))
     dialog = xbmcgui.Dialog()
-    dialog.ok(translation(30035), translation(30036) % (event_name, starttime))
-    xbmcplugin.endOfDirectory(plugin.handle, succeeded=False, updateListing=True)
+    dialog.ok(translation(30035), translation(30036) % (event_name, starttime, extra))
+    endOfDirectory(plugin.handle, succeeded=False, updateListing=True)
+

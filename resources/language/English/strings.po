@@ -1,7 +1,7 @@
 # Kodi Media Center language file
-# Addon Name: ESPN 3
+# Addon Name: ESPN
 # Addon id: plugin.video.espn_3
-# Addon Provider: awaters1,locomot1f,MetalChris,BlueCop,Romans I XVI
+# Addon Provider: github.com/kodi-addons
 msgid ""
 msgstr ""
 "Project-Id-Version: Kodi Addons\n"
@@ -65,7 +65,7 @@ msgid "Upcoming Event"
 msgstr ""
 
 msgctxt "#30036"
-msgid "The event %s will start at %s."
+msgid "The event %s will start at %s.\n\n%s"
 msgstr ""
 
 msgctxt "#30037"
@@ -441,4 +441,8 @@ msgstr ""
 
 msgctxt "#40260"
 msgid "ESPN+ Details"
+msgstr ""
+
+msgctxt "#40270"
+msgid "You will require additional entitlements to view this content: %s"
 msgstr ""

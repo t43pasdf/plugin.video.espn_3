@@ -28,6 +28,7 @@ DISNEY_ROOT_URL = 'https://registerdisney.go.com/jgc/v6/client'
 API_KEY_URL = DISNEY_ROOT_URL + '/{id-provider}/api-key?langPref=en-US'
 LOGIN_URL = DISNEY_ROOT_URL + '/{id-provider}/guest/login?langPref=en-US'
 LICENSE_PLATE_URL = DISNEY_ROOT_URL + '/{id-provider}/license-plate'
+REFRESH_AUTH_URL = DISNEY_ROOT_URL + '/{id-provider}/refresh-auth?langPref=en-US'
 BAM_API_KEY = 'ZXNwbiZicm93c2VyJjEuMC4w.ptUt7QxsteaRruuPmGZFaJByOoqKvDP2a5YkInHrc7c'
 BAM_APP_CONFIG = 'https://bam-sdk-configs.bamgrid.com/bam-sdk/v2.0/espn-a9b93989/browser/v3.4/linux/chrome/prod.json'
 
@@ -44,6 +45,20 @@ class TokenExchange(object):
         return is_token_valid(self.access_token)
     def is_refresh_token_valid(self):
         return is_token_valid(self.refresh_token)
+
+class DisneyToken(object):
+    def __init__(self, token_dict):
+        self.grant_time_utc = token_dict['grant_time_utc']
+        self.access_token = token_dict['access_token']
+        self.access_token_ttl = token_dict['ttl']
+        self.refresh_token = token_dict['refresh_token']
+        self.refresh_token_ttl = token_dict['refresh_ttl']
+        self.swid = token_dict['swid']
+        self.id_token = token_dict['id_token']
+
+    def is_refresh_token_valid(self):
+        return time.time() < self.grant_time_utc + self.refresh_token_ttl
+
 
 class Assertion(object):
     def __init__(self, grant_dict):
@@ -69,6 +84,7 @@ class EspnPlusConfig(SettingsFile):
         self.device_token_exchange = None
         self.device_refresh_token = None
         self.device_grant = None
+        self.disney_token = None
         self.load_tokens()
 
     def load_tokens(self):
@@ -84,6 +100,8 @@ class EspnPlusConfig(SettingsFile):
             self.device_refresh_token = TokenExchange(self.settings['deviceRefreshToken'])
         if 'deviceGrant' in self.settings:
             self.device_grant = Assertion(self.settings['deviceGrant'])
+        if 'disneyToken' in self.settings:
+            self.disney_token = DisneyToken(self.settings['disneyToken'])
 
     def get_subscriptions(self):
         if 'subscriptions' in self.settings:
@@ -104,6 +122,10 @@ class EspnPlusConfig(SettingsFile):
         self.load_tokens()
     def set_disney_id_token(self, id_token):
         self.settings['disneyIdToken'] = id_token
+        self.load_tokens()
+    def set_disney_token(self, disney_token):
+        disney_token['grant_time_utc'] = time.time()
+        self.settings['disneyToken'] = disney_token
         self.load_tokens()
     def set_id_token_grant(self, grant_resp):
         self.settings['idTokenGrant'] = grant_resp
@@ -130,6 +152,7 @@ def have_valid_login_id_token():
     return config.disney_id_token is not None and config.disney_id_token.is_valid()
 
 def handle_license_plate_token(token):
+    config.set_disney_token(token)
     config.set_disney_id_token(token['id_token'])
 
 def get_login_id_token(username, password, provider):
@@ -146,6 +169,9 @@ def get_login_id_token(username, password, provider):
 
 def has_valid_login_id_token():
     return config.disney_id_token is not None and config.disney_id_token.is_valid()
+
+def has_valid_disney_refresh_token():
+    return config.disney_token is not None and config.disney_token.refresh_token_is_valid()
 
 def get_license_plate(provider):
     logging.debug('Getting license plate')
@@ -191,6 +217,15 @@ def perform_license_plate_auth_flow(semaphore, result_queue):
 
     return pairing_code, ws
 
+def refresh_auth(provider):
+    logging.debug('Refreshing auth')
+    post_data = {
+        'refreshToken': config.disney_token.refresh_token
+    }
+    resp = global_session.post(url_for_provider(LICENSE_PLATE_URL, provider), headers={
+        'Content-Type': 'application/json',
+    }, json=post_data)
+    config.set_disney_id_token(resp.json()['data']['token']['id_token'])
 
 def start_websocket_thread(ws):
     thread.start_new_thread(ws.run_forever, ())
@@ -365,3 +400,22 @@ def get_entitlements():
                 for entitlement in product['productEntitlements']:
                     entitlements.append(entitlement['name'])
     return entitlements
+
+def can_we_access_without_prompt():
+    if has_valid_bam_account_access_token():
+        return True
+    if has_valid_login_id_token():
+        return True
+    if has_valid_disney_refresh_token():
+        return True
+    return False
+
+def ensure_valid_access_token():
+    if has_valid_bam_account_access_token():
+        return
+    if has_valid_login_id_token():
+        request_bam_account_access_token()
+        return
+    if has_valid_disney_refresh_token():
+        refresh_auth(ANDROID_ID)
+        request_bam_account_access_token()

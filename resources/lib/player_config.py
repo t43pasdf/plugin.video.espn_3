@@ -3,6 +3,8 @@ import base64
 
 import util
 from globals import ADDON_PATH_PROFILE
+import pytz
+import datetime
 
 # 1 hour
 TIME_DIFFERENCE = 60 * 60
@@ -37,6 +39,12 @@ def can_access_free_content():
 def get_timezone():
     return get_user_location()['timeZone']
 
+def get_timezone_utc_offest():
+    tz = pytz.timezone(get_timezone())
+    return 'UTC%s' % tz.localize(datetime.datetime.now()).strftime('%z')
+
+def get_zipcode():
+    return get_user_location()['zipcode']
 
 def get_dma():
     return get_user_location()['dma']

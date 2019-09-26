@@ -12,6 +12,7 @@ import util
 from constants import *
 from globals import selfAddon, translation
 from resources.lib.kodiutils import get_setting_as_bool
+import logging
 
 TAG = 'Addon_Util: '
 
@@ -22,6 +23,23 @@ def check_error(session_json):
         dialog.ok(translation(30037), translation(30500) % session_json['message'])
         return True
     return False
+
+def check_espn_plus_error(session_json):
+    if 'errors' in session_json:
+        error_msg = ''
+        for error in session_json['errors']:
+            error_msg = error_msg + error['description'] + ' '
+        dialog = xbmcgui.Dialog()
+        dialog.ok(translation(30037), translation(30500) % error_msg)
+        return True
+
+def is_entitled(packages, entitlements):
+    has_entitlement = packages is None or len(packages) == 0
+    if packages is not None:
+        for entitlement in entitlements:
+            logging.debug('%s in %s ? %s' % (entitlement, packages, entitlement in packages))
+            has_entitlement = has_entitlement or (entitlement in packages)
+    return has_entitlement
 
 def get_auth_types_from_network(network_name):
     xbmc.log(TAG + 'Checking auth of ' + network_name, xbmc.LOGDEBUG)
@@ -43,6 +61,7 @@ def check_auth_types(auth_types):
     if 'isp' in auth_types:
         return player_config.can_access_free_content()
     return False
+
 
 def get_url(url):
     if 'listingsUrl' not in url and 'tz' not in url:
@@ -111,10 +130,19 @@ def check_event_blackout(event_id):
 def compare(lstart, lnetwork, lstatus, rstart, rnetwork, rstatus):
     # xbmc.log(TAG + 'lstart %s lnetwork %s lstatus %s rstart %s rnetwork %s rstatus %s' %
     #          (lstart, lnetwork, lstatus, rstart, rnetwork, rstatus), xbmc.LOGDEBUG)
-    if lnetwork < rnetwork:
+    # Prefer live content
+    #  sorted by network
+    # Prefer upcoming content
+    # sorted by time
+    if lstatus == 'live' and rstatus != 'live':
         return -1
-    if rnetwork < lnetwork:
+    if rstatus == 'live' and lstatus != 'live':
         return 1
+    if lstatus == 'live' and rstatus == 'live':
+        if lnetwork < rnetwork:
+            return -1
+        if rnetwork < lnetwork:
+            return 1
     if lstart is None and rstart is None:
         return 0
     if lstart is None:
