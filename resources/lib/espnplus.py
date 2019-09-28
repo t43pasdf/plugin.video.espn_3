@@ -28,7 +28,7 @@ DISNEY_ROOT_URL = 'https://registerdisney.go.com/jgc/v6/client'
 API_KEY_URL = DISNEY_ROOT_URL + '/{id-provider}/api-key?langPref=en-US'
 LOGIN_URL = DISNEY_ROOT_URL + '/{id-provider}/guest/login?langPref=en-US'
 LICENSE_PLATE_URL = DISNEY_ROOT_URL + '/{id-provider}/license-plate'
-REFRESH_AUTH_URL = DISNEY_ROOT_URL + '/{id-provider}/refresh-auth?langPref=en-US'
+REFRESH_AUTH_URL = DISNEY_ROOT_URL + '/{id-provider}/guest/refresh-auth?langPref=en-US'
 BAM_API_KEY = 'ZXNwbiZicm93c2VyJjEuMC4w.ptUt7QxsteaRruuPmGZFaJByOoqKvDP2a5YkInHrc7c'
 BAM_APP_CONFIG = 'https://bam-sdk-configs.bamgrid.com/bam-sdk/v2.0/espn-a9b93989/browser/v3.4/linux/chrome/prod.json'
 
@@ -78,13 +78,6 @@ class Token(object):
 class EspnPlusConfig(SettingsFile):
     def __init__(self):
         SettingsFile.__init__(self, 'espnplus.json')
-        self.account_token = None
-        self.id_token_grant = None
-        self.disney_id_token = None
-        self.device_token_exchange = None
-        self.device_refresh_token = None
-        self.device_grant = None
-        self.disney_token = None
         self.load_tokens()
 
     def load_tokens(self):
@@ -171,7 +164,7 @@ def has_valid_login_id_token():
     return config.disney_id_token is not None and config.disney_id_token.is_valid()
 
 def has_valid_disney_refresh_token():
-    return config.disney_token is not None and config.disney_token.refresh_token_is_valid()
+    return config.disney_token is not None and config.disney_token.is_refresh_token_valid()
 
 def get_license_plate(provider):
     logging.debug('Getting license plate')
@@ -222,7 +215,7 @@ def refresh_auth(provider):
     post_data = {
         'refreshToken': config.disney_token.refresh_token
     }
-    resp = global_session.post(url_for_provider(LICENSE_PLATE_URL, provider), headers={
+    resp = global_session.post(url_for_provider(REFRESH_AUTH_URL, provider), headers={
         'Content-Type': 'application/json',
     }, json=post_data)
     config.set_disney_id_token(resp.json()['data']['token']['id_token'])

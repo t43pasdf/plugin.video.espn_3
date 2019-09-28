@@ -446,3 +446,23 @@ msgstr ""
 msgctxt "#40270"
 msgid "You will require additional entitlements to view this content: %s"
 msgstr ""
+
+msgctxt "#40500"
+msgid "Search"
+msgstr ""
+
+msgctxt "#40501"
+msgid "New Search"
+msgstr ""
+
+msgctxt "#40510"
+msgid "Enter Search Query"
+msgstr ""
+
+msgctxt "#40520"
+msgid "Clear Search History"
+msgstr ""
+
+msgctxt "#40521"
+msgid "Search History Cleared"
+msgstr ""

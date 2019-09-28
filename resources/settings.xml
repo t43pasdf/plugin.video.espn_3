@@ -28,7 +28,7 @@
         <setting id="ShowBuzzerBeater" type="bool" label="30999" default="true"/>
         <setting id="ShowAccExtra" type="bool" label="30989" default="true"/>
         <setting id="ShowGoalLine" type="bool" label="30988" default="true"/>
-        <setting id="ShowAcc" type="bool" label="30400" default="true"/>
+        <setting id="ShowAcc" type="bool" label="31000" default="true"/>
     </category>
     <category label="30870">
         <setting id="ShowAppleTVMenu" type="bool" label="30800" default="true"/>
@@ -44,6 +44,7 @@
         <setting id="replays4" type="enum" label="30025" values="60|90|120|240" default="0" visible="eq(-6,true)"/>/>
     </category>
     <category label="30880">
+        <setting id="ClearSearchHistory" type="action" label="40520" action="RunPlugin(plugin://plugin.video.espn_3/search/clear-history)"/>
         <setting id="NoColors" type="bool" label="30770" default="false"/>
         <setting id="ClearData" type="bool" label="30170" default="false"/>
         <setting id="DisableSSL" type="bool" label="30180" default="false"/>

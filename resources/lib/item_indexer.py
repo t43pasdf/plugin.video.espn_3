@@ -10,7 +10,10 @@ def get_item_listing_text(event_name, starttime, duration, status, network, blac
     if sport != sport2 and len(sport2) > 0:
         sport += ' (' + sport2 + ')'
     length = duration
-    ename = event_name
+    if len(network) > 0:
+        ename = '[B]%s[/B]' % event_name
+    else:
+        ename = event_name
 
     if starttime is not None:
         now = time.time()
@@ -48,7 +51,8 @@ def get_item_listing_text(event_name, starttime, duration, status, network, blac
         if selfAddon.getSetting('NoColors') == 'true':
             ename = network + ' ' + ename
         else:
-            ename = '[B]%s[/B] ' % (network) + ename
+            # ename = '[B]%s[/B] %s' % (network, ename)
+            ename = '%s %s' % (network, ename)
 
     requires_auth = check_auth_types(auth_types)
     if requires_auth and not adobe_activate_api.is_authenticated():

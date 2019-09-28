@@ -73,10 +73,11 @@ def parse_json(url, bucket_path=None, channel_id=None):
         header_bucket['contents'][0]['plot'] = plot
     if 'buckets' in json_data['page']:
         buckets = buckets + json_data['page']['buckets']
-    process_buckets(url, header_bucket, buckets, selected_bucket, list(), channel_filter=channel_id)
+    was_search = 'name' in json_data['page'] and json_data['page']['name'] == 'Suggestions'
+    process_buckets(url, header_bucket, buckets, selected_bucket, list(), channel_filter=channel_id, was_search=was_search)
 
 
-def process_buckets(url, header_bucket, buckets, selected_buckets, current_bucket_path, channel_filter=None):
+def process_buckets(url, header_bucket, buckets, selected_buckets, current_bucket_path, channel_filter=None, was_search=False):
     selected_bucket = None if selected_buckets is None or len(selected_buckets) == 0 else selected_buckets[0]
     logging.debug('Selected buckets: %s Current Path: %s' % (selected_buckets, current_bucket_path))
     original_bucket_path = current_bucket_path
@@ -90,7 +91,7 @@ def process_buckets(url, header_bucket, buckets, selected_buckets, current_bucke
         if ('contents' in bucket or 'buckets' in bucket) and selected_bucket is None and len(buckets) > 1:
             if bucket.get('type', '') != 'images':
                 bucket_path = '/'.join(current_bucket_path)
-                if 'links' in bucket and 'self' in bucket['links']:
+                if 'links' in bucket and 'self' in bucket['links'] and not was_search:
                     bucket_url = bucket['links']['self']
                     # bucket_path shouldn't be needed because we are using the full url to it
                     addDirectoryItem(plugin.handle, plugin.url_for(page_api_url_bucket, bucket_id=bucket['id'], url=bucket_url),
@@ -244,8 +245,11 @@ def index_v3_content(content):
 
     more_than_one_stream = len(content['streams']) > 1
     for stream in content['streams']:
-        duration = parse_duration(stream['duration'])
-        duration_seconds = duration.tm_hour * 3600 + duration.tm_min * 60 + duration.tm_sec
+        if 'duration' in stream:
+            duration = parse_duration(stream['duration'])
+            duration_seconds = duration.tm_hour * 3600 + duration.tm_min * 60 + duration.tm_sec
+        else:
+            duration_seconds = 0
 
         name = content['name']
         if more_than_one_stream:

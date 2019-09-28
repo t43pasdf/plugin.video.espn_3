@@ -16,6 +16,7 @@ from plugin_routing import *
 from resources.lib import events
 from resources.lib import kodilogging
 from resources.lib.addon_util import *
+from resources.lib.settings_file import SettingsFile
 from ui import tvos, appletv, legacy, roku
 from ui.legacy import legacy_root_menu
 
@@ -23,6 +24,86 @@ TAG = 'ESPN3: '
 ADDON = xbmcaddon.Addon()
 logger = logging.getLogger(ADDON.getAddonInfo('id'))
 kodilogging.config()
+
+class SearchSettings(SettingsFile):
+    def __init__(self):
+        SettingsFile.__init__(self, 'search.json')
+        self.max_search_history_items = 20
+        self.load_config()
+
+    def load_config(self):
+        self.in_search_results = self.settings.get('inSearchResults', False)
+        self.last_search_url = self.settings.get('lastSearchResultsUrl', '')
+        self.search_history = self.settings.get('searchHistory', [])
+
+    def set_in_search_results(self):
+        self.settings['inSearchResults'] = True
+        self.load_config()
+
+    def set_not_in_search_results(self):
+        self.settings['inSearchResults'] = False
+        self.load_config()
+
+    def set_last_search_query(self, query):
+        self.settings['lastSearchResultsUrl'] = query
+        if len(query) <= 0:
+            self.set_not_in_search_results()
+        self.load_config()
+
+    def add_search_history(self, query):
+        self.search_history.insert(0, query)
+        if len(self.search_history) > self.max_search_history_items:
+            self.search_history = self.search_history[0:self.max_search_history_items]
+        self.settings['searchHistory'] = self.search_history
+        self.load_config()
+
+    def clear_search_history(self):
+        self.settings['searchHistory'] = []
+        self.load_config()
+
+search_settings = SearchSettings()
+
+def handle_search(search_query):
+    networks = 'espn1,espn2,espnu,espnews,espndeportes,sec,longhorn,buzzerbeater,goalline,espn3,espnclassic,acc'
+    search_url = 'https://watch-search.espn.com/api/product/v3/watchespn/web/suggest?q=%s&size=20&authNetworks=%s&includeDtcContent=true' % (
+    search_query, networks)
+    search_settings.set_last_search_query(search_url)
+    parse_json(search_url)
+    endOfDirectory(plugin.handle, succeeded=True, cacheToDisc=False)
+
+
+@plugin.route('/search/clear-history')
+def clear_search_history():
+    search_settings.clear_search_history()
+    xbmcgui.Dialog().ok(translation(40520), translation(40521))
+
+@plugin.route('/search/results')
+def search_results():
+    search_query = arg_as_string('q')
+    handle_search(search_query)
+
+@plugin.route('/search/input')
+def search_input():
+    if search_settings.in_search_results:
+        search_query = search_settings.last_search_url
+    else:
+        dialog = xbmcgui.Dialog()
+        search_query = dialog.input(translation(40510), type=xbmcgui.INPUT_ALPHANUM)
+        if len(search_query) > 0:
+            search_settings.add_search_history(search_query)
+    if len(search_query) > 0:
+        search_settings.set_in_search_results()
+        handle_search(search_query)
+
+@plugin.route('/search')
+def search():
+    search_settings.set_last_search_query('')
+    addDirectoryItem(plugin.handle, plugin.url_for(search_input),
+                     ListItem('[B]%s[/B]' % translation(40501)), True)
+    for search_history in search_settings.search_history:
+        addDirectoryItem(plugin.handle, plugin.url_for(search_results, q=search_history),
+                         ListItem(search_history), True)
+    endOfDirectory(plugin.handle, succeeded=True)
 
 @plugin.route('/')
 def new_index():
@@ -40,9 +121,11 @@ def new_index():
         util.clear_cache(get_v3_url(WATCH_API_V3_WEB_HOME))
 
     parse_json(WATCH_API_V3_LIVE)
-    current_time = time.strftime("%I:%M %p", time.localtime(time.time()))
+    addDirectoryItem(plugin.handle, plugin.url_for(search),
+                     ListItem(translation(40500)), True)
     parse_json(WATCH_API_V3_WEB_HOME)
 
+    current_time = time.strftime("%I:%M %p", time.localtime(time.time()))
     addDirectoryItem(plugin.handle, plugin.url_for(new_index, refresh=True),
                      ListItem(translation(30850) % current_time), True)
     addDirectoryItem(plugin.handle,
