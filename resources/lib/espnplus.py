@@ -89,6 +89,13 @@ class EspnPlusConfig(SettingsFile):
         self.load_tokens()
 
     def load_tokens(self):
+        self.account_token = None
+        self.id_token_grant = None
+        self.disney_id_token = None
+        self.device_token_exchange = None
+        self.device_refresh_token = None
+        self.device_grant = None
+        self.disney_token = None
         if 'accountToken' in self.settings:
             self.account_token = TokenExchange(self.settings['accountToken'])
         if 'idTokenGrant' in self.settings:
