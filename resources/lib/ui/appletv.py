@@ -10,13 +10,13 @@ def appletv_root_menu():
     trending_mode()
     addDirectoryItem(plugin.handle,
                      plugin.url_for(appletv_featured),
-                     make_list_item(translation(30680)), True)
+                     make_list_item(get_string(30680)), True)
     addDirectoryItem(plugin.handle,
                      plugin.url_for(appletv_sports),
-                     make_list_item(translation(30550)), True)
+                     make_list_item(get_string(30550)), True)
     addDirectoryItem(plugin.handle,
                      plugin.url_for(appletv_channels),
-                     make_list_item(translation(30560)), True)
+                     make_list_item(get_string(30560)), True)
     endOfDirectory(plugin.handle)
 
 @plugin.route(ROOT + '/featured')
@@ -176,7 +176,7 @@ def process_item_list(item_list):
                 if label2 is not None:
                     menu_label = menu_label + ' ' + label2.text
                 if label is None and label2 is None:
-                    menu_label = translation(30570)
+                    menu_label = get_string(30570)
                 url = method_info[3]
                 nav_id = method_info[2]
                 url = url + '&navigationItemId=' + nav_id

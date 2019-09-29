@@ -19,9 +19,11 @@ import os
 import requests
 
 import xbmc
-from globals import ADDON_PATH_PROFILE
 
-SETTINGS_FILE = 'adobe.json'
+from resources.lib.settings_file import SettingsFile
+
+adobe_settings = SettingsFile('adobe.json')
+settings = adobe_settings.settings
 UA_ATV = 'AppleCoreMedia/1.0.0.13Y234 (Apple TV; U; CPU OS 9_2 like Mac OS X; en_us)'
 TAG = 'ESPN3-adobe-api: '
 
@@ -39,29 +41,9 @@ class AuthorizationException(Exception):
     pass
 
 
-def reset_settings():
-    save_settings(dict())
-
-
-def save_settings(settings):
-    settings_file = os.path.join(ADDON_PATH_PROFILE, SETTINGS_FILE)
-    with open(settings_file, 'w') as fp:
-        json.dump(settings, fp, sort_keys=False, indent=4)
-
-
-def load_settings():
-    settings_file = os.path.join(ADDON_PATH_PROFILE, SETTINGS_FILE)
-    if not os.path.isfile(settings_file):
-        save_settings(dict())
-    with open(settings_file, 'r') as fp:
-        return json.load(fp)
-
-
 def get_device_id():
-    settings = load_settings()
     if 'device_id' not in settings:
         settings['device_id'] = str(uuid.uuid1())
-        save_settings(settings)
     return settings['device_id']
 
 
@@ -95,7 +77,6 @@ def generate_message(method, path):
 
 
 def is_reg_code_valid():
-    settings = load_settings()
     if 'generateRegCode' not in settings:
         xbmc.log(TAG + 'Unable to find reg code', xbmc.LOGDEBUG)
         return False
@@ -128,9 +109,7 @@ def get_regcode():
 
     resp = get_url_response(url, message, dict(), 'POST')
 
-    settings = load_settings()
     settings['generateRegCode'] = resp
-    save_settings(settings)
     return resp['code']
 
 
@@ -147,9 +126,7 @@ def authenticate(regcode):
     message = generate_message('GET', path)
 
     resp = get_url_response(url, message)
-    settings = load_settings()
     settings['authenticateRegCode'] = resp
-    save_settings(settings)
 
 
 # Get authn token (re-auth device after it expires), getAuthnToken
@@ -168,12 +145,10 @@ def re_authenticate():
     resp = get_url_response(url, message)
     if 'status' in resp and resp['status'] == '410':
         raise AuthorizationException()
-    settings = load_settings()
     settings['authenticateRegCode'] = resp
     if 'authorize' in settings:
         del settings['authorize']
     xbmc.log(TAG + 'Re-authenticated device', xbmc.LOGDEBUG)
-    save_settings(settings)
 
 
 def get_resource(channel, event_name, event_guid, event_parental_rating):
@@ -198,14 +173,12 @@ def authorize(resource):
 
     resp = get_url_response(url, message)
 
-    settings = load_settings()
     if 'authorize' not in settings:
         settings['authorize'] = dict()
     xbmc.log(TAG + 'resource %s resp %s' % (resource, resp), xbmc.LOGDEBUG)
     if 'status' in resp and resp['status'] == 403:
         raise AuthorizationException()
     settings['authorize'][resource.decode('iso-8859-1').encode('utf-8')] = resp
-    save_settings(settings)
 
 
 def deauthorize():
@@ -222,12 +195,10 @@ def deauthorize():
         resp = get_url_response(url, message, body=None, method='DELETE')
     except:
         xbmc.log(TAG + 'De-authorize failed', xbmc.LOGDEBUG)
-    settings = load_settings()
     if 'authorize' in settings:
         del settings['authorize']
     if 'authenticateRegCode' in settings:
         del settings['authenticateRegCode']
-    save_settings(settings)
 
 
 # getShortMediaToken
@@ -271,32 +242,26 @@ def get_short_media_token(resource):
         if 'status' in resp and resp['status'] == 403:
             raise AuthorizationException()
     xbmc.log(TAG + 'Resp %s' % resp, xbmc.LOGDEBUG)
-    settings = load_settings()
     settings['getShortMediaToken'] = resp
-    save_settings(settings)
     return resp['serializedToken']
 
 
 def is_authenticated():
-    settings = load_settings()
     return 'authenticateRegCode' in settings
 
 
 def has_to_reauthenticate():
-    settings = load_settings()
     if 'authenticateRegCode' in settings and 'expires' in settings['authenticateRegCode']:
         return is_expired(settings['authenticateRegCode']['expires'])
     return True
 
 
 def is_authorized(resource):
-    settings = load_settings()
     if 'authorize' in settings and resource.decode('iso-8859-1').encode('utf-8') in settings['authorize']:
         return not is_expired(settings['authorize'][resource.decode('iso-8859-1').encode('utf-8')]['expires'])
 
 
 def get_expires_time(key):
-    settings = load_settings()
     expires = settings[key]['expires']
     expires_time = time.localtime(int(expires) / 1000)
     return time.strftime('%Y-%m-%d %H:%M', expires_time)
@@ -311,7 +276,6 @@ def get_authorization_expires():
 
 
 def clean_up_authorization_tokens():
-    settings = load_settings()
     keys_to_delete = list()
     if 'authorize' in settings:
         for key in settings['authorize']:
@@ -322,7 +286,6 @@ def clean_up_authorization_tokens():
                 keys_to_delete.append(key)
     for key in keys_to_delete:
         del settings['authorize'][key]
-    save_settings(settings)
 
 
 def get_user_metadata():

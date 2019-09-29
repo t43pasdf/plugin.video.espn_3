@@ -96,3 +96,12 @@ WATCH_API_V1_TRENDING = 'http://watch.api.espn.com/v1/trending'
 
 WATCH_API_V3_WEB_HOME = 'https://watch.product.api.espn.com/api/product/v3/watchespn/web/home'
 WATCH_API_V3_LIVE = 'https://watch.product.api.espn.com/api/product/v3/watchespn/web/bucket?bucketId=5060'
+
+KEEP_FILES = [
+    'adobe.json',
+    'espnplus.json',
+    'settings.xml',
+    'user_data.json',
+    'search.json',
+    'player_config.xml'
+]

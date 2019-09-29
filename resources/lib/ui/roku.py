@@ -1,4 +1,4 @@
-from xbmcplugin import endOfDirectory
+from xbmcplugin import endOfDirectory, setContent
 
 from resources.lib import adobe_activate_api
 from resources.lib.addon_util import *
@@ -58,11 +58,11 @@ def roku_url_mode():
         json_data['listings'].sort(cmp=compare_roku)
         for listing in json_data['listings']:
             index_listing(listing)
-        xbmcplugin.setContent(plugin.handle, 'episodes')
+        setContent(plugin.handle, 'episodes')
     if 'videos' in json_data:
         for video in json_data['videos']:
             index_video(video)
-        xbmcplugin.setContent(plugin.handle, 'episodes')
+        setContent(plugin.handle, 'episodes')
     if 'categories' in json_data:
         for category in json_data['categories']:
             if category_id is None or category_id == '':

@@ -15,7 +15,8 @@ import hashlib
 import re
 import codecs
 
-from globals import ADDON_PATH_PROFILE, global_session
+from globals import global_session
+from kodiutils import addon_profile_path
 
 TAG = 'ESPN3 util: '
 
@@ -37,20 +38,20 @@ def fetch_file(url, cache_file, encoding):
 def clear_cache(url):
     cache_file = hashlib.sha224(url).hexdigest()
     try:
-        os.remove(os.path.join(ADDON_PATH_PROFILE, cache_file + '.xml'))
+        os.remove(os.path.join(addon_profile_path, cache_file + '.xml'))
     except:
         pass
 
     try:
-        os.remove(os.path.join(ADDON_PATH_PROFILE, cache_file + '.json'))
+        os.remove(os.path.join(addon_profile_path, cache_file + '.json'))
     except:
         pass
 
 
-def get_url_as_xml_cache(url, cache_file=None, timeout=300, encoding='utf-8'):
+def get_url_as_xml_cache(url, cache_file=None, timeout=180, encoding='utf-8'):
     if cache_file is None:
         cache_file = hashlib.sha224(url).hexdigest()
-        cache_file = os.path.join(ADDON_PATH_PROFILE, cache_file + '.xml')
+        cache_file = os.path.join(addon_profile_path, cache_file + '.xml')
     if not is_file_valid(cache_file, timeout):
         xbmc.log(TAG + 'Fetching config file %s from %s' % (cache_file, url), xbmc.LOGDEBUG)
         fetch_file(url, cache_file, encoding)
@@ -92,7 +93,7 @@ def get_url_as_json(url):
 def get_url_as_json_cache(url, cache_file=None, timeout=180):
     if cache_file is None:
         cache_file = hashlib.sha224(url).hexdigest()
-        cache_file = os.path.join(ADDON_PATH_PROFILE, cache_file + '.json')
+        cache_file = os.path.join(addon_profile_path, cache_file + '.json')
     if not is_file_valid(cache_file, timeout):
         xbmc.log(TAG + 'Fetching config file %s from %s' % (cache_file, url), xbmc.LOGDEBUG)
         fetch_file(url, cache_file, 'utf-8')
@@ -110,7 +111,6 @@ def get_url_as_json_cache(url, cache_file=None, timeout=180):
         except Exception as e:
             clear_cache(url)
             raise e
-
 
 
 # espn.page.loadSportPage('url');

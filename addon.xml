@@ -9,7 +9,6 @@
         <import addon="script.module.elementtree" version="1.2.8"/>
         <import addon="script.module.simplejson" version="3.16.1"/>
         <import addon="script.module.m3u8" version="0.2.10"/>
-        <import addon="script.module.dateutil" version="2.7.3"/>
         <import addon="script.module.requests" version="2.22.0" />
         <import addon="script.module.pyjwt" version="1.6.4" />
         <import addon="script.module.pytz" version="2014.2" />
@@ -20,11 +19,21 @@
     <extension point="xbmc.addon.metadata">
         <language/>
         <platform>all</platform>
-        <license>GNU GENERAL PUBLIC LICENSE. Version 3, 29 June 2007</license>
-        <summary lang="en">ESPN</summary>
+        <license>MIT</license>
+        <summary lang="en">Watch ESPN and ESPN+</summary>
         <description lang="en">Unofficial Watch ESPN. Watch full live streaming sporting events and replays on ESPN's cable channels (with a valid cable provider), ESPN 3 (with a valid ISP) and ESPN+ (with a valid subscription), including football, baseball, cricket, soccer, and basketball events. NOT SUPPORTED BY ESPN OR DISNEY OR ANYONE ELSE USE AT YOUR OWN RISK
         </description>
         <forum>http://forum.kodi.tv/showthread.php?tid=230418</forum>
         <source>https://github.com/kodi-addons/plugin.video.espn_3</source>
+        <news>
+            3.0.0
+                - Added in support for ESPN+ content with a valid subscription
+                - Updated the main index page to correspond to the latest Watch ESPN interface
+                - Code updates to make the addon more modern
+        </news>
+        <assets>
+            <icon>resources/icon.png</icon>
+            <fanart>resources/fanart.jpg</fanart>
+        </assets>
     </extension>
 </addon>

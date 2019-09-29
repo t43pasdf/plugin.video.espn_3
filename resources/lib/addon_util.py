@@ -18,8 +18,7 @@ from xbmcgui import ListItem
 import player_config
 import util
 from constants import *
-from globals import selfAddon, translation
-from resources.lib.kodiutils import get_setting_as_bool
+from resources.lib.kodiutils import get_setting_as_bool, get_string
 import logging
 
 TAG = 'Addon_Util: '
@@ -28,7 +27,7 @@ def check_error(session_json):
     status = session_json['status']
     if not status == 'success':
         dialog = xbmcgui.Dialog()
-        dialog.ok(translation(30037), translation(30500) % session_json['message'])
+        dialog.ok(get_string(30037), get_string(30500) % session_json['message'])
         return True
     return False
 
@@ -38,7 +37,7 @@ def check_espn_plus_error(session_json):
         for error in session_json['errors']:
             error_msg = error_msg + error['description'] + ' '
         dialog = xbmcgui.Dialog()
-        dialog.ok(translation(30037), translation(30500) % error_msg)
+        dialog.ok(get_string(30037), get_string(30500) % error_msg)
         return True
 
 def is_entitled(packages, entitlements):
@@ -93,7 +92,7 @@ def include_item(networkId):
     for setting in CHANNEL_SETTINGS:
         channel = CHANNEL_SETTINGS[setting]
         if channel == networkId:
-            return selfAddon.getSetting(setting) == 'true'
+            return get_setting_as_bool(setting)
     return True
 
 

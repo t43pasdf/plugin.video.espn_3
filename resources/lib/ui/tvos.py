@@ -13,8 +13,8 @@ def tvos_root_menu():
 
     addDirectoryItem(plugin.handle,
                      plugin.url_for(page_api.page_api_url, url=TV_OS_SPORTS),
-                     make_list_item(translation(30550)), True)
+                     make_list_item(get_string(30550)), True)
     addDirectoryItem(plugin.handle,
                      plugin.url_for(page_api.page_api_url, url=TV_OS_CHANNELS),
-                     make_list_item(translation(30560)), True)
+                     make_list_item(get_string(30560)), True)
     endOfDirectory(plugin.handle)

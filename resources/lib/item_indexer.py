@@ -7,6 +7,7 @@
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 from xbmcplugin import addDirectoryItem
+from kodiutils import get_setting_as_bool
 
 from play_routes import *
 
@@ -52,11 +53,11 @@ def get_item_listing_text(event_name, starttime, duration, status, network, blac
 
     blackout_text = ''
     if blackout:
-        blackout_text = translation(30580)
+        blackout_text = get_string(30580)
     if len(blackout_text) > 0:
         ename = blackout_text + ' ' + ename
     if len(network) > 0:
-        if selfAddon.getSetting('NoColors') == 'true':
+        if get_setting_as_bool('NoColors'):
             ename = network + ' ' + ename
         else:
             # ename = '[B]%s[/B] %s' % (network, ename)
@@ -123,15 +124,15 @@ def index_item(args):
         network = network_id
     xbmc.log(TAG + 'network_id ' + network_id, xbmc.LOGDEBUG)
     if network_id in NETWORK_ID_TO_NETWORK_NAME:
-        network = translation(NETWORK_ID_TO_NETWORK_NAME[network_id])
+        network = get_string(NETWORK_ID_TO_NETWORK_NAME[network_id])
     blackout = args['blackout'] if 'blackout' in args else False
     blackout_text = ''
     if blackout:
-        blackout_text = translation(30580)
+        blackout_text = get_string(30580)
     if len(blackout_text) > 0:
         ename = blackout_text + ' ' + ename
     if len(network) > 0:
-        if selfAddon.getSetting('NoColors') == 'true':
+        if get_setting_as_bool('NoColors'):
             ename = network + ' ' + ename
         else:
             ename = '[B]%s[/B] ' % (network) + ename

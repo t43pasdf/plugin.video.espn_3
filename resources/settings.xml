@@ -46,7 +46,7 @@
     <category label="30880">
         <setting id="ClearSearchHistory" type="action" label="40520" action="RunPlugin(plugin://plugin.video.espn_3/search/clear-history)"/>
         <setting id="NoColors" type="bool" label="30770" default="false"/>
-        <setting id="ClearData" type="bool" label="30170" default="false"/>
+        <setting id="ClearData" type="action" label="30170" action="RunPlugin(plugin://plugin.video.espn_3/clear-data)"/>
         <setting id="DisableSSL" type="bool" label="30180" default="false"/>
         <setting id="DisableInputStream" type="bool" label="30185" default="true"/>
         <setting id="debug" type="bool" label="32001" default="false"/>

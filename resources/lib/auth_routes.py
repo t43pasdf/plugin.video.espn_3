@@ -31,20 +31,20 @@ def login_tv_provider():
     else:
         regcode = adobe_activate_api.get_regcode()
         dialog = xbmcgui.Dialog()
-        ok = dialog.yesno(translation(30310),
-                          translation(30320),
-                          translation(30330) % regcode,
-                          translation(30340),
-                          translation(30360),
-                          translation(30350))
+        ok = dialog.yesno(get_string(30310),
+                          get_string(30320),
+                          get_string(30330) % regcode,
+                          get_string(30340),
+                          get_string(30360),
+                          get_string(30350))
         if ok:
             try:
                 adobe_activate_api.authenticate(regcode)
-                dialog.ok(translation(30310), translation(30370))
+                dialog.ok(get_string(30310), get_string(30370))
                 set_setting('LoggedInToTvProvider', True)
                 return True
             except urllib2.HTTPError as e:
-                dialog.ok(translation(30037), translation(30420) % e)
+                dialog.ok(get_string(30037), get_string(30420) % e)
                 set_setting('LoggedInToTvProvider', False)
                 return False
 
@@ -52,15 +52,15 @@ def login_tv_provider():
 @plugin.route('/view-tv-provider-details')
 def view_tv_provider_details():
     dialog = xbmcgui.Dialog()
-    dialog.ok(translation(30380),
-              translation(30390) % adobe_activate_api.get_authentication_expires(),
-              translation(30700) % (player_config.get_dma(), player_config.get_timezone()))
+    dialog.ok(get_string(30380),
+              get_string(30390) % adobe_activate_api.get_authentication_expires(),
+              get_string(30700) % (player_config.get_dma(), player_config.get_timezone()))
 
 @plugin.route('/logout-tv-provider')
 def logout_tv_provider():
     dialog = xbmcgui.Dialog()
-    ok = dialog.yesno(translation(30381),
-                      translation(30382))
+    ok = dialog.yesno(get_string(30381),
+                      get_string(30382))
     if ok:
         adobe_activate_api.deauthorize()
         set_setting('LoggedInToTvProvider', False)
@@ -116,7 +116,7 @@ def login_espn_plus():
 
     logging.debug('Bam token %s' % espnplus.get_bam_account_access_token())
     dialog = xbmcgui.Dialog()
-    dialog.ok(translation(40000), translation(40101))
+    dialog.ok(get_string(40000), get_string(40101))
     set_setting('LoggedInToEspnPlus', True)
     return True
 
@@ -132,7 +132,7 @@ def view_espn_plus_details():
                 product_name = product_name + ' ' + product['name']
             product_details = product_details + product_name + ' ' + sub['expirationDate'] + '\n'
     dialog = xbmcgui.Dialog()
-    dialog.ok(translation(40260), product_details)
+    dialog.ok(get_string(40260), product_details)
 
 @plugin.route('/logout-espn-plus')
 def logout_espn_plus():

@@ -19,7 +19,7 @@ from globals import global_session
 from plugin_routing import *
 from resources.lib.addon_util import *
 from resources.lib.globals import UA_PC
-from resources.lib.kodiutils import set_setting
+from resources.lib.kodiutils import set_setting, get_setting_as_int, get_setting
 
 
 def get_token_type(auth_types):
@@ -36,9 +36,9 @@ def check_auth_status(auth_types, resource, network_name):
         # Adobe auth
         if not adobe_activate_api.is_authenticated():
             dialog = xbmcgui.Dialog()
-            ret = dialog.yesno(translation(30038), translation(30050),
-                               yeslabel=translation(30051),
-                               nolabel=translation(30360))
+            ret = dialog.yesno(get_string(30038), get_string(30050),
+                               yeslabel=get_string(30051),
+                               nolabel=get_string(30360))
             if ret:
                 authed = auth_routes.login_tv_provider()
                 if not authed:
@@ -53,13 +53,13 @@ def check_auth_status(auth_types, resource, network_name):
             logging.debug('error getting media token %s' % http_exception)
             if http_exception.code == 410 or http_exception.code == 404 or http_exception.code == 401:
                 dialog = xbmcgui.Dialog()
-                dialog.ok(translation(30037), translation(30840))
+                dialog.ok(get_string(30037), get_string(30840))
                 adobe_activate_api.deauthorize()
                 return None
             elif http_exception.code == 403:
                 # Check for blackout
                 dialog = xbmcgui.Dialog()
-                ok = dialog.yesno(translation(30037), translation(30900))
+                ok = dialog.yesno(get_string(30037), get_string(30900))
                 if ok:
                     setting = get_setting_from_channel(network_name)
                     if setting is not None:
@@ -70,7 +70,7 @@ def check_auth_status(auth_types, resource, network_name):
         except adobe_activate_api.AuthorizationException as exception:
             logging.debug('Error authorizating media token %s' % exception)
             dialog = xbmcgui.Dialog()
-            dialog.ok(translation(30037), translation(30840))
+            dialog.ok(get_string(30037), get_string(30840))
             adobe_activate_api.deauthorize()
             return None
     elif 'direct' in auth_types:
@@ -78,9 +78,9 @@ def check_auth_status(auth_types, resource, network_name):
         if not espnplus.can_we_access_without_prompt():
             logging.debug('Invalid token')
             dialog = xbmcgui.Dialog()
-            ret = dialog.yesno(translation(30038), translation(30060),
-                               yeslabel=translation(30061),
-                               nolabel=translation(30360))
+            ret = dialog.yesno(get_string(30038), get_string(30060),
+                               yeslabel=get_string(30061),
+                               nolabel=get_string(30360))
             if ret:
                 authed = auth_routes.login_espn_plus()
                 if not authed:
@@ -98,8 +98,8 @@ def check_auth_status(auth_types, resource, network_name):
 
 def process_playback_url(playback_url, auth_string):
     logging.debug('Playback url %s' % playback_url)
-    stream_quality = str(selfAddon.getSetting('StreamQuality'))
-    bitrate_limit = int(selfAddon.getSetting('BitrateLimit'))
+    stream_quality =  str(get_setting('StreamQuality'))
+    bitrate_limit = int(get_setting('BitrateLimit'))
     logging.debug('Stream Quality %s' % stream_quality)
     try:
         m3u8_obj = m3u8.load(playback_url)
@@ -111,7 +111,7 @@ def process_playback_url(playback_url, auth_string):
 
     success = True
 
-    use_inputstream_addon = selfAddon.getSetting('DisableInputStream') == 'false'
+    use_inputstream_addon = not get_setting_as_bool('DisableInputStream')
 
     if not use_inputstream_addon:
         if m3u8_obj.is_variant:
@@ -120,7 +120,7 @@ def process_playback_url(playback_url, auth_string):
             m3u8_obj.playlists.sort(key=lambda playlist: playlist.stream_info.bandwidth, reverse=True)
             m3u8_obj.data['playlists'].sort(key=lambda playlist: int(playlist['stream_info'][bandwidth_key]),
                                             reverse=True)
-            stream_quality_index = str(selfAddon.getSetting('StreamQualityIndex'))
+            stream_quality_index = str(get_setting('StreamQualityIndex'))
             stream_index = None
             should_ask = False
             try:
@@ -149,13 +149,13 @@ def process_playback_url(playback_url, auth_string):
                     if 'average_bandwidth' in stream_info:
                         logging.debug('bandwidth: %s average bandwidth: %s' %
                                       (stream_info['bandwidth'], stream_info['average_bandwidth']))
-                    stream_options.append(translation(30450) % (resolution, frame_rate, bandwidth))
+                    stream_options.append(get_string(30450) % (resolution, frame_rate, bandwidth))
                 dialog = xbmcgui.Dialog()
-                stream_index = dialog.select(translation(30440), stream_options)
+                stream_index = dialog.select(get_string(30440), stream_options)
                 if stream_index < 0:
                     success = False
                 else:
-                    selfAddon.setSetting(id='StreamQualityIndex', value=str(stream_index))
+                    set_setting('StreamQualityIndex', value=str(stream_index))
 
             uri = m3u8_obj.playlists[stream_index].uri
             logging.debug('Chose stream %d; %s' % (stream_index, uri))
@@ -303,8 +303,8 @@ def upcoming_event(event_id):
     logging.debug('Entitled for content? %s' % has_entitlement)
     extra = ''
     if not has_entitlement:
-        extra = translation(40270) % (', '.join(packages))
+        extra = get_string(40270) % (', '.join(packages))
     dialog = xbmcgui.Dialog()
-    dialog.ok(translation(30035), translation(30036) % (event_name, starttime, extra))
+    dialog.ok(get_string(30035), get_string(30036) % (event_name, starttime, extra))
     endOfDirectory(plugin.handle, succeeded=False, updateListing=True)
 

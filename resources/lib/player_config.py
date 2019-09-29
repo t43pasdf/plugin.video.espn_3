@@ -10,7 +10,7 @@ import os
 import base64
 
 import util
-from globals import ADDON_PATH_PROFILE
+from kodiutils import addon_profile_path
 import pytz
 import datetime
 
@@ -18,17 +18,12 @@ import datetime
 TIME_DIFFERENCE = 60 * 60
 
 PLAYER_CONFIG_FILE = 'player_config.xml'
-PLAYER_CONFIG_FILE = os.path.join(ADDON_PATH_PROFILE, PLAYER_CONFIG_FILE)
-PLAYER_CONFIG_URL = base64.b64decode('aHR0cHM6Ly9lc3BuLmdvLmNvbS93YXRjaGVzcG4vcGxheWVyL2NvbmZpZw==')
+PLAYER_CONFIG_FILE = os.path.join(addon_profile_path, PLAYER_CONFIG_FILE)
+PLAYER_CONFIG_URL = 'https://espn.go.com/watchespn/player/config'
 
 USER_DATA_FILE = 'user_data.json'
-USER_DATA_FILE = os.path.join(ADDON_PATH_PROFILE, USER_DATA_FILE)
+USER_DATA_FILE = os.path.join(addon_profile_path, USER_DATA_FILE)
 USER_DATA_URL = 'http://broadband.espn.com/espn3/auth/watchespn/user'
-
-PROVIDERS_FILE = 'providers.xml'
-PROVIDERS_FILE = os.path.join(ADDON_PATH_PROFILE, PROVIDERS_FILE)
-
-CHECK_RIGHTS_URL = base64.b64decode('aHR0cDovL2Jyb2FkYmFuZC5lc3BuLmdvLmNvbS9lc3BuMy9hdXRoL2VzcG5uZXR3b3Jrcy91c2Vy')
 
 
 def get_config():

@@ -1,5 +1,6 @@
 # Legacy menu system
 from datetime import datetime, timedelta
+import xbmcplugin
 
 from resources.lib import events
 from resources.lib.globals import defaultreplay, \
@@ -16,17 +17,17 @@ def legacy_root_menu():
     include_premium = adobe_activate_api.is_authenticated()
     channel_list = events.get_channel_list(include_premium)
     curdate = datetime.utcnow()
-    upcoming = int(selfAddon.getSetting('upcoming'))+1
+    upcoming = get_setting_as_int('upcoming')+1
     days = (curdate+timedelta(days=upcoming)).strftime("%Y%m%d")
     # Live
     addDirectoryItem(plugin.handle,
                      plugin.url_for(live_events_mode, espn_url=events.get_live_events_url(channel_list)),
-                     make_list_item(translation(30029)), True)
+                     make_list_item(get_string(30029)), True)
     # Upcoming
     espn_url = events.get_upcoming_events_url(channel_list) + '&endDate=' + days + '&startDate=' + curdate.strftime("%Y%m%d")
     addDirectoryItem(plugin.handle,
                      plugin.url_for(list_sports, espn_url=events.get_live_events_url(channel_list)),
-                     make_list_item(translation(30030)), True)
+                     make_list_item(get_string(30030)), True)
     enddate = '&endDate=' + (curdate+timedelta(days=1)).strftime("%Y%m%d")
     replays1 = [5, 10, 15, 20, 25]
     replays1 = replays1[get_setting_as_int('replays1')]
@@ -44,23 +45,23 @@ def legacy_root_menu():
     addDirectoryItem(plugin.handle,
                      plugin.url_for(list_sports, espn_url=events.get_replay_events_url(
                          channel_list) + enddate + '&startDate=' + start1),
-                     make_list_item(translation(30031) % replays1), True)
+                     make_list_item(get_string(30031) % replays1), True)
     addDirectoryItem(plugin.handle,
                      plugin.url_for(list_sports, espn_url=events.get_replay_events_url(
                          channel_list) + enddate + '&startDate=' + start2),
-                     make_list_item(translation(30031) % replays2), True)
+                     make_list_item(get_string(30031) % replays2), True)
     addDirectoryItem(plugin.handle,
                      plugin.url_for(list_sports, espn_url=events.get_replay_events_url(
                          channel_list) + enddate + '&startDate=' + start3),
-                     make_list_item(translation(30031) % replays3), True)
+                     make_list_item(get_string(30031) % replays3), True)
     addDirectoryItem(plugin.handle,
                      plugin.url_for(list_sports, espn_url=events.get_replay_events_url(
                          channel_list) + '&endDate=' + start3 + '&startDate=' + start4),
-                     make_list_item(translation(30033) % (replays3, replays4)), True)
+                     make_list_item(get_string(30033) % (replays3, replays4)), True)
     addDirectoryItem(plugin.handle,
                      plugin.url_for(list_sports, espn_url=events.get_replay_events_url(
                          channel_list) + enddate + '&startDate=' + startAll),
-                     make_list_item(translation(30032)), True)
+                     make_list_item(get_string(30032)), True)
     xbmcplugin.endOfDirectory(plugin.handle)
 
 @plugin.route(ROOT + '/list-sports')
@@ -74,7 +75,7 @@ def list_sports():
         image = None
     addDirectoryItem(plugin.handle,
                      plugin.url_for(live_events_mode, espn_url=espn_url),
-                     make_list_item(translation(30034), icon=image), True)
+                     make_list_item(get_string(30034), icon=image), True)
     sports = []
     sport_elements = util.get_url_as_xml_cache(espn_url, encoding='ISO-8859-1').findall('.//sportDisplayValue')
     for sport in sport_elements:
@@ -149,21 +150,21 @@ def index_legacy_live_events(espn_url, sport=None, network_id=None):
             _index_event(event, live, upcoming, replay, chosen_sport)
     # Dir for ESPN3/SECPlus/ACC Extra
     elif chosen_network is None:
-        if num_espn3 > 0 and selfAddon.getSetting('ShowEspn3') == 'true':
+        if num_espn3 > 0 and get_setting_as_bool('ShowEspn3'):
             translation_number = 30191 if num_espn3 == 1 else 30190
-            name = (translation(translation_number) % num_espn3)
+            name = (get_string(translation_number) % num_espn3)
             addDirectoryItem(plugin.handle,
                              plugin.url_for(live_network_events_mode, espn_url=espn_url, network_id=ESPN3_ID),
                              make_list_item(name), True)
-        if num_secplus > 0 and selfAddon.getSetting('ShowSecPlus') == 'true':
+        if num_secplus > 0 and get_setting_as_bool('ShowSecPlus'):
             translation_number = 30201 if num_secplus == 1 else 30200
-            name = (translation(translation_number) % num_secplus)
+            name = (get_string(translation_number) % num_secplus)
             addDirectoryItem(plugin.handle,
                              plugin.url_for(live_network_events_mode, espn_url=espn_url, network_id=SECPLUS_ID),
                              make_list_item(name), True)
-        if num_accextra > 0 and selfAddon.getSetting('ShowAccExtra') == 'true':
+        if num_accextra > 0 and get_setting_as_bool('ShowAccExtra'):
             translation_number = 30203 if num_accextra == 1 else 30202
-            name = (translation(translation_number) % num_accextra)
+            name = (get_string(translation_number) % num_accextra)
             addDirectoryItem(plugin.handle,
                              plugin.url_for(live_network_events_mode, espn_url=espn_url, network_id=ACC_EXTRA_ID),
                              make_list_item(name), True)
