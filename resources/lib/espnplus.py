@@ -198,7 +198,6 @@ def get_license_plate(provider):
         'Authorization': 'APIKEY %s' % get_api_key(provider),
         'Content-Type': 'application/json',
     }, json=post_data)
-    print(resp.text)
     return post_data, resp.json()
 
 def perform_license_plate_auth_flow(semaphore, result_queue):
@@ -259,7 +258,7 @@ def create_on_message(fastcast_topic, result_queue):
     return on_message
 
 def on_error(ws, error):
-    print(error)
+    logging.debug(error)
 
 def create_on_close(semaphore):
     def on_close(ws):
@@ -284,7 +283,6 @@ def executeMethod(endpoint, access_token='', json=None, data=None):
     http_headers = {}
     for i, (header, value) in enumerate(endpoint['headers'].items()):
         http_headers[header] = fillInTemplate(value, access_token)
-    logging.debug(http_headers)
     resp = None
     if endpoint['method'] == 'POST':
         resp = global_session.post(endpoint['href'], headers=http_headers, json=json, data=data)

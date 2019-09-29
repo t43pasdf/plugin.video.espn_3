@@ -52,7 +52,7 @@ def get_v3_url(url):
     if current_qs is None:
         current_qs = ''
     qs = urlparse.parse_qs(current_qs)
-    # TODO: Add tz, features, zipcode
+    # TODO: Add features
     entitlements = ','.join(espnplus.get_entitlements())
     logging.debug('QS: %s' % qs)
     qs['entitlements'] = entitlements
@@ -76,7 +76,13 @@ def parse_json(url, bucket_path=None, channel_id=None):
         description = util.get_nested_value(json_data, ['page', 'header', 'description'])
         subtitle = util.get_nested_value(json_data, ['page', 'header', 'subtitle'])
         director = util.get_nested_value(json_data, ['page', 'header', 'director'])
-        plot = '%s\n%s\n%s\n' % (subtitle, description, director)
+        plot = ''
+        if subtitle is not None:
+            plot = '%s\n' % (subtitle)
+        if description is not None:
+            plot = '%s%s\n' % (plot, description)
+        if director is not None:
+            plot = '%s%s\n' % (plot, director)
         header_bucket = json_data['page']['header']['bucket']
         header_bucket['contents'][0]['plot'] = plot
     if 'buckets' in json_data['page']:
@@ -246,7 +252,6 @@ def index_v3_content(content):
 
     starttime = get_time(content)
     if 'date' in content and 'time' in content:
-        #  TODO: Include duration in plot
         plot = content['date'] + ' ' + content['time'] + '\n' + plot
 
     event_id = content['eventId'] if 'eventId' in content else content['id']

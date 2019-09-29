@@ -103,7 +103,6 @@ def login_espn_plus():
             logging.error('No result from websocket %s', e)
 
         if token is not None and 'id_token' in token:
-            logging.debug('Received token %s' % token)
             espnplus.handle_license_plate_token(token)
         else:
             dialog = xbmcgui.Dialog()

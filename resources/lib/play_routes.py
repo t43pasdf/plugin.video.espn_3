@@ -104,7 +104,7 @@ def process_playback_url(playback_url, auth_string):
     try:
         m3u8_obj = m3u8.load(playback_url)
     except Exception as e:
-        logging.error('Unable to lead m3u8 %s' % e)
+        logging.error('Unable to load m3u8 %s' % e)
         playback_url += '|' + auth_string
         item = xbmcgui.ListItem(path=playback_url)
         return setResolvedUrl(plugin.handle, True, item)
@@ -194,7 +194,7 @@ def start_adobe_session(media_token, token_type, resource, start_session_url):
     except urllib2.HTTPError as exception:
         if exception.code == 403:
             session_json = json.load(exception)
-            xbmc.log(TAG + 'checking for errors in %s' % session_json)
+            logging.debug('checking for errors in %s' % session_json)
         else:
             raise exception
 

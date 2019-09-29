@@ -49,7 +49,7 @@ def is_entitled(packages, entitlements):
     return has_entitlement
 
 def get_auth_types_from_network(network_name):
-    xbmc.log(TAG + 'Checking auth of ' + network_name, xbmc.LOGDEBUG)
+    logging.debug('Checking auth of ' + network_name)
     requires_auth = not (network_name == 'espn3' or network_name == 'accextra' or network_name.find('free') >= 0 or network_name == '')
     if requires_auth:
         return ['mvpd']
@@ -124,10 +124,9 @@ def check_json_blackout(listing):
     return False
 
 def check_event_blackout(event_id):
-    xbmc.log(TAG + ' Checking blackout for ' + event_id, xbmc.LOGDEBUG)
-    url = base64.b64decode(
-        'aHR0cDovL2Jyb2FkYmFuZC5lc3BuLmdvLmNvbS9lc3BuMy9hdXRoL3dhdGNoZXNwbi91dGlsL2lzVXNlckJsYWNrZWRPdXQ/ZXZlbnRJZD0=') + event_id
-    xbmc.log(TAG + 'Blackout url %s' % url, xbmc.LOGDEBUG)
+    logging.debug(' Checking blackout for ' + event_id)
+    url = 'http://broadband.espn.go.com/espn3/auth/watchespn/util/isUserBlackedOut?eventId=%s' % event_id
+    logging.debug('Blackout url %s' % url)
     blackout_data = util.get_url_as_json_cache(url)
     blackout = blackout_data['E3BlackOut']
     if not blackout == 'true':

@@ -17,6 +17,7 @@ import time
 import json
 import os
 import requests
+import logging
 
 import xbmc
 
@@ -78,7 +79,7 @@ def generate_message(method, path):
 
 def is_reg_code_valid():
     if 'generateRegCode' not in settings:
-        xbmc.log(TAG + 'Unable to find reg code', xbmc.LOGDEBUG)
+        logging.debug('Unable to find reg code')
         return False
     # Check code isn't expired
     expiration = settings['generateRegCode']['expires']
