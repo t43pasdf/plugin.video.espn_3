@@ -119,7 +119,7 @@ def new_index():
         adobe_activate_api.clean_up_authorization_tokens()
     except:
         logger.debug('Unable to clean up authoorization tokens')
-        adobe_activate_api.reset_settings()
+        adobe_activate_api.adobe_settings.reset_settings()
     if clear_cache:
         util.clear_cache(get_v3_url(WATCH_API_V3_LIVE))
         util.clear_cache(get_v3_url(WATCH_API_V3_WEB_HOME))

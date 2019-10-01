@@ -20,8 +20,8 @@
         <language/>
         <platform>all</platform>
         <license>MIT</license>
-        <summary lang="en">Watch ESPN and ESPN+</summary>
-        <description lang="en">Unofficial Watch ESPN. Watch full live streaming sporting events and replays on ESPN's cable channels (with a valid cable provider), ESPN 3 (with a valid ISP) and ESPN+ (with a valid subscription), including football, baseball, cricket, soccer, and basketball events. NOT SUPPORTED BY ESPN OR DISNEY OR ANYONE ELSE USE AT YOUR OWN RISK.
+        <summary lang="en_GB">Watch ESPN and ESPN+</summary>
+        <description lang="en_GB">Unofficial Watch ESPN. Watch full live streaming sporting events and replays on ESPN's cable channels (with a valid cable provider), ESPN 3 (with a valid ISP) and ESPN+ (with a valid subscription), including football, baseball, cricket, soccer, and basketball events. NOT SUPPORTED BY ESPN OR DISNEY OR ANYONE ELSE USE AT YOUR OWN RISK.
         </description>
         <forum>http://forum.kodi.tv/showthread.php?tid=230418</forum>
         <source>https://github.com/kodi-addons/plugin.video.espn_3</source>
