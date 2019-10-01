@@ -6,7 +6,10 @@
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-import urlparse
+try:
+    from urlparse import urlunsplit
+except ImportError:
+    from urllib.parse import urlunsplit
 import urllib
 import uuid
 import hashlib
@@ -14,8 +17,6 @@ import hmac
 import base64
 import urllib2
 import time
-import json
-import os
 import requests
 import logging
 
@@ -102,7 +103,7 @@ def get_regcode():
          'ttl': '1800'})
 
     path = '/regcode'
-    url = urlparse.urlunsplit(['https', 'api.auth.adobe.com',
+    url = urlunsplit(['https', 'api.auth.adobe.com',
                                'reggie/v1/ESPN' + path,
                                params, ''])
 
@@ -120,7 +121,7 @@ def authenticate(regcode):
     params = urllib.urlencode({'requestor': 'ESPN'})
 
     path = '/authenticate/' + regcode
-    url = urlparse.urlunsplit(['https', 'api.auth.adobe.com',
+    url = urlunsplit(['https', 'api.auth.adobe.com',
                                    'api/v1' + path,
                                    params, ''])
 
@@ -136,7 +137,7 @@ def re_authenticate():
                                'deviceId': get_device_id()})
 
     path = '/tokens/authn'
-    url = urlparse.urlunsplit(['https', 'api.auth.adobe.com',
+    url = urlunsplit(['https', 'api.auth.adobe.com',
                                    'api/v1' + path,
                                    params, ''])
 
@@ -166,7 +167,7 @@ def authorize(resource):
                                'resource': resource})
 
     path = '/authorize'
-    url = urlparse.urlunsplit(['https', 'api.auth.adobe.com',
+    url = urlunsplit(['https', 'api.auth.adobe.com',
                                    'api/v1' + path,
                                    params, ''])
 
@@ -186,7 +187,7 @@ def deauthorize():
     params = urllib.urlencode({'deviceId': get_device_id()})
 
     path = '/logout'
-    url = urlparse.urlunsplit(['https', 'api.auth.adobe.com',
+    url = urlunsplit(['https', 'api.auth.adobe.com',
                                'api/v1' + path,
                                params, ''])
 
@@ -215,7 +216,7 @@ def get_short_media_token(resource):
                                'resource' : resource})
 
     path = '/mediatoken'
-    url = urlparse.urlunsplit(['https', 'api.auth.adobe.com',
+    url = urlunsplit(['https', 'api.auth.adobe.com',
                                    'api/v1' + path,
                                    params, ''])
 
@@ -294,7 +295,7 @@ def get_user_metadata():
                                'deviceId' : get_device_id()})
 
     path = '/tokens/usermetadata'
-    url = urlparse.urlunsplit(['https', 'api.auth.adobe.com',
+    url = urlunsplit(['https', 'api.auth.adobe.com',
                                    'api/v1' + path,
                                    params, ''])
 

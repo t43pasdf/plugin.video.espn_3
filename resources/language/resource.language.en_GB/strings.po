@@ -288,6 +288,10 @@ msgctxt "#30780"
 msgid "AndroidTV"
 msgstr ""
 
+msgctxt "#30790"
+msgid "Old Index"
+msgstr ""
+
 msgctxt "#30800"
 msgid "Show the AppleTV menu"
 msgstr ""

@@ -123,7 +123,7 @@ def parse_url_from_method(method):
 
 # espn.page.loadMore('loadMoreLiveAndUpcoming', 'nav-0', 'url')
 def parse_method_call(method):
-    p = re.compile('([\\w\\.:/&\\?=%,-]{2,})')
+    p = re.compile('([\\w.:/&?,-]{2,})')
     return p.findall(method)
 
 

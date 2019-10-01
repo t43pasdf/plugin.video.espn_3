@@ -134,7 +134,7 @@ def new_index():
                      ListItem(get_string(30850) % current_time), True)
     addDirectoryItem(plugin.handle,
                      plugin.url_for(index),
-                     ListItem('Old Index'), True)
+                     ListItem(get_string(30790)), True)
 
     endOfDirectory(plugin.handle, succeeded=True, updateListing=refresh, cacheToDisc=False)
 
@@ -143,11 +143,6 @@ def new_index():
 def index():
     refresh = arg_as_bool('refresh')
     clear_cache = arg_as_bool('clear-cache')
-    try:
-        adobe_activate_api.clean_up_authorization_tokens()
-    except:
-        logger.debug('Unable to clean up authoorization tokens')
-        adobe_activate_api.reset_settings()
     if clear_cache:
         include_premium = adobe_activate_api.is_authenticated()
         channel_list = events.get_channel_list(include_premium)

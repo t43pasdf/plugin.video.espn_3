@@ -166,7 +166,7 @@ def index_item(args):
         guid = args['guid'] if 'guid' in args else None
         if adobeRSS is None and guid is None:
             addDirectoryItem(plugin.handle,
-                             plugin.url_for(PLAY_ITEM, url=args['sessionUrl']),
+                             plugin.url_for(PLAY_ITEM, url=args['sessionUrl'], event_id=args['eventId']),
                              make_list_item(ename, icon=fanart, infoLabels=infoLabels))
         else:
             if 'adobeRSS' in args:
