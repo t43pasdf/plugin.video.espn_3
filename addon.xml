@@ -12,6 +12,7 @@
         <import addon="script.module.requests" version="2.22.0" />
         <import addon="script.module.pyjwt" version="1.6.4" />
         <import addon="script.module.pytz" version="2014.2" />
+        <import addon="script.module.six" version="1.11.0" />
     </requires>
     <extension point="xbmc.python.pluginsource" library="addon.py">
         <provides>video</provides>
