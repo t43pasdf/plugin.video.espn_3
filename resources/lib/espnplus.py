@@ -291,7 +291,7 @@ def execute_method(endpoint, access_token='', json=None, data=None):
     return resp
 
 def create_device_grant():
-    endpoint = app_config['services']['device']['client']['endpoints']['create_device_grant']
+    endpoint = app_config['services']['device']['client']['endpoints']['createDeviceGrant']
     resp = execute_method(endpoint, json={
             'deviceFamily': 'browser',
             'applicationRuntime': 'chrome',
@@ -312,12 +312,12 @@ def exchange_token(data):
     return resp.json()
 
 def create_account_grant(access_token, json):
-    endpoint = app_config['services']['account']['client']['endpoints']['create_account_grant']
+    endpoint = app_config['services']['account']['client']['endpoints']['createAccountGrant']
     resp = execute_method(endpoint, access_token=access_token, json=json)
     return resp.json()
 
 def get_subscriptions(access_token):
-    endpoint = app_config['services']['subscription']['client']['endpoints']['get_subscriptions']
+    endpoint = app_config['services']['subscription']['client']['endpoints']['getSubscriptions']
     resp = execute_method(endpoint, access_token=access_token)
     return resp.json()
 
