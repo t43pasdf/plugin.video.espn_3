@@ -1,10 +1,22 @@
 # Copyright 2019 https://github.com/kodi-addons
 #
-# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is furnished
+# to do so, subject to the following conditions:
 #
-# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
 #
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+# INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+# PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+# HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+# SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 
 try:
     from urlparse import urlunsplit
@@ -71,7 +83,8 @@ def generate_message(method, path):
     nonce = str(uuid.uuid4())
     today = str(int(time.time() * 1000))
     key = 'gB8HYdEPyezeYbR1'
-    message = method + ' requestor_id=ESPN, nonce=' + nonce + ', signature_method=HMAC-SHA1, request_time=' + today + ', request_uri=' + path
+    message = method + ' requestor_id=ESPN, nonce=' + nonce + \
+        ', signature_method=HMAC-SHA1, request_time=' + today + ', request_uri=' + path
     signature = hmac.new(key, message, hashlib.sha1)
     signature = base64.b64encode(signature.digest())
     message = message + ', public_key=yKpsHYd8TOITdTMJHmkJOVmgbb2DykNK, signature=' + signature
@@ -104,8 +117,8 @@ def get_regcode():
 
     path = '/regcode'
     url = urlunsplit(['https', 'api.auth.adobe.com',
-                               'reggie/v1/ESPN' + path,
-                               params, ''])
+                      'reggie/v1/ESPN' + path,
+                      params, ''])
 
     message = generate_message('POST', path)
 
@@ -122,8 +135,8 @@ def authenticate(regcode):
 
     path = '/authenticate/' + regcode
     url = urlunsplit(['https', 'api.auth.adobe.com',
-                                   'api/v1' + path,
-                                   params, ''])
+                      'api/v1' + path,
+                      params, ''])
 
     message = generate_message('GET', path)
 
@@ -138,8 +151,8 @@ def re_authenticate():
 
     path = '/tokens/authn'
     url = urlunsplit(['https', 'api.auth.adobe.com',
-                                   'api/v1' + path,
-                                   params, ''])
+                      'api/v1' + path,
+                      params, ''])
 
     message = generate_message('GET', path)
 
@@ -154,7 +167,10 @@ def re_authenticate():
 
 
 def get_resource(channel, event_name, event_guid, event_parental_rating):
-    return '<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/"><channel><title><![CDATA[' + channel + "]]></title><item><title><![CDATA[" + event_name + "]]></title><guid><![CDATA[" + event_guid + ']]></guid><media:rating scheme="urn:v-chip"><![CDATA[' + event_parental_rating + "]]></media:rating></item></channel></rss>"
+    return '<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/"><channel><title><![CDATA[' + \
+           channel + ']]></title><item><title><![CDATA[' + event_name + "]]></title><guid><![CDATA[" + \
+           event_guid + ']]></guid><media:rating scheme="urn:v-chip"><![CDATA[' + event_parental_rating + \
+           "]]></media:rating></item></channel></rss> "
 
 
 # Sample '{"resource":"resource","mvpd":"","requestor":"ESPN","expires":"1463621239000"}'
@@ -168,8 +184,8 @@ def authorize(resource):
 
     path = '/authorize'
     url = urlunsplit(['https', 'api.auth.adobe.com',
-                                   'api/v1' + path,
-                                   params, ''])
+                      'api/v1' + path,
+                      params, ''])
 
     message = generate_message('GET', path)
 
@@ -188,14 +204,14 @@ def deauthorize():
 
     path = '/logout'
     url = urlunsplit(['https', 'api.auth.adobe.com',
-                               'api/v1' + path,
-                               params, ''])
+                      'api/v1' + path,
+                      params, ''])
 
     message = generate_message('DELETE', path)
 
     try:
-        resp = get_url_response(url, message, body=None, method='DELETE')
-    except:
+        get_url_response(url, message, body=None, method='DELETE')
+    except urllib2.HTTPError:
         xbmc.log(TAG + 'De-authorize failed', xbmc.LOGDEBUG)
     if 'authorize' in settings:
         del settings['authorize']
@@ -212,13 +228,13 @@ def get_short_media_token(resource):
         re_authenticate()
 
     params = urllib.urlencode({'requestor': 'ESPN',
-                               'deviceId' : get_device_id(),
-                               'resource' : resource})
+                               'deviceId': get_device_id(),
+                               'resource': resource})
 
     path = '/mediatoken'
     url = urlunsplit(['https', 'api.auth.adobe.com',
-                                   'api/v1' + path,
-                                   params, ''])
+                      'api/v1' + path,
+                      params, ''])
 
     message = generate_message('GET', path)
 
@@ -292,13 +308,13 @@ def clean_up_authorization_tokens():
 
 def get_user_metadata():
     params = urllib.urlencode({'requestor': 'ESPN',
-                               'deviceId' : get_device_id()})
+                               'deviceId': get_device_id()})
 
     path = '/tokens/usermetadata'
     url = urlunsplit(['https', 'api.auth.adobe.com',
-                                   'api/v1' + path,
-                                   params, ''])
+                      'api/v1' + path,
+                      params, ''])
 
     message = generate_message('GET', path)
 
-    resp = get_url_response(url, message)
+    get_url_response(url, message)

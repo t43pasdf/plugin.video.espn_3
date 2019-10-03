@@ -1,21 +1,44 @@
 # Copyright 2019 https://github.com/kodi-addons
 #
-# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is furnished
+# to do so, subject to the following conditions:
 #
-# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
 #
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+# INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+# PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+# HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+# SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+import time
+import logging
+import urllib
 
 from xbmcplugin import addDirectoryItem
-from kodiutils import get_setting_as_bool
+from resources.lib.kodiutils import get_setting_as_bool, get_string
+from resources.lib.addon_util import check_auth_types, get_auth_types_from_network, make_list_item, \
+    include_item, get_league, get_subcategory, check_json_blackout
+from resources.lib.constants import NETWORK_ID_TO_NETWORK_NAME
 
-from play_routes import *
+from resources.lib import adobe_activate_api
+
+from resources.lib.play_routes import upcoming_event, play_item, play_tv
+from resources.lib.plugin_routing import plugin
 
 
 def format_time(etime):
     return etime
 
-def get_item_listing_text(event_name, starttime, duration, status, network, blackout, auth_types, requires_package=False, sport=None, sport2=None):
+
+def get_item_listing_text(event_name, starttime, duration, status, network,
+                          blackout, auth_types, requires_package=False, sport=None, sport2=None):
     if sport != sport2 and len(sport2) > 0:
         sport += ' (' + sport2 + ')'
     length = duration
@@ -47,9 +70,6 @@ def get_item_listing_text(event_name, starttime, duration, status, network, blac
             else:
                 etime = time.strftime("%m/%d %I:%M %p", starttime)
             ename = etime + ' - ' + ename
-        aired = time.strftime("%Y-%m-%d", starttime)
-    else:
-        aired = 0
 
     blackout_text = ''
     if blackout:
@@ -70,6 +90,7 @@ def get_item_listing_text(event_name, starttime, duration, status, network, blac
         ename = 'Requires ESPN+ Package - ' + ename
     return ename, length
 
+
 # TODO: Make use of get_item_listing_text
 def index_item(args):
     if args['type'] == 'over':
@@ -82,6 +103,7 @@ def index_item(args):
     starttime = args['starttime'] if 'starttime' in args else None
     length = int(args['duration'])
 
+    etime = time.time()
     if starttime is not None:
         now = time.time()
         etime = time.strftime("%I:%M %p", starttime)
@@ -99,8 +121,8 @@ def index_item(args):
         else:
             now_time = time.localtime(now)
             if now_time.tm_year == starttime.tm_year and \
-                            now_time.tm_mon == starttime.tm_mon and \
-                            now_time.tm_mday == starttime.tm_mday:
+                    now_time.tm_mon == starttime.tm_mon and \
+                    now_time.tm_mday == starttime.tm_mday:
                 etime = time.strftime("%I:%M %p", starttime)
             else:
                 etime = time.strftime("%m/%d %I:%M %p", starttime)
@@ -110,19 +132,11 @@ def index_item(args):
         aired = 0
 
     network_id = args['networkId'] if 'networkId' in args else ''
-    if network_id == 'longhorn':
-        channel_color = 'BF5700'
-    elif network_id == 'sec' or network_id == 'secplus':
-        channel_color = '004C8D'
-    elif network_id == 'accextra':
-        channel_color = '013ca6'
-    else:
-        channel_color = 'CC0000'
     if 'networkName' in args:
         network = args['networkName']
     else:
         network = network_id
-    xbmc.log(TAG + 'network_id ' + network_id, xbmc.LOGDEBUG)
+    logging.debug('network_id ' + network_id)
     if network_id in NETWORK_ID_TO_NETWORK_NAME:
         network = get_string(NETWORK_ID_TO_NETWORK_NAME[network_id])
     blackout = args['blackout'] if 'blackout' in args else False
@@ -143,23 +157,24 @@ def index_item(args):
     if requires_auth and not adobe_activate_api.is_authenticated():
         ename = '*' + ename
 
-    xbmc.log(TAG + 'Duration %s' % length, xbmc.LOGDEBUG)
+    logging.debug('Duration %s' % length)
 
     mpaa = args['parentalRating'] if 'parentRating' in args else 'U'
     info_labels = {'title': ename,
-                  'genre': sport,
-                  'duration': length,
-                  'studio': network,
-                  'mpaa': mpaa,
-                  'plot': description,
-                  'aired': aired,
-                  'premiered': aired}
+                   'genre': sport,
+                   'duration': length,
+                   'studio': network,
+                   'mpaa': mpaa,
+                   'plot': description,
+                   'aired': aired,
+                   'premiered': aired}
 
     fanart = args['imageHref']
 
     if args['type'] == 'upcoming':
         addDirectoryItem(plugin.handle,
-                         plugin.url_for(upcoming_event, event_id=args['eventId'], starttime=etime, event_name=ename),
+                         plugin.url_for(upcoming_event, event_id=args['eventId'], starttime=etime,
+                                        event_name=urllib.quote_plus(ename.encode('utf-8'))),
                          make_list_item(ename, icon=fanart, info_labels=info_labels))
     else:
         adobe_rss = args['adobeRSS'] if 'adobeRSS' in args else None
@@ -173,8 +188,8 @@ def index_item(args):
                 adobe_rss = args['adobeRSS']
             else:
                 adobe_rss = adobe_activate_api.get_resource(args['channelResourceId'],
-                                                           args['eventName'], args['guid'],
-                                                           mpaa)
+                                                            args['eventName'], args['guid'],
+                                                            mpaa)
 
             if include_item(network_id):
                 logging.debug('Adding %s with handle %d and id %s' % (ename, plugin.handle, args['eventId']))
@@ -195,7 +210,8 @@ def index_listing(listing):
     starttime = time.strptime(listing['startTime'][:-3], time_format)
     endtime = time.strptime(listing['endTime'][:-3], time_format)
     duration = (time.mktime(endtime) - time.mktime(starttime))
-    xbmc.log(TAG + ' Duration: %s' % duration, xbmc.LOGDEBUG)
+    logging.debug(' Duration: %s' % duration)
+    logging.debug(listing)
 
     index_item({
         'sport': get_league(listing),
@@ -210,7 +226,7 @@ def index_listing(listing):
         'networkName': listing['broadcasts'][0]['name'],
         'blackout': check_json_blackout(listing),
         'description': listing['keywords'],
-        'eventId': listing['eventId'],
+        'eventId': listing['eventId'] if len(str(listing['eventId'])) > 0 else listing['id'],
         'sessionUrl': listing['links']['source']['hls']['default']['href'],
         'guid': listing['guid'],
         'channelResourceId': listing['broadcasts'][0]['adobeResource']

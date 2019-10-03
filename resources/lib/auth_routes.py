@@ -1,10 +1,22 @@
 # Copyright 2019 https://github.com/kodi-addons
 #
-# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is furnished
+# to do so, subject to the following conditions:
 #
-# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
 #
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+# INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+# PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+# HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+# SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 
 import Queue
 import logging
@@ -12,10 +24,10 @@ import threading
 import time
 import urllib2
 
-import adobe_activate_api
-import espnplus
-from plugin_routing import *
-from resources.lib.addon_util import *
+import xbmcgui
+
+from resources.lib import adobe_activate_api, espnplus, player_config
+from resources.lib.plugin_routing import plugin
 from resources.lib.kodiutils import get_string, set_setting
 
 
@@ -56,6 +68,7 @@ def view_tv_provider_details():
               get_string(30390) % adobe_activate_api.get_authentication_expires(),
               get_string(30700) % (player_config.get_dma(), player_config.get_timezone()))
 
+
 @plugin.route('/logout-tv-provider')
 def logout_tv_provider():
     dialog = xbmcgui.Dialog()
@@ -64,6 +77,7 @@ def logout_tv_provider():
     if ok:
         adobe_activate_api.deauthorize()
         set_setting('LoggedInToTvProvider', False)
+
 
 @plugin.route('/login-espn-plus')
 def login_espn_plus():
@@ -119,10 +133,12 @@ def login_espn_plus():
     set_setting('LoggedInToEspnPlus', True)
     return True
 
+
 @plugin.route('/view-espn-plus-details')
 def view_espn_plus_details():
     account_details = espnplus.get_bam_account_details()
-    product_details = account_details['attributes']['email'] + ' - ' + account_details['activeProfile']['profileName'] + '\n'
+    product_details = \
+        account_details['attributes']['email'] + ' - ' + account_details['activeProfile']['profileName'] + '\n'
     sub_details = espnplus.get_bam_sub_details()
     for sub in sub_details:
         if sub['isActive']:
@@ -132,6 +148,7 @@ def view_espn_plus_details():
             product_details = product_details + product_name + ' ' + sub['expirationDate'] + '\n'
     dialog = xbmcgui.Dialog()
     dialog.ok(get_string(40260), product_details)
+
 
 @plugin.route('/logout-espn-plus')
 def logout_espn_plus():

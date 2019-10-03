@@ -1,17 +1,37 @@
 # Copyright 2019 https://github.com/kodi-addons
 #
-# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is furnished
+# to do so, subject to the following conditions:
 #
-# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
 #
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+# INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+# PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+# HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+# SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-from xbmcplugin import setContent
+import logging
+import time
+import re
+import json
+from xbmcplugin import setContent, addDirectoryItem, endOfDirectory
 
-from resources.lib.item_indexer import *
-from resources.lib.plugin import *
+from resources.lib import player_config, util
+from resources.lib.addon_util import make_list_item, get_url, compare
+from resources.lib.item_indexer import index_listing, index_video, index_item
+from resources.lib.plugin import plugin, arg_as_string
+from resources.lib.kodiutils import get_string
+from resources.lib.constants import APPLE_TV_FEATURED, APPLE_TV_CHANNELS, APPLE_TV_SPORTS, WATCH_API_V1_TRENDING
 
 ROOT = '/appletv'
+
 
 @plugin.route(ROOT)
 def appletv_root_menu():
@@ -26,6 +46,7 @@ def appletv_root_menu():
                      plugin.url_for(appletv_channels),
                      make_list_item(get_string(30560)), True)
     endOfDirectory(plugin.handle)
+
 
 @plugin.route(ROOT + '/featured')
 def appletv_featured():
@@ -48,6 +69,7 @@ def appletv_featured():
                          plugin.url_for(appletv_shelf, shelf_id=name),
                          make_list_item(title), True)
     endOfDirectory(plugin.handle)
+
 
 @plugin.route(ROOT + '/showcase')
 def appletv_showcase():
@@ -74,12 +96,13 @@ def appletv_showcase():
                 process_item_list(navigation_item.findall('.//twoLineMenuItem'))
                 process_item_list(navigation_item.findall('.//twoLineEnhancedMenuItem'))
                 setContent(plugin.handle, 'episodes')
-    else: # If there are no navigation items then just dump all of the menu entries
+    else:  # If there are no navigation items then just dump all of the menu entries
         logging.debug('Dumping all menu items')
         process_item_list(et.findall('.//twoLineMenuItem'))
         process_item_list(et.findall('.//twoLineEnhancedMenuItem'))
         setContent(plugin.handle, 'episodes')
     endOfDirectory(plugin.handle)
+
 
 @plugin.route(ROOT + '/shelf/<shelf_id>')
 def appletv_shelf(shelf_id):
@@ -90,6 +113,7 @@ def appletv_shelf(shelf_id):
             process_item_list(shelf.findall('.//sixteenByNinePoster'))
     setContent(plugin.handle, 'episodes')
     endOfDirectory(plugin.handle)
+
 
 @plugin.route(ROOT + '/sports')
 def appletv_sports():
@@ -107,6 +131,7 @@ def appletv_sports():
                          make_list_item(name, image), True)
     endOfDirectory(plugin.handle, updateListing=False)
 
+
 @plugin.route(ROOT + '/channels')
 def appletv_channels():
     et = util.get_url_as_xml_cache(get_url(APPLE_TV_CHANNELS))
@@ -120,12 +145,14 @@ def appletv_channels():
     setContent(plugin.handle, 'episodes')
     endOfDirectory(plugin.handle, updateListing=False)
 
+
 def trending_mode():
     json_data = util.get_url_as_json_cache(get_url(WATCH_API_V1_TRENDING))
     for listing in json_data['listings']:
         index_listing(listing)
     for video in json_data['videos']:
         index_video(video)
+
 
 # Items can play as is and do not need authentication
 def index_item_shelf(stash_json):
@@ -134,6 +161,7 @@ def index_item_shelf(stash_json):
     description = description + '\n\n' + get_metadata(item)
 
     index_item({
+        'eventId': stash_json['id'],
         'sport': stash_json['sportName'],
         'eventName': stash_json['name'],
         'imageHref': stash_json['imageHref'],
@@ -142,6 +170,7 @@ def index_item_shelf(stash_json):
         'sessionUrl': stash_json['playbackUrl'],
         'type': 'live'
     })
+
 
 def index_tv_shelf(stash_json, upcoming):
     if 'description' in stash_json:
@@ -155,19 +184,20 @@ def index_tv_shelf(stash_json, upcoming):
         'sport': stash_json['categoryName'],
         'eventName': stash_json['name'],
         'subcategory': stash_json['subcategoryName'],
-        'imageHref':stash_json['imageHref'],
-        'parentalRating':stash_json['parentalRating'],
-        'starttime' : time.localtime(int(stash_json['startTime']) / 1000),
+        'imageHref': stash_json['imageHref'],
+        'parentalRating': stash_json['parentalRating'],
+        'starttime': time.localtime(int(stash_json['startTime']) / 1000),
         'duration': int(stash_json['duration']),
-        'type' : stash_json['type'],
-        'networkId' : stash_json['network'],
-        'blackout' : check_blackout(item),
-        'description' : description,
-        'eventId' : stash_json['eventId'] if stash_json['eventId'] != '' else stash_json['id'],
+        'type': stash_json['type'],
+        'networkId': stash_json['network'],
+        'blackout': check_blackout(item),
+        'description': description,
+        'eventId': stash_json['eventId'] if stash_json['eventId'] != '' else stash_json['id'],
         'sessionUrl': stash_json['sessionUrl'],
         'guid': stash_json['guid'],
         'channelResourceId': stash_json['channelResourceId']
     })
+
 
 def process_item_list(item_list):
     stashes = list()
@@ -202,10 +232,10 @@ def process_item_list(item_list):
                                  plugin.url_for(appletv_showcase, url=url),
                                  make_list_item(name, image), True)
             else:
-                stash = stash_element.text.encode('ISO-8859-1')
+                stash = stash_element.text.encode('utf-8')
                 # Some of the json is baddly formatted
                 stash = re.sub(r'\s+"', '"', stash)
-                stash_json = json.loads(stash) #, 'utf-8')
+                stash_json = json.loads(stash, 'utf-8')
                 stash_json['internal_item'] = item
                 stashes.append(stash_json)
 
@@ -219,6 +249,7 @@ def process_item_list(item_list):
         else:
             index_item_shelf(stash_json)
 
+
 def get_metadata(item):
     metadata_keys_element = item.find('.//metadataKeys')
     metadata_values_element = item.find('.//metadataValues')
@@ -230,6 +261,7 @@ def get_metadata(item):
             if value_labels[i].text is not None:
                 description += '%s: %s\n' % (key_labels[i].text, value_labels[i].text)
     return description
+
 
 def check_blackout(item):
     blackouts = item.findall('.//blackouts/blackoutsItem/detail/detailItem')
@@ -243,8 +275,10 @@ def check_blackout(item):
                 return True
     return False
 
+
 def get_time(listing):
     return time.localtime(int(listing['startTime']) / 1000) if 'startTime' in listing else None
+
 
 def compare_appletv(l, r):
     lnetwork = l['network'] if 'network' in l else None

@@ -1,55 +1,75 @@
 # Copyright 2019 https://github.com/kodi-addons
 #
-# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is furnished
+# to do so, subject to the following conditions:
 #
-# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
 #
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+# INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+# PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+# HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+# SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 
 # Legacy menu system
 from datetime import datetime, timedelta
 import xbmcplugin
+import logging
+import time
 
-from resources.lib import events
+from xbmcplugin import addDirectoryItem
+from resources.lib.plugin_routing import plugin, arg_as_string
+from resources.lib import adobe_activate_api, player_config, util, events
 from resources.lib.globals import defaultreplay, \
     defaultupcoming
-from resources.lib.item_indexer import *
-from resources.lib.kodiutils import get_setting_as_int
+from resources.lib.item_indexer import index_item
+from resources.lib.kodiutils import get_setting_as_int, get_string, get_setting_as_bool
+from resources.lib.addon_util import make_list_item, check_event_blackout
+from resources.lib.constants import ESPN3_ID, SECPLUS_ID, ACC_EXTRA_ID
 
 LIST_SPORTS_MODE = 'LIST_SPORTS'
 INDEX_SPORTS_MODE = 'INDEX_SPORTS'
 ROOT = '/legacy'
+
 
 @plugin.route(ROOT)
 def legacy_root_menu():
     include_premium = adobe_activate_api.is_authenticated()
     channel_list = events.get_channel_list(include_premium)
     curdate = datetime.utcnow()
-    upcoming = get_setting_as_int('upcoming')+1
-    days = (curdate+timedelta(days=upcoming)).strftime("%Y%m%d")
+    upcoming = get_setting_as_int('upcoming') + 1
+    days = (curdate + timedelta(days=upcoming)).strftime("%Y%m%d")
     # Live
     addDirectoryItem(plugin.handle,
                      plugin.url_for(live_events_mode, espn_url=events.get_live_events_url(channel_list)),
                      make_list_item(get_string(30029)), True)
     # Upcoming
-    espn_url = events.get_upcoming_events_url(channel_list) + '&endDate=' + days + '&startDate=' + curdate.strftime("%Y%m%d")
+    espn_url = events.get_upcoming_events_url(channel_list) + '&endDate=' + days \
+               + '&startDate=' + curdate.strftime("%Y%m%d")
     addDirectoryItem(plugin.handle,
                      plugin.url_for(list_sports, espn_url=events.get_live_events_url(channel_list)),
                      make_list_item(get_string(30030)), True)
-    enddate = '&endDate=' + (curdate+timedelta(days=1)).strftime("%Y%m%d")
+    enddate = '&endDate=' + (curdate + timedelta(days=1)).strftime("%Y%m%d")
     replays1 = [5, 10, 15, 20, 25]
     replays1 = replays1[get_setting_as_int('replays1')]
-    start1 = (curdate-timedelta(days=replays1)).strftime("%Y%m%d")
+    start1 = (curdate - timedelta(days=replays1)).strftime("%Y%m%d")
     replays2 = [10, 20, 30, 40, 50]
     replays2 = replays2[get_setting_as_int('replays2')]
-    start2 = (curdate-timedelta(days=replays2)).strftime("%Y%m%d")
+    start2 = (curdate - timedelta(days=replays2)).strftime("%Y%m%d")
     replays3 = [30, 60, 90, 120]
     replays3 = replays3[get_setting_as_int('replays3')]
-    start3 = (curdate-timedelta(days=replays3)).strftime("%Y%m%d")
+    start3 = (curdate - timedelta(days=replays3)).strftime("%Y%m%d")
     replays4 = [60, 90, 120, 240]
     replays4 = replays4[get_setting_as_int('replays4')]
-    start4 = (curdate-timedelta(days=replays4)).strftime("%Y%m%d")
-    start_all = (curdate-timedelta(days=365)).strftime("%Y%m%d")
+    start4 = (curdate - timedelta(days=replays4)).strftime("%Y%m%d")
+    start_all = (curdate - timedelta(days=365)).strftime("%Y%m%d")
     addDirectoryItem(plugin.handle,
                      plugin.url_for(list_sports, espn_url=events.get_replay_events_url(
                          channel_list) + enddate + '&startDate=' + start1),
@@ -71,6 +91,7 @@ def legacy_root_menu():
                          channel_list) + enddate + '&startDate=' + start_all),
                      make_list_item(get_string(30032)), True)
     xbmcplugin.endOfDirectory(plugin.handle)
+
 
 @plugin.route(ROOT + '/list-sports')
 def list_sports():
@@ -98,12 +119,14 @@ def list_sports():
     xbmcplugin.addSortMethod(plugin.handle, xbmcplugin.SORT_METHOD_VIDEO_SORT_TITLE)
     xbmcplugin.endOfDirectory(plugin.handle)
 
+
 @plugin.route(ROOT + '/live')
 def live_events_mode():
     espn_url = arg_as_string('espn_url')
     index_legacy_live_events(espn_url)
     xbmcplugin.setContent(plugin.handle, 'episodes')
     xbmcplugin.endOfDirectory(plugin.handle)
+
 
 @plugin.route(ROOT + '/live/network/<network_id>')
 def live_network_events_mode(network_id):
@@ -112,12 +135,14 @@ def live_network_events_mode(network_id):
     xbmcplugin.setContent(plugin.handle, 'episodes')
     xbmcplugin.endOfDirectory(plugin.handle)
 
+
 @plugin.route(ROOT + '/live/sport/<sport>')
 def live_sport_events_mode(sport):
     espn_url = arg_as_string('espn_url')
     index_legacy_live_events(espn_url, sport=sport)
     xbmcplugin.setContent(plugin.handle, 'episodes')
     xbmcplugin.endOfDirectory(plugin.handle)
+
 
 def index_legacy_live_events(espn_url, sport=None, network_id=None):
     chosen_sport = sport
@@ -177,13 +202,14 @@ def index_legacy_live_events(espn_url, sport=None, network_id=None):
                              plugin.url_for(live_network_events_mode, espn_url=espn_url, network_id=ACC_EXTRA_ID),
                              make_list_item(name), True)
 
+
 def _index_event(event, live, upcoming, replay, chosen_sport):
-    xbmc.log(TAG + ' processing event %s' % event.get('id'), xbmc.LOGDEBUG)
+    logging.debug(' processing event %s' % event.get('id'))
     network_id = event.find('networkId').text
     network_name = ''
     if network_id is not None:
         network_name = player_config.get_network_name(network_id)
-    xbmc.log(TAG + ' networkName %s' % network_name, xbmc.LOGDEBUG)
+    logging.debug(' networkName %s' % network_name)
 
     fanart = event.find('.//thumbnail/large').text
     if fanart is not None:
@@ -191,9 +217,8 @@ def _index_event(event, live, upcoming, replay, chosen_sport):
     starttime = int(event.find('startTimeGmtMs').text) / 1000
     endtime = int(event.find('endTimeGmtMs').text) / 1000
     length = int(round((endtime - starttime)))
-    xbmc.log(TAG + 'duration %s' % length, xbmc.LOGDEBUG)
-    session_url = base64.b64decode(
-        'aHR0cDovL2Jyb2FkYmFuZC5lc3BuLmdvLmNvbS9lc3BuMy9hdXRoL3dhdGNoZXNwbi9zdGFydFNlc3Npb24/')
+    logging.debug('duration %s' % length)
+    session_url = 'http://broadband.espn.go.com/espn3/auth/watchespn/startSession?'
     session_url += 'channel=' + network_name
     if event.find('simulcastAiringId') is not None and event.find('simulcastAiringId').text is not None:
         session_url += '&simulcastAiringId=' + event.find('simulcastAiringId').text
@@ -227,4 +252,3 @@ def _index_event(event, live, upcoming, replay, chosen_sport):
         'guid': event.find('guid').text,
         'channelResourceId': event.find('adobeResource').text
     })
-

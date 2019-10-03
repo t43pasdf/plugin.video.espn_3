@@ -1,30 +1,46 @@
 # Copyright 2019 https://github.com/kodi-addons
 #
-# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is furnished
+# to do so, subject to the following conditions:
 #
-# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
 #
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+# INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+# PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+# HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+# SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import json
+
 try:
     from urllib2 import HTTPError
 except ImportError:
     from urllib.error import HTTPError
 
+import urllib
+
 import m3u8
 from xbmcplugin import setResolvedUrl, endOfDirectory
+import xbmcgui
 
+import logging
 import xbmc
 import base64
-import adobe_activate_api
-import auth_routes
-import espnplus
-from globals import global_session
-from plugin_routing import *
-from resources.lib.addon_util import *
+
+from resources.lib import util, espnplus, auth_routes, adobe_activate_api
+from resources.lib.globals import global_session
+from resources.lib.plugin_routing import plugin, arg_as_string, arg_as_list
+from resources.lib.addon_util import requires_adobe_auth, get_setting_from_channel, check_error, \
+    check_espn_plus_error, get_auth_types_from_network, is_entitled
 from resources.lib.globals import UA_PC
-from resources.lib.kodiutils import set_setting, get_setting_as_int, get_setting
+from resources.lib.kodiutils import set_setting, get_setting, get_string, get_setting_as_bool
 
 
 def get_token_type(auth_types):
@@ -33,6 +49,7 @@ def get_token_type(auth_types):
     elif 'direct' in auth_types:
         return 'ESPN+'
     return 'DEVICE'
+
 
 def check_auth_status(auth_types, resource, network_name):
     logging.debug('Checking auth of %s' % (auth_types))
@@ -101,9 +118,10 @@ def check_auth_status(auth_types, resource, network_name):
     logging.error('Unable to handle auth types')
     return None
 
+
 def process_playback_url(playback_url, auth_string):
     logging.debug('Playback url %s' % playback_url)
-    stream_quality =  str(get_setting('StreamQuality'))
+    stream_quality = str(get_setting('StreamQuality'))
     bitrate_limit = int(get_setting('BitrateLimit'))
     logging.debug('Stream Quality %s' % stream_quality)
     try:
@@ -132,7 +150,7 @@ def process_playback_url(playback_url, auth_string):
                 stream_index = int(stream_quality_index)
                 if stream_index < 0 or stream_index >= len(m3u8_obj.playlists):
                     should_ask = True
-            except:
+            except ValueError:
                 should_ask = True
             if '0' == stream_quality:  # Best
                 stream_index = 0
@@ -173,7 +191,7 @@ def process_playback_url(playback_url, auth_string):
             item = xbmcgui.ListItem(path=playback_url)
             setResolvedUrl(plugin.handle, success, item)
     else:
-        xbmc.log(TAG + 'Using inputstream.hls addon', xbmc.LOGDEBUG)
+        logging.debug('Using inputstream.hls addon')
         item = xbmcgui.ListItem(path=playback_url)
         item.setProperty('inputstreamaddon', 'inputstream.hls')
         item.setProperty('inputstream.hls.manifest_type', 'hls')
@@ -193,7 +211,6 @@ def start_adobe_session(media_token, token_type, resource, start_session_url):
 
     xbmc.log('ESPN3: start_session_url: ' + authed_url, xbmc.LOGDEBUG)
 
-
     try:
         session_json = util.get_url_as_json(authed_url)
     except HTTPError as exception:
@@ -208,8 +225,9 @@ def start_adobe_session(media_token, token_type, resource, start_session_url):
 
     playback_url = session_json['session']['playbackUrls']['default']
     auth_string = 'Connection=keep-alive&User-Agent=' + urllib.quote(UA_PC) + '&Cookie=_mediaAuth=' + \
-                        urllib.quote(session_json['session']['token'])
+                  urllib.quote(session_json['session']['token'])
     process_playback_url(playback_url, auth_string=auth_string)
+
 
 def start_espn_plus_session(start_session_url):
     espnplus_url = start_session_url.replace('{scenario}', 'browser~ssai')
@@ -225,7 +243,7 @@ def start_espn_plus_session(start_session_url):
         logging.debug('Unable to get session %s' % exception)
         if exception.code == 403:
             session_json = json.load(exception)
-            xbmc.log(TAG + 'checking for errors in %s' % session_json)
+            logging.debug('checking for errors in %s' % session_json)
         else:
             raise exception
 
@@ -240,17 +258,20 @@ def start_espn_plus_session(start_session_url):
     auth_string = 'Authorization=' + espnplus.get_bam_account_access_token()
     process_playback_url(playback_url, auth_string=auth_string)
 
+
 def start_session(media_token, token_type, resource, start_session_url):
     if token_type == 'ADOBEPASS' or token_type == 'DEVICE':
         start_adobe_session(media_token, token_type, resource, start_session_url)
     else:
         start_espn_plus_session(start_session_url)
 
+
 @plugin.route('/play-item/<event_id>')
 def play_item(event_id):
     url = arg_as_string('url')
     item = xbmcgui.ListItem(path=url)
     return setResolvedUrl(plugin.handle, True, item)
+
 
 @plugin.route('/play-vod/<event_id>')
 def play_vod(event_id):
@@ -259,6 +280,7 @@ def play_vod(event_id):
     playback_url = session_json['playbackState']['videoHref']
 
     process_playback_url(playback_url, '')
+
 
 # Used for V3 Page api play requests
 @plugin.route('/play-event/<event_id>')
@@ -282,8 +304,9 @@ def play_event(event_id):
 
 
 # Cookie is only needed when authenticating with espn broadband as opposed to uplynk
-#ua UA_PC
-#finalurl = finalurl + '|Connection=keep-alive&User-Agent=' + urllib.quote(ua) + '&Cookie=_mediaAuth=' + urllib.quote(base64.b64encode(pkan))
+# ua UA_PC
+# finalurl = finalurl + '|Connection=keep-alive&User-Agent=' + urllib.quote(ua)
+# + '&Cookie=_mediaAuth=' + urllib.quote(base64.b64encode(pkan))
 # Legacy uses this to play items
 @plugin.route('/play-tv/<event_id>')
 def play_tv(event_id):
@@ -302,6 +325,7 @@ def play_tv(event_id):
 
     start_session(media_token, token_type, resource, start_session_url)
 
+
 @plugin.route('/upcoming-event/<event_id>')
 def upcoming_event(event_id):
     starttime = arg_as_string('starttime')
@@ -317,4 +341,3 @@ def upcoming_event(event_id):
     dialog = xbmcgui.Dialog()
     dialog.ok(get_string(30035), get_string(30036) % (event_name, starttime, extra))
     endOfDirectory(plugin.handle, succeeded=False, updateListing=True)
-

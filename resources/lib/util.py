@@ -1,10 +1,22 @@
 # Copyright 2019 https://github.com/kodi-addons
 #
-# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is furnished
+# to do so, subject to the following conditions:
 #
-# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
 #
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+# INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+# PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+# HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+# SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 
 import xbmc
 import os
@@ -15,8 +27,8 @@ import hashlib
 import re
 import codecs
 
-from globals import global_session
-from kodiutils import addon_profile_path
+from resources.lib.globals import global_session
+from resources.lib.kodiutils import addon_profile_path
 
 TAG = 'ESPN3 util: '
 
@@ -39,12 +51,12 @@ def clear_cache(url):
     cache_file = hashlib.sha224(url).hexdigest()
     try:
         os.remove(os.path.join(addon_profile_path, cache_file + '.xml'))
-    except:
+    except OSError:
         pass
 
     try:
         os.remove(os.path.join(addon_profile_path, cache_file + '.json'))
-    except:
+    except OSError:
         pass
 
 
@@ -61,20 +73,21 @@ def get_url_as_xml_cache(url, cache_file=None, timeout=180, encoding='utf-8'):
         xml_data = xml_file.read()
         return load_element_tree(xml_data)
 
+
 # ESPN files are in iso-8859-1 and sometimes do not have the xml preamble
 def load_element_tree(data):
     try:
         parser = ET.XMLParser(encoding='iso-8859-1')
         data_tree = ET.fromstring(data, parser)
-    except:
+    except ET.ParseError:
         if '<?xml version' not in data:
             xbmc.log(TAG + 'Fixing up data because of no xml preamble', xbmc.LOGDEBUG)
             try:
                 data_tree = ET.fromstring('<?xml version="1.0" encoding="ISO-8859-1" ?>' + data)
-            except:
+            except ET.ParseError:
                 try:
                     data_tree = ET.fromstring('<?xml version="1.0" encoding="windows-1252" ?>' + data)
-                except:
+                except ET.ParseError:
                     # One last chance to fix up the data
                     xbmc.log(TAG + 'removing invalid xml characters', xbmc.LOGDEBUG)
                     data = re.sub('[\\x00-\\x1f]', '', data)
@@ -132,6 +145,6 @@ def get_nested_value(dict_val, keys, defaultvalue=None):
     for key in keys:
         try:
             local_dict = local_dict[key]
-        except:
+        except KeyError:
             return defaultvalue
     return local_dict

@@ -1,33 +1,47 @@
 # Copyright 2019 https://github.com/kodi-addons
 #
-# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is furnished
+# to do so, subject to the following conditions:
 #
-# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
 #
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+# INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+# PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+# HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+# SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 
 import time
 import os
+import logging
+import base64
 
 import xbmcaddon
+import xbmcgui
+from xbmcgui import ListItem
 from xbmcplugin import addDirectoryItem, endOfDirectory
 
-import adobe_activate_api
-import settings_file
-from page_api import page_api_url, parse_json, get_v3_url
-from plugin_routing import *
-from resources.lib import events
-from resources.lib import kodilogging
-from resources.lib.addon_util import *
+from resources.lib.constants import WATCH_API_V3_LIVE, WATCH_API_V3_WEB_HOME, KEEP_FILES
+from resources.lib.page_api import page_api_url, parse_json, get_v3_url
+from resources.lib.plugin_routing import plugin, arg_as_string, arg_as_bool
 from resources.lib.settings_file import SettingsFile
-from resources.lib.kodiutils import addon_profile_path
-from ui import tvos, appletv, legacy, roku
-from ui.legacy import legacy_root_menu
+from resources.lib.kodiutils import addon_profile_path, get_string, get_setting_as_bool
+from resources.lib.ui import tvos, appletv, legacy, roku
+from resources.lib.ui.legacy import legacy_root_menu
+from resources.lib import util, adobe_activate_api, settings_file, events, kodilogging
 
 TAG = 'ESPN3: '
 ADDON = xbmcaddon.Addon()
 logger = logging.getLogger(ADDON.getAddonInfo('id'))
 kodilogging.config()
+
 
 class SearchSettings(SettingsFile):
     def __init__(self):
@@ -65,12 +79,14 @@ class SearchSettings(SettingsFile):
         self.settings['searchHistory'] = []
         self.load_config()
 
+
 search_settings = SearchSettings()
+
 
 def handle_search(search_query):
     networks = 'espn1,espn2,espnu,espnews,espndeportes,sec,longhorn,buzzerbeater,goalline,espn3,espnclassic,acc'
-    search_url = 'https://watch-search.espn.com/api/product/v3/watchespn/web/suggest?q=%s&size=20&authNetworks=%s&includeDtcContent=true' % (
-    search_query, networks)
+    search_url = 'https://watch-search.espn.com/api/product/v3/watchespn/web/suggest?' + \
+                 'q=%s&size=20&authNetworks=%s&includeDtcContent=true' % (search_query, networks)
     search_settings.set_last_search_query(search_url)
     parse_json(search_url)
     endOfDirectory(plugin.handle, succeeded=True, cacheToDisc=False)
@@ -81,10 +97,12 @@ def clear_search_history():
     search_settings.clear_search_history()
     xbmcgui.Dialog().ok(get_string(40520), get_string(40521))
 
+
 @plugin.route('/search/results')
 def search_results():
     search_query = arg_as_string('q')
     handle_search(search_query)
+
 
 @plugin.route('/search/input')
 def search_input():
@@ -99,6 +117,7 @@ def search_input():
         search_settings.set_in_search_results()
         handle_search(search_query)
 
+
 @plugin.route('/search')
 def search():
     search_settings.set_last_search_query('')
@@ -109,17 +128,14 @@ def search():
                          ListItem(search_history), True)
     endOfDirectory(plugin.handle, succeeded=True)
 
+
 @plugin.route('/')
 def new_index():
     # New index will have the channels listed and then the buckets from the watch
     # web product
     refresh = arg_as_bool('refresh')
     clear_cache = arg_as_bool('clear-cache')
-    try:
-        adobe_activate_api.clean_up_authorization_tokens()
-    except:
-        logger.debug('Unable to clean up authoorization tokens')
-        adobe_activate_api.adobe_settings.reset_settings()
+    adobe_activate_api.clean_up_authorization_tokens()
     if clear_cache:
         util.clear_cache(get_v3_url(WATCH_API_V3_LIVE))
         util.clear_cache(get_v3_url(WATCH_API_V3_WEB_HOME))
@@ -182,10 +198,12 @@ def clear_data():
         for root, dirs, files in os.walk(addon_profile_path):
             for currentFile in files:
                 protected_file = currentFile in KEEP_FILES
-                if not protected_file and (currentFile.lower().endswith('.xml') or currentFile.lower().endswith('.json')):
+                if not protected_file and (currentFile.lower().endswith('.xml') or
+                                           currentFile.lower().endswith('.json')):
                     os.remove(os.path.join(addon_profile_path, currentFile))
-    except:
+    except OSError:
         pass
+
 
 # if mode is None:
 #
@@ -209,4 +227,3 @@ def clear_data():
 def run():
     plugin.run()
     settings_file.save_settings()
-

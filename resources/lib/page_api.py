@@ -1,23 +1,45 @@
 # Copyright 2019 https://github.com/kodi-addons
 #
-# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is furnished
+# to do so, subject to the following conditions:
 #
-# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
 #
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+# INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+# PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+# HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+# SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import urlparse
+import urllib
+import time
+
+import logging
+import util
 
 from xbmcplugin import addDirectoryItem, setContent, endOfDirectory
+from xbmcgui import ListItem
 
-from item_indexer import index_item, get_item_listing_text
-from play_routes import *
-import espnplus
+from resources.lib import espnplus, player_config
+from resources.lib.item_indexer import index_item, get_item_listing_text
+from resources.lib.play_routes import play_vod, upcoming_event, play_event
+from resources.lib.plugin_routing import plugin, arg_as_string
+from resources.lib.addon_util import is_entitled, make_list_item, compare
+from resources.lib.constants import NETWORK_ID_SORT_ORDER
 
 BUCKET = 'BUCKET'
 
+
 def make_channel_id(id, name):
     return '%s' % (name)
+
 
 @plugin.route('/page-api')
 def page_api_url():
@@ -25,11 +47,13 @@ def page_api_url():
     parse_json(url)
     endOfDirectory(plugin.handle)
 
+
 @plugin.route('/page-api/bucket/<bucket_id>')
 def page_api_url_bucket(bucket_id):
     url = arg_as_string('url')
     parse_json(url)
     endOfDirectory(plugin.handle)
+
 
 @plugin.route('/page-api/channel')
 def page_api_channel():
@@ -41,10 +65,10 @@ def page_api_channel():
 
 @plugin.route('/page-api/buckets/<path:bucket_path>')
 def page_api_buckets(bucket_path):
-    url = arg_as_string('url')
     bucket_url = arg_as_string('bucket_url')
     parse_json(bucket_url, bucket_path)
     endOfDirectory(plugin.handle)
+
 
 def get_v3_url(url):
     components = urlparse.urlparse(url)
@@ -60,8 +84,10 @@ def get_v3_url(url):
     qs['lang'] = 'en'
     qs['zipcode'] = player_config.get_zipcode()
     qs['tz'] = player_config.get_timezone_utc_offest()
-    new_components = (components.scheme, components.netloc, components.path, components.params, urllib.urlencode(qs, doseq=True), components.fragment)
+    new_components = (components.scheme, components.netloc, components.path, components.params,
+                      urllib.urlencode(qs, doseq=True), components.fragment)
     return urlparse.urlunparse(new_components)
+
 
 def parse_json(url, bucket_path=None, channel_id=None):
     logging.debug('Looking at url %s %s' % (url, bucket_path))
@@ -88,10 +114,12 @@ def parse_json(url, bucket_path=None, channel_id=None):
     if 'buckets' in json_data['page']:
         buckets = buckets + json_data['page']['buckets']
     was_search = 'name' in json_data['page'] and json_data['page']['name'] == 'Suggestions'
-    process_buckets(url, header_bucket, buckets, selected_bucket, list(), channel_filter=channel_id, was_search=was_search)
+    process_buckets(url, header_bucket, buckets, selected_bucket, list(),
+                    channel_filter=channel_id, was_search=was_search)
 
 
-def process_buckets(url, header_bucket, buckets, selected_buckets, current_bucket_path, channel_filter=None, was_search=False):
+def process_buckets(url, header_bucket, buckets, selected_buckets, current_bucket_path,
+                    channel_filter=None, was_search=False):
     selected_bucket = None if selected_buckets is None or len(selected_buckets) == 0 else selected_buckets[0]
     logging.debug('Selected buckets: %s Current Path: %s' % (selected_buckets, current_bucket_path))
     original_bucket_path = current_bucket_path
@@ -108,12 +136,13 @@ def process_buckets(url, header_bucket, buckets, selected_buckets, current_bucke
                 if 'links' in bucket and 'self' in bucket['links'] and not was_search:
                     bucket_url = bucket['links']['self']
                     # bucket_path shouldn't be needed because we are using the full url to it
-                    addDirectoryItem(plugin.handle, plugin.url_for(page_api_url_bucket, bucket_id=bucket['id'], url=bucket_url),
+                    addDirectoryItem(plugin.handle,
+                                     plugin.url_for(page_api_url_bucket, bucket_id=bucket['id'], url=bucket_url),
                                      ListItem(bucket['name']), True)
                 else:
                     # The items are listed directly in the bucket, not in a sub-url, so use the bucket_path
-                    addDirectoryItem(plugin.handle, plugin.url_for(page_api_buckets, bucket_path=bucket_path, url=url,
-                                                                   bucket_url=url),
+                    addDirectoryItem(plugin.handle,
+                                     plugin.url_for(page_api_buckets, bucket_path=bucket_path, url=url, bucket_url=url),
                                      ListItem(bucket['name']), True)
         else:
             logging.debug('Processing bucket %s' % bucket['id'])
@@ -125,6 +154,7 @@ def process_buckets(url, header_bucket, buckets, selected_buckets, current_bucke
             else:
                 index_bucket_content(url, bucket, channel_filter)
 
+
 def index_bucket_content(url, bucket, channel_filter):
     if 'contents' in bucket:
         bucket['contents'].sort(cmp=compare_contents)
@@ -133,7 +163,7 @@ def index_bucket_content(url, bucket, channel_filter):
         content_indexed = 0
         for content in bucket['contents']:
             content_type = content['type']
-            if content_type == 'network' or content_type == 'subcategory' or content_type == 'category' or content_type == 'program':
+            if content_type in ['network', 'subcategory', 'category', 'program']:
                 content_url = content['links']['self']
                 if 'imageHref' in content:
                     fanart = content['imageHref']
@@ -182,10 +212,11 @@ def index_bucket_content(url, bucket, channel_filter):
 
 
 def index_content(content):
-    if 'tracking' in 'content':
+    if 'tracking' in 'content' or 'airings' in content:
         index_v1_content(content)
     else:
         index_v3_content(content)
+
 
 def parse_duration(duration_str):
     formats = [
@@ -197,7 +228,7 @@ def parse_duration(duration_str):
         try:
             duration = time.strptime(duration_str, format)
             return duration
-        except:
+        except ValueError:
             pass
     ret = time.localtime()
     ret.tm_hour = 0
@@ -205,15 +236,18 @@ def parse_duration(duration_str):
     ret.tm_sec = 0
     return ret
 
+
 def get_rank_text(rank):
     if rank is None or rank == '':
         return ''
     return str(rank) + ''
 
+
 def get_possesion_text(event):
     if event['teamOnePossession'] or event['teamTwoPossession']:
         return '%s has possession\n' % (event['teamOneName'] if event['teamOnePossession'] else event['teamTwoName'])
     return ''
+
 
 def get_team_name(event, number):
     key_name = 'team%sName' % number
@@ -232,7 +266,7 @@ def index_v3_content(content):
     if type == 'vod':
         index_v3_vod(content)
         return
-    
+
     status = content['status']
 
     subtitle = content.get('subtitle', '')
@@ -272,25 +306,25 @@ def index_v3_content(content):
         packages = util.get_nested_value(stream, ['packages'], [])
         has_entitlement = is_entitled(packages, entitlements)
         ename, length = get_item_listing_text(name, starttime, duration_seconds, content['status'],
-                                      stream['source']['name'], 'blackoutText' in content,
-                                      stream['authTypes'], requires_package=not has_entitlement)
+                                              stream['source']['name'], 'blackoutText' in content,
+                                              stream['authTypes'], requires_package=not has_entitlement)
 
         source_name = util.get_nested_value(content, ['stream', 0, 'source', 'name'])
 
         fanart = util.get_nested_value(content, ['imageHref'])
 
-
         info_labels = {'title': ename,
-                      'genre': subtitle,
-                      'duration': length,
-                      'studio': source_name,
-                      'plot': plot}
+                       'genre': subtitle,
+                       'duration': length,
+                       'studio': source_name,
+                       'plot': plot}
 
         if status == 'upcoming':
             starttime_text = time.strftime("%m/%d/%Y %I:%M %p", starttime)
             addDirectoryItem(plugin.handle,
                              plugin.url_for(upcoming_event, event_id=event_id,
-                                            event_name=urllib.quote_plus(name.encode('utf-8')), starttime=starttime_text,
+                                            event_name=urllib.quote_plus(name.encode('utf-8')),
+                                            starttime=starttime_text,
                                             packages='|'.join(packages)),
                              make_list_item(ename, info_labels=info_labels))
         else:
@@ -300,15 +334,16 @@ def index_v3_content(content):
                                             auth_types='|'.join(stream['authTypes'])),
                              make_list_item(ename, info_labels=info_labels, icon=fanart))
 
+
 # {
 # "id": "d2ecb4c1-8fd1-4008-906d-e066e5170cd0",
 # "name": "Indianapolis 500 On Demand",
 # "type": "show",
 # "imageFormat": "5x2",
 # "size": "md",
-# "imageHref": "http://s.espncdn.com/stitcher/artwork/5x2.jpg?width=400&source=https://artwork.espncdn.com/series/d2ecb4c1-8fd1-4008-906d-e066e5170cd0/5x2/960x384_201804161812.jpg&cb=12&showBadge=true&package=ESPN_PLUS",
+# "imageHref": "http://s.espncdn.com...",
 # "links": {
-#     "self": "https://watch.product.api.espn.com/api/product/v3/watchespn/web/series/d2ecb4c1-8fd1-4008-906d-e066e5170cd0?tz=America%2FPuerto_Rico&lang=en",
+#     "self": "https://watch.product.api.espn.com/api/...",
 #     "web": "http://www.espn.com/watch/series/d2ecb4c1-8fd1-4008-906d-e066e5170cd0/indianapolis-500-on-demand",
 #     "shareUrl": "http://www.espn.com/watch/series/d2ecb4c1-8fd1-4008-906d-e066e5170cd0/indianapolis-500-on-demand"
 #     }
@@ -319,6 +354,7 @@ def index_v3_show(content):
     fanart = content['imageHref']
     addDirectoryItem(plugin.handle, plugin.url_for(page_api_url, url=content_url),
                      ListItem(name, iconImage=fanart), True)
+
 
 def index_v3_vod(content):
     plot = content.get('description', '')
@@ -343,9 +379,9 @@ def index_v3_vod(content):
         fanart = util.get_nested_value(content, ['imageHref'])
 
         info_labels = {'title': ename,
-                      'duration': length,
-                      'studio': source_name,
-                      'plot': plot}
+                       'duration': length,
+                       'studio': source_name,
+                       'plot': plot}
 
         addDirectoryItem(plugin.handle,
                          plugin.url_for(play_vod, event_id=event_id,
@@ -390,6 +426,7 @@ def index_v1_content(content):
         'adobeRSS': content['adobeRSS'] if 'adobeRSS' in content else None
     })
 
+
 def get_time(content):
     starttime = None
     if 'date' in content and 'time' in content:
@@ -404,29 +441,30 @@ def get_time(content):
 
 
 def compare_contents(l, r):
-    lnetwork = util.get_nested_value(l, ['streams', 0, 'source', 'id'])
-    rnetwork = util.get_nested_value(r, ['streams', 0, 'source', 'id'])
+    lnetwork = util.get_nested_value(l, ['streams', 0, 'source', 'id'], '')
+    rnetwork = util.get_nested_value(r, ['streams', 0, 'source', 'id'], '')
     try:
         lnetwork_sort = NETWORK_ID_SORT_ORDER.index(lnetwork.lower())
-    except:
+    except ValueError:
         lnetwork_sort = 1000
     try:
         rnetwork_sort = NETWORK_ID_SORT_ORDER.index(rnetwork.lower())
-    except:
+    except ValueError:
         rnetwork_sort = 1000
     ltype = l['status'] if 'status' in l else 'clip'
     rtype = r['status'] if 'status' in r else 'clip'
     return compare(get_time(l), lnetwork_sort, ltype, get_time(r), rnetwork_sort, rtype)
 
+
 def compare_network_ids(l, r):
-    lnetwork = util.get_nested_value(l, ['streams', 0, 'source', 'id'])
-    rnetwork = util.get_nested_value(r, ['streams', 0, 'source', 'id'])
+    lnetwork = util.get_nested_value(l, ['streams', 0, 'source', 'id'], '')
+    rnetwork = util.get_nested_value(r, ['streams', 0, 'source', 'id'], '')
     try:
         lnetwork_sort = NETWORK_ID_SORT_ORDER.index(lnetwork.lower())
-    except:
+    except ValueError:
         lnetwork_sort = 1000
     try:
         rnetwork_sort = NETWORK_ID_SORT_ORDER.index(rnetwork.lower())
-    except:
+    except ValueError:
         rnetwork_sort = 1000
     return lnetwork_sort - rnetwork_sort

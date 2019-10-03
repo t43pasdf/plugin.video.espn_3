@@ -1,15 +1,28 @@
 # Copyright 2019 https://github.com/kodi-addons
 #
-# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is furnished
+# to do so, subject to the following conditions:
 #
-# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
 #
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+# INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+# PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+# HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+# SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 
 from globals import global_session
 from settings_file import SettingsFile
 import time
 import util
+
 try:
     import jwt
 except ImportError:
@@ -18,6 +31,7 @@ import json
 import logging
 import uuid
 import websocket
+
 try:
     import thread
 except ImportError:
@@ -40,9 +54,11 @@ REFRESH_AUTH_URL = DISNEY_ROOT_URL + '/{id-provider}/guest/refresh-auth?langPref
 BAM_API_KEY = 'ZXNwbiZicm93c2VyJjEuMC4w.ptUt7QxsteaRruuPmGZFaJByOoqKvDP2a5YkInHrc7c'
 BAM_APP_CONFIG = 'https://bam-sdk-configs.bamgrid.com/bam-sdk/v2.0/espn-a9b93989/browser/v3.4/linux/chrome/prod.json'
 
+
 def is_token_valid(encoded_token):
     token = jwt.decode(encoded_token, verify=False)
     return time.time() < token['exp']
+
 
 class TokenExchange(object):
     def __init__(self, token_dict):
@@ -51,8 +67,10 @@ class TokenExchange(object):
 
     def is_access_token_valid(self):
         return is_token_valid(self.access_token)
+
     def is_refresh_token_valid(self):
         return is_token_valid(self.refresh_token)
+
 
 class DisneyToken(object):
     def __init__(self, token_dict):
@@ -74,6 +92,7 @@ class Assertion(object):
 
     def is_valid(self):
         return is_token_valid(self.assertion)
+
 
 class Token(object):
     def __init__(self, token):
@@ -122,46 +141,58 @@ class EspnPlusConfig(SettingsFile):
     def set_device_grant(self, device_grant):
         self.settings['deviceGrant'] = device_grant
         self.load_tokens()
+
     def set_device_token_exchange(self, token_exchange):
         self.settings['deviceTokenExchange'] = token_exchange
         self.load_tokens()
+
     def set_device_refresh_token(self, token_exchange):
         self.settings['deviceRefreshToken'] = token_exchange
         self.load_tokens()
+
     def set_disney_id_token(self, id_token):
         self.settings['disneyIdToken'] = id_token
         self.load_tokens()
+
     def set_disney_token(self, disney_token):
         disney_token['grant_time_utc'] = time.time()
         self.settings['disneyToken'] = disney_token
         self.load_tokens()
+
     def set_id_token_grant(self, grant_resp):
         self.settings['idTokenGrant'] = grant_resp
         self.load_tokens()
+
     def set_account_token(self, token_exchange):
         self.settings['accountToken'] = token_exchange
         self.load_tokens()
+
 
 config = EspnPlusConfig()
 
 app_config = util.get_url_as_json_cache(BAM_APP_CONFIG)
 
+
 # disney
 
 def url_for_provider(url, provider):
-    return url.replace('{id-provider}',  provider)
+    return url.replace('{id-provider}', provider)
+
 
 def get_api_key(provider):
     logging.debug('Getting API Key')
     resp = global_session.post(url_for_provider(API_KEY_URL, provider))
     return resp.headers.get('api-key')
 
+
 def have_valid_login_id_token():
     return config.disney_id_token is not None and config.disney_id_token.is_valid()
+
 
 def handle_license_plate_token(token):
     config.set_disney_token(token)
     config.set_disney_id_token(token['id_token'])
+
 
 def get_login_id_token(username, password, provider):
     if config.disney_id_token is None or not config.disney_id_token.is_valid():
@@ -175,11 +206,14 @@ def get_login_id_token(username, password, provider):
         config.set_disney_id_token(resp.json()['data']['token']['id_token'])
     return config.disney_id_token.token
 
+
 def has_valid_login_id_token():
     return config.disney_id_token is not None and config.disney_id_token.is_valid()
 
+
 def has_valid_disney_refresh_token():
     return config.disney_token is not None and config.disney_token.is_refresh_token_valid()
+
 
 def get_license_plate(provider):
     logging.debug('Getting license plate')
@@ -199,6 +233,7 @@ def get_license_plate(provider):
         'Content-Type': 'application/json',
     }, json=post_data)
     return post_data, resp.json()
+
 
 def perform_license_plate_auth_flow(semaphore, result_queue):
     license_post_data, license_resp = get_license_plate(ANDROID_ID)
@@ -224,6 +259,7 @@ def perform_license_plate_auth_flow(semaphore, result_queue):
 
     return pairing_code, ws
 
+
 def refresh_auth(provider):
     logging.debug('Refreshing auth')
     post_data = {
@@ -234,8 +270,10 @@ def refresh_auth(provider):
     }, json=post_data)
     config.set_disney_id_token(resp.json()['data']['token']['id_token'])
 
+
 def start_websocket_thread(ws):
     thread.start_new_thread(ws.run_forever, ())
+
 
 # websocket
 def create_on_message(fastcast_topic, result_queue):
@@ -255,16 +293,21 @@ def create_on_message(fastcast_topic, result_queue):
                 token = json.loads(message_json['pl'])
                 result_queue.put(token)
                 ws.close()
+
     return on_message
+
 
 def on_error(ws, error):
     logging.debug(error)
+
 
 def create_on_close(semaphore):
     def on_close(ws):
         logging.debug('Closed websocket')
         semaphore.release()
+
     return on_close
+
 
 def on_open(ws):
     logging.debug('Opened websocket')
@@ -272,11 +315,13 @@ def on_open(ws):
         'op': 'C'
     }))
 
+
 # bam
 
 def fill_in_template(template, access_token):
     return template.replace('{apiKey}', BAM_API_KEY) \
         .replace('{accessToken}', access_token)
+
 
 def execute_method(endpoint, access_token='', json=None, data=None):
     logging.debug('Executing endpoint %s' % endpoint['href'])
@@ -290,41 +335,48 @@ def execute_method(endpoint, access_token='', json=None, data=None):
         resp = global_session.get(endpoint['href'], headers=http_headers)
     return resp
 
+
 def create_device_grant():
     endpoint = app_config['services']['device']['client']['endpoints']['createDeviceGrant']
     resp = execute_method(endpoint, json={
-            'deviceFamily': 'browser',
-            'applicationRuntime': 'chrome',
-            'deviceProfile': 'linux',
-            'attributes': {}
-        })
+        'deviceFamily': 'browser',
+        'applicationRuntime': 'chrome',
+        'deviceProfile': 'linux',
+        'attributes': {}
+    })
     if resp is not None:
         config.set_device_grant(resp.json())
+
 
 def get_device_assertion():
     if config.device_grant is None or not config.device_grant.is_valid():
         create_device_grant()
     return config.device_grant.assertion
 
+
 def exchange_token(data):
     endpoint = app_config['services']['token']['client']['endpoints']['exchange']
     resp = execute_method(endpoint, data=data)
     return resp.json()
+
 
 def create_account_grant(access_token, json):
     endpoint = app_config['services']['account']['client']['endpoints']['createAccountGrant']
     resp = execute_method(endpoint, access_token=access_token, json=json)
     return resp.json()
 
+
 def get_subscriptions(access_token):
     endpoint = app_config['services']['subscription']['client']['endpoints']['getSubscriptions']
     resp = execute_method(endpoint, access_token=access_token)
     return resp.json()
 
+
 def get_account_details(access_token):
     endpoint = app_config['services']['account']['client']['endpoints']['getCurrentAccount']
     resp = execute_method(endpoint, access_token=access_token)
     return resp.json()
+
 
 def get_device_token_exchange():
     if config.device_token_exchange is None or not config.device_token_exchange.is_refresh_token_valid():
@@ -358,6 +410,7 @@ def get_device_refresh_token():
         config.set_device_refresh_token(token_exchange)
     return config.device_refresh_token.access_token
 
+
 def request_bam_account_access_token():
     if config.id_token_grant is None or not config.id_token_grant.is_valid():
         logging.debug('Getting Token Grant')
@@ -379,11 +432,14 @@ def request_bam_account_access_token():
     config.set_account_token(account_token)
     config.set_subscriptions(get_bam_sub_details())
 
+
 def has_valid_bam_account_access_token():
     return config.account_token is not None and config.account_token.is_access_token_valid()
 
+
 def get_bam_account_access_token():
     return config.account_token.access_token
+
 
 def get_bam_sub_details():
     if config.get_subscriptions() is None:
@@ -394,8 +450,10 @@ def get_bam_sub_details():
         config.set_subscriptions(get_subscriptions(config.account_token.access_token))
     return config.get_subscriptions()
 
+
 def get_bam_account_details():
     return get_account_details(config.account_token.access_token)
+
 
 def get_entitlements():
     sub_details = get_bam_sub_details()
@@ -407,6 +465,7 @@ def get_entitlements():
                     entitlements.append(entitlement['name'])
     return entitlements
 
+
 def can_we_access_without_prompt():
     if has_valid_bam_account_access_token():
         return True
@@ -415,6 +474,7 @@ def can_we_access_without_prompt():
     if has_valid_disney_refresh_token():
         return True
     return False
+
 
 def ensure_valid_access_token():
     if has_valid_bam_account_access_token():

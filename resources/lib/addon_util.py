@@ -1,10 +1,21 @@
 # Copyright 2019 https://github.com/kodi-addons
 #
-# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is furnished
+# to do so, subject to the following conditions:
 #
-# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
 #
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+# INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+# PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+# HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+# SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import re
 import time
@@ -13,13 +24,13 @@ import urllib
 import xbmcgui
 from xbmcgui import ListItem
 
-import player_config
-import util
-from constants import *
+from resources.lib import player_config, util
+from resources.lib.constants import CHANNEL_SETTINGS
 from resources.lib.kodiutils import get_setting_as_bool, get_string
 import logging
 
 TAG = 'Addon_Util: '
+
 
 def check_error(session_json):
     status = session_json['status']
@@ -28,6 +39,7 @@ def check_error(session_json):
         dialog.ok(get_string(30037), get_string(30500) % session_json['message'])
         return True
     return False
+
 
 def check_espn_plus_error(session_json):
     if 'errors' in session_json:
@@ -38,6 +50,7 @@ def check_espn_plus_error(session_json):
         dialog.ok(get_string(30037), get_string(30500) % error_msg)
         return True
 
+
 def is_entitled(packages, entitlements):
     has_entitlement = packages is None or len(packages) == 0
     if packages is not None:
@@ -46,12 +59,15 @@ def is_entitled(packages, entitlements):
             has_entitlement = has_entitlement or (entitlement in packages)
     return has_entitlement
 
+
 def get_auth_types_from_network(network_name):
     logging.debug('Checking auth of ' + network_name)
-    requires_auth = not (network_name == 'espn3' or network_name == 'accextra' or network_name.find('free') >= 0 or network_name == '')
+    requires_auth = not (network_name == 'espn3' or network_name == 'accextra'
+                         or network_name.find('free') >= 0 or network_name == '')
     if requires_auth:
         return ['mvpd']
     return ['isp']
+
 
 def requires_adobe_auth(auth_types):
     if 'mvpd' in auth_types:
@@ -59,6 +75,7 @@ def requires_adobe_auth(auth_types):
     if 'isp' in auth_types:
         return player_config.can_access_free_content()
     return False
+
 
 def check_auth_types(auth_types):
     if 'mvpd' in auth_types or 'direct' in auth_types:
@@ -80,11 +97,13 @@ def get_url(url):
         return url + sep + 'tz=' + urllib.quote_plus(tz)
     return url
 
+
 def get_setting_from_channel(channel):
     for setting in CHANNEL_SETTINGS:
         if CHANNEL_SETTINGS[setting] == channel:
             return setting
     return None
+
 
 def include_item(network_id):
     for setting in CHANNEL_SETTINGS:
@@ -121,6 +140,7 @@ def check_json_blackout(listing):
             return True
     return False
 
+
 def check_event_blackout(event_id):
     logging.debug(' Checking blackout for ' + event_id)
     url = 'http://broadband.espn.go.com/espn3/auth/watchespn/util/isUserBlackedOut?eventId=%s' % event_id
@@ -130,6 +150,7 @@ def check_event_blackout(event_id):
     if not blackout == 'true':
         blackout = blackout_data['LinearBlackOut']
     return blackout == 'true'
+
 
 def compare(lstart, lnetwork, lstatus, rstart, rnetwork, rstatus):
     # xbmc.log(TAG + 'lstart %s lnetwork %s lstatus %s rstart %s rnetwork %s rstatus %s' %
@@ -164,6 +185,7 @@ def compare(lstart, lnetwork, lstatus, rstart, rnetwork, rstatus):
     elif rstatus == 'live':
         return 1
     return int(rtime - ltime)
+
 
 def make_list_item(label, icon=None, info_labels=None):
     if get_setting_as_bool('NoColors'):
