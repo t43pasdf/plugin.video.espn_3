@@ -146,7 +146,7 @@ def index_item(args):
     xbmc.log(TAG + 'Duration %s' % length, xbmc.LOGDEBUG)
 
     mpaa = args['parentalRating'] if 'parentRating' in args else 'U'
-    infoLabels = {'title': ename,
+    info_labels = {'title': ename,
                   'genre': sport,
                   'duration': length,
                   'studio': network,
@@ -160,14 +160,14 @@ def index_item(args):
     if args['type'] == 'upcoming':
         addDirectoryItem(plugin.handle,
                          plugin.url_for(upcoming_event, event_id=args['eventId'], starttime=etime, event_name=ename),
-                         make_list_item(ename, icon=fanart, infoLabels=infoLabels))
+                         make_list_item(ename, icon=fanart, info_labels=info_labels))
     else:
-        adobeRSS = args['adobeRSS'] if 'adobeRSS' in args else None
+        adobe_rss = args['adobeRSS'] if 'adobeRSS' in args else None
         guid = args['guid'] if 'guid' in args else None
-        if adobeRSS is None and guid is None:
+        if adobe_rss is None and guid is None:
             addDirectoryItem(plugin.handle,
-                             plugin.url_for(PLAY_ITEM, url=args['sessionUrl'], event_id=args['eventId']),
-                             make_list_item(ename, icon=fanart, infoLabels=infoLabels))
+                             plugin.url_for(play_item, url=args['sessionUrl'], event_id=args['eventId']),
+                             make_list_item(ename, icon=fanart, info_labels=info_labels))
         else:
             if 'adobeRSS' in args:
                 adobe_rss = args['adobeRSS']
@@ -180,10 +180,10 @@ def index_item(args):
                 logging.debug('Adding %s with handle %d and id %s' % (ename, plugin.handle, args['eventId']))
                 logging.debug(adobe_rss)
                 addDirectoryItem(plugin.handle,
-                                 plugin.url_for(PLAY_TV, event_id=args['eventId'],
+                                 plugin.url_for(play_tv, event_id=args['eventId'],
                                                 session_url=args['sessionUrl'], network_name=args['networkId'],
                                                 resource=urllib.quote_plus(adobe_rss.encode('utf-8'))),
-                                 make_list_item(ename, icon=fanart, infoLabels=infoLabels))
+                                 make_list_item(ename, icon=fanart, info_labels=info_labels))
             else:
                 logging.debug('Skipping %s' % args['networkId'])
 

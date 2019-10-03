@@ -49,7 +49,7 @@ def legacy_root_menu():
     replays4 = [60, 90, 120, 240]
     replays4 = replays4[get_setting_as_int('replays4')]
     start4 = (curdate-timedelta(days=replays4)).strftime("%Y%m%d")
-    startAll = (curdate-timedelta(days=365)).strftime("%Y%m%d")
+    start_all = (curdate-timedelta(days=365)).strftime("%Y%m%d")
     addDirectoryItem(plugin.handle,
                      plugin.url_for(list_sports, espn_url=events.get_replay_events_url(
                          channel_list) + enddate + '&startDate=' + start1),
@@ -68,7 +68,7 @@ def legacy_root_menu():
                      make_list_item(get_string(30033) % (replays3, replays4)), True)
     addDirectoryItem(plugin.handle,
                      plugin.url_for(list_sports, espn_url=events.get_replay_events_url(
-                         channel_list) + enddate + '&startDate=' + startAll),
+                         channel_list) + enddate + '&startDate=' + start_all),
                      make_list_item(get_string(30032)), True)
     xbmcplugin.endOfDirectory(plugin.handle)
 
@@ -179,11 +179,11 @@ def index_legacy_live_events(espn_url, sport=None, network_id=None):
 
 def _index_event(event, live, upcoming, replay, chosen_sport):
     xbmc.log(TAG + ' processing event %s' % event.get('id'), xbmc.LOGDEBUG)
-    networkId = event.find('networkId').text
-    networkName = ''
-    if networkId is not None:
-        networkName = player_config.get_network_name(networkId)
-    xbmc.log(TAG + ' networkName %s' % networkName, xbmc.LOGDEBUG)
+    network_id = event.find('networkId').text
+    network_name = ''
+    if network_id is not None:
+        network_name = player_config.get_network_name(network_id)
+    xbmc.log(TAG + ' networkName %s' % network_name, xbmc.LOGDEBUG)
 
     fanart = event.find('.//thumbnail/large').text
     if fanart is not None:
@@ -194,7 +194,7 @@ def _index_event(event, live, upcoming, replay, chosen_sport):
     xbmc.log(TAG + 'duration %s' % length, xbmc.LOGDEBUG)
     session_url = base64.b64decode(
         'aHR0cDovL2Jyb2FkYmFuZC5lc3BuLmdvLmNvbS9lc3BuMy9hdXRoL3dhdGNoZXNwbi9zdGFydFNlc3Npb24/')
-    session_url += 'channel=' + networkName
+    session_url += 'channel=' + network_name
     if event.find('simulcastAiringId') is not None and event.find('simulcastAiringId').text is not None:
         session_url += '&simulcastAiringId=' + event.find('simulcastAiringId').text
 
@@ -218,8 +218,8 @@ def _index_event(event, live, upcoming, replay, chosen_sport):
         'starttime': time.localtime(starttime),
         'duration': length,
         'type': event.get('type'),
-        'networkId': networkName,
-        'networkName': networkName,
+        'networkId': network_name,
+        'networkName': network_name,
         'blackout': blackout,
         'description': description,
         'eventId': event.get('id'),

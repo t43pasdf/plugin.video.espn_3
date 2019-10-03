@@ -280,7 +280,7 @@ def index_v3_content(content):
         fanart = util.get_nested_value(content, ['imageHref'])
 
 
-        infoLabels = {'title': ename,
+        info_labels = {'title': ename,
                       'genre': subtitle,
                       'duration': length,
                       'studio': source_name,
@@ -292,13 +292,13 @@ def index_v3_content(content):
                              plugin.url_for(upcoming_event, event_id=event_id,
                                             event_name=urllib.quote_plus(name.encode('utf-8')), starttime=starttime_text,
                                             packages='|'.join(packages)),
-                             make_list_item(ename, infoLabels=infoLabels))
+                             make_list_item(ename, info_labels=info_labels))
         else:
             addDirectoryItem(plugin.handle,
                              plugin.url_for(play_event, event_id=event_id,
                                             event_url=stream['links']['play'],
                                             auth_types='|'.join(stream['authTypes'])),
-                             make_list_item(ename, infoLabels=infoLabels, icon=fanart))
+                             make_list_item(ename, info_labels=info_labels, icon=fanart))
 
 # {
 # "id": "d2ecb4c1-8fd1-4008-906d-e066e5170cd0",
@@ -342,7 +342,7 @@ def index_v3_vod(content):
 
         fanart = util.get_nested_value(content, ['imageHref'])
 
-        infoLabels = {'title': ename,
+        info_labels = {'title': ename,
                       'duration': length,
                       'studio': source_name,
                       'plot': plot}
@@ -350,7 +350,7 @@ def index_v3_vod(content):
         addDirectoryItem(plugin.handle,
                          plugin.url_for(play_vod, event_id=event_id,
                                         url=stream['links']['play']),
-                         make_list_item(ename, infoLabels=infoLabels, icon=fanart))
+                         make_list_item(ename, info_labels=info_labels, icon=fanart))
 
 
 def index_v1_content(content):
@@ -365,11 +365,11 @@ def index_v1_content(content):
             description += '\n' + content['tracking']['sport']
     else:
         description = ''
-    networkId = ''
-    networkName = ''
+    network_id = ''
+    network_name = ''
     if 'adobeRSS' in content:
-        networkId = content['tracking']['network'] if 'network' in content['tracking'] else ''
-        networkName = content['source']
+        network_id = content['tracking']['network'] if 'network' in content['tracking'] else ''
+        network_name = content['source']
     league = content['tracking']['league']
     index_item({
         'sport': content['tracking']['sport'],
@@ -380,8 +380,8 @@ def index_v1_content(content):
         'starttime': starttime,
         'duration': duration,
         'type': content['status'] if 'status' in content else 'live',
-        'networkId': networkId,
-        'networkName': networkName,
+        'networkId': network_id,
+        'networkName': network_name,
         # TODO: Blackout check
         'blackout': False,
         'description': description,

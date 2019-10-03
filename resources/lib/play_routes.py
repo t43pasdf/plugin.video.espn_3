@@ -242,7 +242,7 @@ def start_session(media_token, token_type, resource, start_session_url):
         start_espn_plus_session(start_session_url)
 
 @plugin.route('/play-item/<event_id>')
-def PLAY_ITEM(event_id):
+def play_item(event_id):
     url = arg_as_string('url')
     item = xbmcgui.ListItem(path=url)
     return setResolvedUrl(plugin.handle, True, item)
@@ -281,7 +281,7 @@ def play_event(event_id):
 #finalurl = finalurl + '|Connection=keep-alive&User-Agent=' + urllib.quote(ua) + '&Cookie=_mediaAuth=' + urllib.quote(base64.b64encode(pkan))
 # Legacy uses this to play items
 @plugin.route('/play-tv/<event_id>')
-def PLAY_TV(event_id):
+def play_tv(event_id):
     resource = arg_as_string('resource')
     network_name = arg_as_string('network_name')
 

@@ -274,15 +274,15 @@ def on_open(ws):
 
 # bam
 
-def fillInTemplate(template, access_token):
+def fill_in_template(template, access_token):
     return template.replace('{apiKey}', BAM_API_KEY) \
         .replace('{accessToken}', access_token)
 
-def executeMethod(endpoint, access_token='', json=None, data=None):
+def execute_method(endpoint, access_token='', json=None, data=None):
     logging.debug('Executing endpoint %s' % endpoint['href'])
     http_headers = {}
     for i, (header, value) in enumerate(endpoint['headers'].items()):
-        http_headers[header] = fillInTemplate(value, access_token)
+        http_headers[header] = fill_in_template(value, access_token)
     resp = None
     if endpoint['method'] == 'POST':
         resp = global_session.post(endpoint['href'], headers=http_headers, json=json, data=data)
@@ -290,9 +290,9 @@ def executeMethod(endpoint, access_token='', json=None, data=None):
         resp = global_session.get(endpoint['href'], headers=http_headers)
     return resp
 
-def createDeviceGrant():
-    endpoint = app_config['services']['device']['client']['endpoints']['createDeviceGrant']
-    resp = executeMethod(endpoint, json={
+def create_device_grant():
+    endpoint = app_config['services']['device']['client']['endpoints']['create_device_grant']
+    resp = execute_method(endpoint, json={
             'deviceFamily': 'browser',
             'applicationRuntime': 'chrome',
             'deviceProfile': 'linux',
@@ -303,34 +303,34 @@ def createDeviceGrant():
 
 def get_device_assertion():
     if config.device_grant is None or not config.device_grant.is_valid():
-        createDeviceGrant()
+        create_device_grant()
     return config.device_grant.assertion
 
-def exchangeToken(data):
+def exchange_token(data):
     endpoint = app_config['services']['token']['client']['endpoints']['exchange']
-    resp = executeMethod(endpoint, data=data)
+    resp = execute_method(endpoint, data=data)
     return resp.json()
 
-def createAccountGrant(access_token, json):
-    endpoint = app_config['services']['account']['client']['endpoints']['createAccountGrant']
-    resp = executeMethod(endpoint, access_token=access_token, json=json)
+def create_account_grant(access_token, json):
+    endpoint = app_config['services']['account']['client']['endpoints']['create_account_grant']
+    resp = execute_method(endpoint, access_token=access_token, json=json)
     return resp.json()
 
-def getSubscriptions(access_token):
-    endpoint = app_config['services']['subscription']['client']['endpoints']['getSubscriptions']
-    resp = executeMethod(endpoint, access_token=access_token)
+def get_subscriptions(access_token):
+    endpoint = app_config['services']['subscription']['client']['endpoints']['get_subscriptions']
+    resp = execute_method(endpoint, access_token=access_token)
     return resp.json()
 
-def getAccountDetails(access_token):
+def get_account_details(access_token):
     endpoint = app_config['services']['account']['client']['endpoints']['getCurrentAccount']
-    resp = executeMethod(endpoint, access_token=access_token)
+    resp = execute_method(endpoint, access_token=access_token)
     return resp.json()
 
 def get_device_token_exchange():
     if config.device_token_exchange is None or not config.device_token_exchange.is_refresh_token_valid():
         logging.debug('Getting Device Token Exchange')
         device_assertion = get_device_assertion()
-        token_exchange = exchangeToken(data={
+        token_exchange = exchange_token(data={
             'grant_type': 'urn:ietf:params:oauth:grant-type:token-exchange',
             'latitude': 0,
             'longitude': 0,
@@ -347,7 +347,7 @@ def get_device_refresh_token():
     if config.device_refresh_token is None or not config.device_refresh_token.is_access_token_valid():
         logging.debug('Getting Device Refresh Token')
         device_token_exchange_refresh = get_device_token_exchange()
-        token_exchange = exchangeToken(data={
+        token_exchange = exchange_token(data={
             'grant_type': 'refresh_token',
             'latitude': 0,
             'longitude': 0,
@@ -362,12 +362,12 @@ def request_bam_account_access_token():
     if config.id_token_grant is None or not config.id_token_grant.is_valid():
         logging.debug('Getting Token Grant')
         device_token = get_device_refresh_token()
-        grant_resp = createAccountGrant(access_token=device_token, json={
+        grant_resp = create_account_grant(access_token=device_token, json={
             'id_token': config.disney_id_token.token
         })
         config.set_id_token_grant(grant_resp)
 
-    account_token = exchangeToken(data={
+    account_token = exchange_token(data={
         'grant_type': 'urn:ietf:params:oauth:grant-type:token-exchange',
         'latitude': 0,
         'longitude': 0,
@@ -391,11 +391,11 @@ def get_bam_sub_details():
             request_bam_account_access_token()
         elif not has_valid_bam_account_access_token():
             return []
-        config.set_subscriptions(getSubscriptions(config.account_token.access_token))
+        config.set_subscriptions(get_subscriptions(config.account_token.access_token))
     return config.get_subscriptions()
 
 def get_bam_account_details():
-    return getAccountDetails(config.account_token.access_token)
+    return get_account_details(config.account_token.access_token)
 
 def get_entitlements():
     sub_details = get_bam_sub_details()

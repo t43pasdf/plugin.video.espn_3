@@ -88,10 +88,10 @@ def get_setting_from_channel(channel):
             return setting
     return None
 
-def include_item(networkId):
+def include_item(network_id):
     for setting in CHANNEL_SETTINGS:
         channel = CHANNEL_SETTINGS[setting]
-        if channel == networkId:
+        if channel == network_id:
             return get_setting_as_bool(setting)
     return True
 
@@ -167,11 +167,11 @@ def compare(lstart, lnetwork, lstatus, rstart, rnetwork, rstatus):
         return 1
     return int(rtime - ltime)
 
-def make_list_item(label, icon=None, infoLabels=None):
+def make_list_item(label, icon=None, info_labels=None):
     if get_setting_as_bool('NoColors'):
         label = re.sub(r'\[COLOR=\w{8}\]', '', label)
         label = re.sub(r'\[/COLOR\]', '', label)
     listitem = ListItem(label, iconImage=icon)
-    listitem.setInfo('video', infoLabels=infoLabels)
+    listitem.setInfo('video', infoLabels=info_labels)
     listitem.setProperty('IsPlayable', 'true')
     return listitem

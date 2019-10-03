@@ -220,15 +220,15 @@ def process_item_list(item_list):
             index_item_shelf(stash_json)
 
 def get_metadata(item):
-    metadataKeysElement = item.find('.//metadataKeys')
-    metadataValuesElement = item.find('.//metadataValues')
+    metadata_keys_element = item.find('.//metadataKeys')
+    metadata_values_element = item.find('.//metadataValues')
     description = ''
-    if metadataKeysElement is not None and metadataValuesElement is not None:
-        keyLabels = metadataKeysElement.findall('.//label')
-        valueLabels = metadataValuesElement.findall('.//label')
-        for i in range(0, min(len(keyLabels), len(valueLabels))):
-            if valueLabels[i].text is not None:
-                description += '%s: %s\n' % (keyLabels[i].text, valueLabels[i].text)
+    if metadata_keys_element is not None and metadata_values_element is not None:
+        key_labels = metadata_keys_element.findall('.//label')
+        value_labels = metadata_values_element.findall('.//label')
+        for i in range(0, min(len(key_labels), len(value_labels))):
+            if value_labels[i].text is not None:
+                description += '%s: %s\n' % (key_labels[i].text, value_labels[i].text)
     return description
 
 def check_blackout(item):
