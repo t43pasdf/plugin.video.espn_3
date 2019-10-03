@@ -217,6 +217,7 @@ def start_espn_plus_session(start_session_url):
             'Accept': 'application/vnd.media-service+json; version=2'
         }).json()
     except urllib2.HTTPError as exception:
+        logging.debug('Unable to get session %s' % exception)
         if exception.code == 403:
             session_json = json.load(exception)
             xbmc.log(TAG + 'checking for errors in %s' % session_json)
@@ -226,9 +227,13 @@ def start_espn_plus_session(start_session_url):
     logging.debug('Session JSON %s' % session_json)
     if check_espn_plus_error(session_json):
         return
-    playback_url = session_json['stream']['complete']
+    if 'slide' in session_json['stream']:
+        playback_url = session_json['stream']['slide']
+    else:
+        playback_url = session_json['stream']['complete']
 
-    process_playback_url(playback_url, auth_string='Authorization=' + espnplus.get_bam_account_access_token())
+    auth_string = 'Authorization=' + espnplus.get_bam_account_access_token()
+    process_playback_url(playback_url, auth_string=auth_string)
 
 def start_session(media_token, token_type, resource, start_session_url):
     if token_type == 'ADOBEPASS' or token_type == 'DEVICE':
