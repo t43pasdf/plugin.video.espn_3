@@ -7,11 +7,16 @@
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import json
-import urllib2
+try:
+    from urllib2 import HTTPError
+except ImportError:
+    from urllib.error import HTTPError
 
 import m3u8
 from xbmcplugin import setResolvedUrl, endOfDirectory
 
+import xbmc
+import base64
 import adobe_activate_api
 import auth_routes
 import espnplus
@@ -46,10 +51,10 @@ def check_auth_status(auth_types, resource, network_name):
             else:
                 return None
         try:
-            # testing code raise urllib2.HTTPError(url='test', code=403, msg='no', hdrs=dict(), fp=None)
+            # testing code raise HTTPError(url='test', code=403, msg='no', hdrs=dict(), fp=None)
             logging.debug('getting media token for resource %s' % resource)
             return adobe_activate_api.get_short_media_token(resource)
-        except urllib2.HTTPError as http_exception:
+        except HTTPError as http_exception:
             logging.debug('error getting media token %s' % http_exception)
             if http_exception.code == 410 or http_exception.code == 404 or http_exception.code == 401:
                 dialog = xbmcgui.Dialog()
@@ -191,7 +196,7 @@ def start_adobe_session(media_token, token_type, resource, start_session_url):
 
     try:
         session_json = util.get_url_as_json(authed_url)
-    except urllib2.HTTPError as exception:
+    except HTTPError as exception:
         if exception.code == 403:
             session_json = json.load(exception)
             logging.debug('checking for errors in %s' % session_json)
@@ -216,7 +221,7 @@ def start_espn_plus_session(start_session_url):
             'Authorization': espnplus.get_bam_account_access_token(),
             'Accept': 'application/vnd.media-service+json; version=2'
         }).json()
-    except urllib2.HTTPError as exception:
+    except HTTPError as exception:
         logging.debug('Unable to get session %s' % exception)
         if exception.code == 403:
             session_json = json.load(exception)
