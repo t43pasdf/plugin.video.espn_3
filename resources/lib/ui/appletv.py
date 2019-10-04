@@ -78,7 +78,7 @@ def appletv_showcase():
     et = util.get_url_as_xml_cache(get_url(url))
     navigation_items = et.findall('.//navigation/navigationItem')
     logging.debug('Found %s items' % len(navigation_items))
-    if selected_nav_id is '' and len(navigation_items) > 0:
+    if selected_nav_id == '' and len(navigation_items) > 0:
         for navigation_item in navigation_items:
             name = navigation_item.find('./title').text
             nav_id = navigation_item.get('id')
