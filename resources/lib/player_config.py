@@ -84,7 +84,7 @@ def get_networks():
 def select_feed_by_id(feed_id):
     try:
         return get_config().find('.//feed[@id=\'' + feed_id + '\']').text
-    except:
+    except:  # noqa: E722
         feeds = get_config().findall('.//feed')
         for feed in feeds:
             if feed.get('id') == feed_id:

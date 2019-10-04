@@ -19,7 +19,12 @@
 
 # Written by Ksosez, BlueCop, Romans I XVI, locomot1f, MetalChris, awaters1, t43pasdf
 
-from resources.lib import plugin
+from resources.lib import kodilogging
+
+# Init logging before our code starts
+kodilogging.config()
+
+from resources.lib import plugin  # noqa: E402
 
 # Keep this file to a minimum, as Kodi
 # doesn't keep a compiled copy of this

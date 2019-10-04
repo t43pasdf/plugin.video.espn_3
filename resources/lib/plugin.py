@@ -20,19 +20,11 @@
 
 import time
 import os
-import logging
 import base64
 
-import xbmcaddon
 import xbmcgui
 from xbmcgui import ListItem
 from xbmcplugin import addDirectoryItem, endOfDirectory
-
-from resources.lib import kodilogging
-
-ADDON = xbmcaddon.Addon()
-# Init logging before our code starts
-kodilogging.config()
 
 from resources.lib.constants import WATCH_API_V3_LIVE, WATCH_API_V3_WEB_HOME, KEEP_FILES
 from resources.lib.page_api import page_api_url, parse_json, get_v3_url
@@ -41,7 +33,7 @@ from resources.lib.settings_file import SettingsFile
 from resources.lib.kodiutils import addon_profile_path, get_string, get_setting_as_bool
 from resources.lib.ui import tvos, appletv, legacy, roku
 from resources.lib.ui.legacy import legacy_root_menu
-from resources.lib import util, adobe_activate_api, settings_file, events, kodilogging
+from resources.lib import util, adobe_activate_api, settings_file, events
 
 TAG = 'ESPN3: '
 

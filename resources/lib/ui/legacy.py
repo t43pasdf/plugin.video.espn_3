@@ -52,7 +52,7 @@ def legacy_root_menu():
                      make_list_item(get_string(30029)), True)
     # Upcoming
     espn_url = events.get_upcoming_events_url(channel_list) + '&endDate=' + days \
-               + '&startDate=' + curdate.strftime("%Y%m%d")
+        + '&startDate=' + curdate.strftime("%Y%m%d")
     addDirectoryItem(plugin.handle,
                      plugin.url_for(list_sports, espn_url=espn_url),
                      make_list_item(get_string(30030)), True)
