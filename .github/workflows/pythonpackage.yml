@@ -33,3 +33,12 @@ jobs:
       run: |
         pip install pytest
         pytest
+    - name: Make zip for Kodi
+      run: |
+        VERSION=`grep "version" < addon.xml | tail -n+2 | head -n1 | sed 's/ *version="//' | sed 's/"//' | tr -d '[[:space:]]'`
+        echo "Making zip of $VERSION"
+        zip -r plugin.video.espn_3.zip addon.py addon.xml LICENSE.txt resources/
+    - uses: actions/upload-artifact@master
+      with:
+        name: plugin.video.espn_3
+        path: plugin.video.espn_3.zip
