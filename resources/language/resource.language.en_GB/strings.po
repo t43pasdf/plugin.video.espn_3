@@ -470,3 +470,11 @@ msgstr ""
 msgctxt "#40521"
 msgid "Search History Cleared"
 msgstr ""
+
+msgctxt "#40530"
+msgid "Clear Data"
+msgstr ""
+
+msgctxt "#40531"
+msgid "Cached data cleared"
+msgstr ""

@@ -54,7 +54,7 @@ def legacy_root_menu():
     espn_url = events.get_upcoming_events_url(channel_list) + '&endDate=' + days \
                + '&startDate=' + curdate.strftime("%Y%m%d")
     addDirectoryItem(plugin.handle,
-                     plugin.url_for(list_sports, espn_url=events.get_live_events_url(channel_list)),
+                     plugin.url_for(list_sports, espn_url=espn_url),
                      make_list_item(get_string(30030)), True)
     enddate = '&endDate=' + (curdate + timedelta(days=1)).strftime("%Y%m%d")
     replays1 = [5, 10, 15, 20, 25]
@@ -106,7 +106,7 @@ def list_sports():
                      plugin.url_for(live_events_mode, espn_url=espn_url),
                      make_list_item(get_string(30034), icon=image), True)
     sports = []
-    sport_elements = util.get_url_as_xml_cache(espn_url, encoding='ISO-8859-1').findall('.//sportDisplayValue')
+    sport_elements = util.get_url_as_xml_cache(espn_url).findall('.//sportDisplayValue')
     for sport in sport_elements:
         sport = sport.text.encode('utf-8')
         if sport not in sports:

@@ -456,9 +456,7 @@ def compare_contents(l, r):
     return compare(get_time(l), lnetwork_sort, ltype, get_time(r), rnetwork_sort, rtype)
 
 
-def compare_network_ids(l, r):
-    lnetwork = util.get_nested_value(l, ['streams', 0, 'source', 'id'], '')
-    rnetwork = util.get_nested_value(r, ['streams', 0, 'source', 'id'], '')
+def compare_network_ids(lnetwork, rnetwork):
     try:
         lnetwork_sort = NETWORK_ID_SORT_ORDER.index(lnetwork.lower())
     except ValueError:

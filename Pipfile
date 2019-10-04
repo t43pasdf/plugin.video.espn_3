@@ -19,6 +19,7 @@ future = "*"
 
 [dev-packages]
 
+pytest = "*"
 
 
 [requires]

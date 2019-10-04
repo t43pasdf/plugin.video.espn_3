@@ -110,10 +110,12 @@ WATCH_API_V3_WEB_HOME = 'https://watch.product.api.espn.com/api/product/v3/watch
 WATCH_API_V3_LIVE = 'https://watch.product.api.espn.com/api/product/v3/watchespn/web/bucket?bucketId=5060'
 
 KEEP_FILES = [
+    # creds for TVE
     'adobe.json',
+    # creds for espn+
     'espnplus.json',
+    # adddon settings
     'settings.xml',
-    'user_data.json',
+    # search history
     'search.json',
-    'player_config.xml'
 ]

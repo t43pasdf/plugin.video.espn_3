@@ -28,6 +28,12 @@ import xbmcgui
 from xbmcgui import ListItem
 from xbmcplugin import addDirectoryItem, endOfDirectory
 
+from resources.lib import kodilogging
+
+ADDON = xbmcaddon.Addon()
+# Init logging before our code starts
+kodilogging.config()
+
 from resources.lib.constants import WATCH_API_V3_LIVE, WATCH_API_V3_WEB_HOME, KEEP_FILES
 from resources.lib.page_api import page_api_url, parse_json, get_v3_url
 from resources.lib.plugin_routing import plugin, arg_as_string, arg_as_bool
@@ -38,9 +44,6 @@ from resources.lib.ui.legacy import legacy_root_menu
 from resources.lib import util, adobe_activate_api, settings_file, events, kodilogging
 
 TAG = 'ESPN3: '
-ADDON = xbmcaddon.Addon()
-logger = logging.getLogger(ADDON.getAddonInfo('id'))
-kodilogging.config()
 
 
 class SearchSettings(SettingsFile):
@@ -203,6 +206,7 @@ def clear_data():
                     os.remove(os.path.join(addon_profile_path, currentFile))
     except OSError:
         pass
+    xbmcgui.Dialog().ok(get_string(40530), get_string(40531))
 
 
 # if mode is None:
