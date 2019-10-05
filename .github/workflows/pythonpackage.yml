@@ -11,9 +11,6 @@ jobs:
       matrix:
         python-version: [2.7, 3.7]
 
-    env:
-      VERSION: $(grep "version" < addon.xml | tail -n+2 | head -n1 | sed 's/ *version="//' | sed 's/"//' | tr -d '[[:space:]]')
-
     steps:
     - uses: actions/checkout@v1
     - name: Set up Python ${{ matrix.python-version }}
@@ -34,6 +31,10 @@ jobs:
     - name: Test with pytest
       run: |
         pipenv run python -m pytest test
+    - name: Set environment variables
+      run: |
+        VERSION=`grep "version" < addon.xml | tail -n+2 | head -n1 | sed 's/ *version="//' | sed 's/"//' | tr -d '[[:space:]]'`
+        echo '::set-env name=VERSION::$VERSION'
     - name: Make zip for Kodi
       run: |
         echo "Making zip of $VERSION"
