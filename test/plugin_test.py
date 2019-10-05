@@ -8,7 +8,7 @@ from resources.lib import adobe_activate_api
 from resources.lib.globals import global_session
 import xbmcplugin
 
-po = polib.pofile('../resources/language/resource.language.en_GB/strings.po')
+po = polib.pofile('resources/language/resource.language.en_GB/strings.po')
 
 
 @pytest.fixture(autouse=True)
@@ -35,10 +35,10 @@ def get_file_contents(file):
 
 
 url_to_file = {
-    'https://bam-sdk-configs.bamgrid.com/bam-sdk/v2.0/espn-a9b93989/browser/v3.4/linux/chrome/prod.json': 'files/prod.json',
-    'http://broadband.espn.com/espn3/auth/watchespn/user': 'files/user.json',
-    'https://watch.product.api.espn.com/api/product/v3/watchespn/web/bucket?lang=en&tz=UTC-0400&countryCode=US&bucketId=5060&zipcode=12188&entitlements=': 'files/live-bucket.json',
-    'https://watch.product.api.espn.com/api/product/v3/watchespn/web/home?entitlements=&lang=en&tz=UTC-0400&zipcode=12188&countryCode=US': 'files/home.json',
+    'https://bam-sdk-configs.bamgrid.com/bam-sdk/v2.0/espn-a9b93989/browser/v3.4/linux/chrome/prod.json': 'test/files/prod.json',
+    'http://broadband.espn.com/espn3/auth/watchespn/user': 'test/files/user.json',
+    'https://watch.product.api.espn.com/api/product/v3/watchespn/web/bucket?lang=en&tz=UTC-0400&countryCode=US&bucketId=5060&zipcode=12188&entitlements=': 'test/files/live-bucket.json',
+    'https://watch.product.api.espn.com/api/product/v3/watchespn/web/home?entitlements=&lang=en&tz=UTC-0400&zipcode=12188&countryCode=US': 'test/files/home.json',
 }
 
 
