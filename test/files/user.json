@@ -1,0 +1,25 @@
+{
+    "user": {
+        "username": "null",
+        "loginStatus": "UNKNOWN",
+        "swid": "null",
+        "location": {
+            "country": "united states",
+            "city": "new york city",
+            "state": "New York",
+            "dma": "533",
+            "zipcode": "12188",
+            "domain": "?",
+            "ip": "127.0.0.1",
+            "timeZone": "America/Puerto_Rico"
+        },
+        "authentication": {
+            "isp": {
+                "name": "comcast",
+                "imageHref": "https://a.espncdn.com/espn360/images/affiliates/settop/COMCAST.png"
+            }
+        }
+    },
+    "timestamp": "October 04, 2019 12:44:14 PM GMT",
+    "status": "success"
+}

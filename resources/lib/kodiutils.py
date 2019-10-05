@@ -19,8 +19,10 @@ logger = logging.getLogger(__name__)
 addon_data_path = xbmc.translatePath(ADDON.getAddonInfo('path')).decode('utf-8')
 addon_profile_path = xbmc.translatePath(ADDON.getAddonInfo('profile')).decode('utf-8')
 
-if not os.path.exists(addon_profile_path):
-    os.makedirs(addon_profile_path)
+
+def ensure_profile_path_exists():
+    if not os.path.exists(addon_profile_path):
+        os.makedirs(addon_profile_path)
 
 
 def notification(header, message, time=5000, icon=ADDON.getAddonInfo('icon'), sound=True):

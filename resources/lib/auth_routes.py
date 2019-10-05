@@ -26,7 +26,7 @@ import urllib2
 
 import xbmcgui
 
-from resources.lib import adobe_activate_api, espnplus, player_config
+from resources.lib import adobe_activate_api, espnplus, player_config, util
 from resources.lib.plugin_routing import plugin
 from resources.lib.kodiutils import get_string, set_setting
 
@@ -137,8 +137,9 @@ def login_espn_plus():
 @plugin.route('/view-espn-plus-details')
 def view_espn_plus_details():
     account_details = espnplus.get_bam_account_details()
-    product_details = \
-        account_details['attributes']['email'] + ' - ' + account_details['activeProfile']['profileName'] + '\n'
+    email = util.get_nested_value(account_details, ['attributes', 'email'], 'Unknown Email')
+    profile_name = util.get_nested_value(account_details, ['activeProfile', 'profileName'], 'Unknown Profile Name')
+    product_details = email + ' - ' + profile_name + '\n'
     sub_details = espnplus.get_bam_sub_details()
     for sub in sub_details:
         if sub['isActive']:

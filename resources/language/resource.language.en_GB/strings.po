@@ -338,6 +338,7 @@ msgstr ""
 
 msgctxt "#30910"
 msgid "There was an SSL certificate verification failure would you like to disable this verification? (configured in settings)"
+msgstr ""
 
 msgctxt "#30988"
 msgid "Goal Line"
@@ -389,7 +390,7 @@ msgstr ""
 
 msgctxt "#32001"
 msgid "Debug"
-msgstr""
+msgstr ""
 
 msgctxt "#31000"
 msgid "ACC"

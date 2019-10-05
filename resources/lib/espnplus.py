@@ -170,7 +170,7 @@ class EspnPlusConfig(SettingsFile):
 
 config = EspnPlusConfig()
 
-app_config = util.get_url_as_json_cache(BAM_APP_CONFIG)
+app_config = util.get_url_as_json_cache(BAM_APP_CONFIG, timeout=3600)
 
 
 # disney

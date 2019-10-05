@@ -30,7 +30,7 @@ from resources.lib.constants import WATCH_API_V3_LIVE, WATCH_API_V3_WEB_HOME, KE
 from resources.lib.page_api import page_api_url, parse_json, get_v3_url
 from resources.lib.plugin_routing import plugin, arg_as_string, arg_as_bool
 from resources.lib.settings_file import SettingsFile
-from resources.lib.kodiutils import addon_profile_path, get_string, get_setting_as_bool
+from resources.lib.kodiutils import addon_profile_path, get_string, get_setting_as_bool, ensure_profile_path_exists
 from resources.lib.ui import tvos, appletv, legacy, roku
 from resources.lib.ui.legacy import legacy_root_menu
 from resources.lib import util, adobe_activate_api, settings_file, events
@@ -221,5 +221,6 @@ def clear_data():
 #             raise exception
 
 def run():
+    ensure_profile_path_exists()
     plugin.run()
     settings_file.save_settings()

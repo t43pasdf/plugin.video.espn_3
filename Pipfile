@@ -21,6 +21,7 @@ future = "*"
 
 pytest = "*"
 "flake8" = "*"
+polib = "*"
 
 
 [requires]
