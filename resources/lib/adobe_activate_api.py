@@ -22,24 +22,30 @@ try:
     from urlparse import urlunsplit
 except ImportError:
     from urllib.parse import urlunsplit
-import urllib
+
+try:
+    from urllib2 import HTTPError
+except ImportError:
+    from urllib.error import HTTPError
+
+try:
+    from urllib import urlencode
+except ImportError:
+    from urllib.parse import urlencode
+
 import uuid
 import hashlib
 import hmac
 import base64
-import urllib2
 import time
 import requests
 import logging
-
-import xbmc
 
 from resources.lib.settings_file import SettingsFile
 
 adobe_settings = SettingsFile('adobe.json')
 settings = adobe_settings.settings
 UA_ATV = 'AppleCoreMedia/1.0.0.13Y234 (Apple TV; U; CPU OS 9_2 like Mac OS X; en_us)'
-TAG = 'ESPN3-adobe-api: '
 
 adobe_session = requests.Session()
 adobe_session.headers.update({
@@ -49,6 +55,9 @@ adobe_session.headers.update({
     'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
     'User-Agent': UA_ATV
 })
+
+
+logger = logging.getLogger(__name__)
 
 
 class AuthorizationException(Exception):
@@ -66,16 +75,14 @@ def is_expired(expiration):
 
 
 def get_url_response(url, message, body=None, method=None):
-    # xbmc.log(TAG + 'url %s message %s' % (url, message), xbmc.LOGDEBUG)
     headers = {'Authorization': message}
 
     if method == 'DELETE':
         resp = requests.delete(url, headers=headers)
     elif method == 'POST':
-        resp = adobe_session.post(url, headers=headers)
+        resp = adobe_session.post(url, json=body, headers=headers)
     else:
         resp = adobe_session.get(url, headers=headers)
-    # xbmc.log(TAG + 'resp %s ' % (resp.text), xbmc.LOGDEBUG)
     return resp.json()
 
 
@@ -93,12 +100,12 @@ def generate_message(method, path):
 
 def is_reg_code_valid():
     if 'generateRegCode' not in settings:
-        logging.debug('Unable to find reg code')
+        logger.debug('Unable to find reg code')
         return False
     # Check code isn't expired
     expiration = settings['generateRegCode']['expires']
     if is_expired(expiration):
-        xbmc.log(TAG + 'Reg code is expired at %s' % expiration, xbmc.LOGDEBUG)
+        logger.debug('Reg code is expired at %s' % expiration)
         return False
     return True
 
@@ -110,7 +117,7 @@ def is_reg_code_valid():
 # "appId":null,"appVersion":null,"registrationURL":null}}'
 # (generateRegCode)
 def get_regcode():
-    params = urllib.urlencode(
+    params = urlencode(
         {'deviceId': get_device_id(),
          'deviceType': 'appletv',
          'ttl': '1800'})
@@ -131,7 +138,7 @@ def get_regcode():
 # Authenticates the user after they have been authenticated on the activation website (authenticateRegCode)
 # Sample: '{"mvpd":"","requestor":"ESPN","userId":"","expires":"1466208969000"}'
 def authenticate(regcode):
-    params = urllib.urlencode({'requestor': 'ESPN'})
+    params = urlencode({'requestor': 'ESPN'})
 
     path = '/authenticate/' + regcode
     url = urlunsplit(['https', 'api.auth.adobe.com',
@@ -146,8 +153,8 @@ def authenticate(regcode):
 
 # Get authn token (re-auth device after it expires), getAuthnToken
 def re_authenticate():
-    params = urllib.urlencode({'requestor': 'ESPN',
-                               'deviceId': get_device_id()})
+    params = urlencode({'requestor': 'ESPN',
+                        'deviceId': get_device_id()})
 
     path = '/tokens/authn'
     url = urlunsplit(['https', 'api.auth.adobe.com',
@@ -156,14 +163,14 @@ def re_authenticate():
 
     message = generate_message('GET', path)
 
-    xbmc.log(TAG + 'Attempting to re-authenticate the device', xbmc.LOGDEBUG)
+    logger.debug('Attempting to re-authenticate the device')
     resp = get_url_response(url, message)
     if 'status' in resp and resp['status'] == '410':
         raise AuthorizationException()
     settings['authenticateRegCode'] = resp
     if 'authorize' in settings:
         del settings['authorize']
-    xbmc.log(TAG + 'Re-authenticated device', xbmc.LOGDEBUG)
+    logger.debug('Re-authenticated device')
 
 
 def get_resource(channel, event_name, event_guid, event_parental_rating):
@@ -176,11 +183,11 @@ def get_resource(channel, event_name, event_guid, event_parental_rating):
 # Sample '{"resource":"resource","mvpd":"","requestor":"ESPN","expires":"1463621239000"}'
 def authorize(resource):
     if is_authorized(resource):
-        xbmc.log(TAG + 'already authorized', xbmc.LOGDEBUG)
+        logger.debug('already authorized')
         return
-    params = urllib.urlencode({'requestor': 'ESPN',
-                               'deviceId': get_device_id(),
-                               'resource': resource})
+    params = urlencode({'requestor': 'ESPN',
+                        'deviceId': get_device_id(),
+                        'resource': resource})
 
     path = '/authorize'
     url = urlunsplit(['https', 'api.auth.adobe.com',
@@ -193,14 +200,14 @@ def authorize(resource):
 
     if 'authorize' not in settings:
         settings['authorize'] = dict()
-    xbmc.log(TAG + 'resource %s resp %s' % (resource, resp), xbmc.LOGDEBUG)
+    logger.debug('resource %s resp %s' % (resource, resp))
     if 'status' in resp and resp['status'] == 403:
         raise AuthorizationException()
     settings['authorize'][resource.decode('iso-8859-1').encode('utf-8')] = resp
 
 
 def deauthorize():
-    params = urllib.urlencode({'deviceId': get_device_id()})
+    params = urlencode({'deviceId': get_device_id()})
 
     path = '/logout'
     url = urlunsplit(['https', 'api.auth.adobe.com',
@@ -211,8 +218,8 @@ def deauthorize():
 
     try:
         get_url_response(url, message, body=None, method='DELETE')
-    except urllib2.HTTPError:
-        xbmc.log(TAG + 'De-authorize failed', xbmc.LOGDEBUG)
+    except HTTPError:
+        logger.debug('De-authorize failed')
     if 'authorize' in settings:
         del settings['authorize']
     if 'authenticateRegCode' in settings:
@@ -224,12 +231,12 @@ def deauthorize():
 # "requestor":"ESPN","resource":" resource"}'
 def get_short_media_token(resource):
     if has_to_reauthenticate():
-        xbmc.log(TAG + 're-authenticating device', xbmc.LOGDEBUG)
+        logger.debug('re-authenticating device')
         re_authenticate()
 
-    params = urllib.urlencode({'requestor': 'ESPN',
-                               'deviceId': get_device_id(),
-                               'resource': resource})
+    params = urlencode({'requestor': 'ESPN',
+                        'deviceId': get_device_id(),
+                        'resource': resource})
 
     path = '/mediatoken'
     url = urlunsplit(['https', 'api.auth.adobe.com',
@@ -243,23 +250,23 @@ def get_short_media_token(resource):
         resp = get_url_response(url, message)
         if 'status' in resp and resp['status'] == 403:
             raise AuthorizationException()
-    except urllib2.HTTPError as exception:
+    except HTTPError as exception:
         if exception.code == 401:
-            xbmc.log(TAG + 'Unauthorized exception, trying again', xbmc.LOGDEBUG)
+            logger.debug('Unauthorized exception, trying again')
             re_authenticate()
             authorize(resource)
             resp = get_url_response(url, message)
         else:
-            xbmc.log(TAG + 'Rethrowing exception %s' % exception, xbmc.LOGDEBUG)
+            logger.debug('Rethrowing exception %s' % exception)
             raise exception
     except AuthorizationException as exception:
-        xbmc.log(TAG + 'Authorization exception, trying again %s' % exception, xbmc.LOGDEBUG)
+        logger.debug('Authorization exception, trying again %s' % exception)
         re_authenticate()
         authorize(resource)
         resp = get_url_response(url, message)
         if 'status' in resp and resp['status'] == 403:
             raise AuthorizationException()
-    xbmc.log(TAG + 'Resp %s' % resp, xbmc.LOGDEBUG)
+    logger.debug('Resp %s' % resp)
     settings['getShortMediaToken'] = resp
     return resp['serializedToken']
 
@@ -307,8 +314,8 @@ def clean_up_authorization_tokens():
 
 
 def get_user_metadata():
-    params = urllib.urlencode({'requestor': 'ESPN',
-                               'deviceId': get_device_id()})
+    params = urlencode({'requestor': 'ESPN',
+                        'deviceId': get_device_id()})
 
     path = '/tokens/usermetadata'
     url = urlunsplit(['https', 'api.auth.adobe.com',

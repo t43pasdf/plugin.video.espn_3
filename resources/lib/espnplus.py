@@ -18,10 +18,7 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
-from globals import global_session
-from settings_file import SettingsFile
 import time
-import util
 
 try:
     import jwt
@@ -30,12 +27,15 @@ except ImportError:
 import json
 import logging
 import uuid
-import websocket
 
 try:
     import thread
 except ImportError:
     import _thread as thread
+
+from resources.lib.globals import global_session
+from resources.lib.settings_file import SettingsFile
+from resources.lib import util, websocket
 
 # try:
 #     import http.client as http_client
@@ -323,14 +323,14 @@ def fill_in_template(template, access_token):
         .replace('{accessToken}', access_token)
 
 
-def execute_method(endpoint, access_token='', json=None, data=None):
+def execute_method(endpoint, access_token='', json_body=None, data=None):
     logging.debug('Executing endpoint %s' % endpoint['href'])
     http_headers = {}
     for i, (header, value) in enumerate(endpoint['headers'].items()):
         http_headers[header] = fill_in_template(value, access_token)
     resp = None
     if endpoint['method'] == 'POST':
-        resp = global_session.post(endpoint['href'], headers=http_headers, json=json, data=data)
+        resp = global_session.post(endpoint['href'], headers=http_headers, json=json_body, data=data)
     elif endpoint['method'] == 'GET':
         resp = global_session.get(endpoint['href'], headers=http_headers)
     return resp
@@ -338,7 +338,7 @@ def execute_method(endpoint, access_token='', json=None, data=None):
 
 def create_device_grant():
     endpoint = app_config['services']['device']['client']['endpoints']['createDeviceGrant']
-    resp = execute_method(endpoint, json={
+    resp = execute_method(endpoint, json_body={
         'deviceFamily': 'browser',
         'applicationRuntime': 'chrome',
         'deviceProfile': 'linux',
@@ -360,9 +360,9 @@ def exchange_token(data):
     return resp.json()
 
 
-def create_account_grant(access_token, json):
+def create_account_grant(access_token, json_body):
     endpoint = app_config['services']['account']['client']['endpoints']['createAccountGrant']
-    resp = execute_method(endpoint, access_token=access_token, json=json)
+    resp = execute_method(endpoint, access_token=access_token, json_body=json_body)
     return resp.json()
 
 
@@ -415,7 +415,7 @@ def request_bam_account_access_token():
     if config.id_token_grant is None or not config.id_token_grant.is_valid():
         logging.debug('Getting Token Grant')
         device_token = get_device_refresh_token()
-        grant_resp = create_account_grant(access_token=device_token, json={
+        grant_resp = create_account_grant(access_token=device_token, json_body={
             'id_token': config.disney_id_token.token
         })
         config.set_id_token_grant(grant_resp)

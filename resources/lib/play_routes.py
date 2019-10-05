@@ -24,7 +24,10 @@ try:
 except ImportError:
     from urllib.error import HTTPError
 
-import urllib
+try:
+    from urllib import urlencode, quote, unquote_plus
+except ImportError:
+    from urllib.parse import urlencode, quote, unquote_plus
 
 import m3u8
 from xbmcplugin import setResolvedUrl, endOfDirectory
@@ -199,14 +202,14 @@ def process_playback_url(playback_url, auth_string):
 
 
 def start_adobe_session(media_token, token_type, resource, start_session_url):
-    params = urllib.urlencode({'partner': 'watchespn',
-                               'playbackScenario': 'HTTP_CLOUD_HIGH',
-                               'platform': 'chromecast_uplynk',
-                               'token': media_token,
-                               'tokenType': token_type,
-                               'resource': base64.b64encode(resource),
-                               'v': '2.0.0'
-                               })
+    params = urlencode({'partner': 'watchespn',
+                        'playbackScenario': 'HTTP_CLOUD_HIGH',
+                        'platform': 'chromecast_uplynk',
+                        'token': media_token,
+                        'tokenType': token_type,
+                        'resource': base64.b64encode(resource),
+                        'v': '2.0.0'
+                        })
     authed_url = start_session_url + '&' + params
 
     xbmc.log('ESPN3: start_session_url: ' + authed_url, xbmc.LOGDEBUG)
@@ -224,8 +227,8 @@ def start_adobe_session(media_token, token_type, resource, start_session_url):
         return
 
     playback_url = session_json['session']['playbackUrls']['default']
-    auth_string = 'Connection=keep-alive&User-Agent=' + urllib.quote(UA_PC) + '&Cookie=_mediaAuth=' + \
-                  urllib.quote(session_json['session']['token'])
+    auth_string = 'Connection=keep-alive&User-Agent=' + quote(UA_PC) + '&Cookie=_mediaAuth=' + \
+                  quote(session_json['session']['token'])
     process_playback_url(playback_url, auth_string=auth_string)
 
 
@@ -329,7 +332,7 @@ def play_tv(event_id):
 @plugin.route('/upcoming-event/<event_id>')
 def upcoming_event(event_id):
     starttime = arg_as_string('starttime')
-    event_name = urllib.unquote_plus(arg_as_string('event_name'))
+    event_name = unquote_plus(arg_as_string('event_name'))
     packages = arg_as_list('packages')
     entitlements = espnplus.get_entitlements()
     logging.debug('Upcoming event chosen for %s, %s, %s' % (starttime, packages, entitlements))

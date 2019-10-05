@@ -19,7 +19,10 @@
 
 import re
 import time
-import urllib
+try:
+    from urllib import quote_plus
+except ImportError:
+    from urllib.parse import quote_plus
 
 import xbmcgui
 from xbmcgui import ListItem
@@ -28,8 +31,6 @@ from resources.lib import player_config, util
 from resources.lib.constants import CHANNEL_SETTINGS
 from resources.lib.kodiutils import get_setting_as_bool, get_string
 import logging
-
-TAG = 'Addon_Util: '
 
 
 def check_error(session_json):
@@ -94,7 +95,7 @@ def get_url(url):
             sep = '&'
         else:
             sep = '?'
-        return url + sep + 'tz=' + urllib.quote_plus(tz)
+        return url + sep + 'tz=' + quote_plus(tz)
     return url
 
 
@@ -153,12 +154,10 @@ def check_event_blackout(event_id):
 
 
 def compare(lstart, lnetwork, lstatus, rstart, rnetwork, rstatus):
-    # xbmc.log(TAG + 'lstart %s lnetwork %s lstatus %s rstart %s rnetwork %s rstatus %s' %
-    #          (lstart, lnetwork, lstatus, rstart, rnetwork, rstatus), xbmc.LOGDEBUG)
     # Prefer live content
     #  sorted by network
     # Prefer upcoming content
-    # sorted by time
+    #  sorted by time
     if lstatus == 'live' and rstatus != 'live':
         return -1
     if rstatus == 'live' and lstatus != 'live':

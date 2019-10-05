@@ -17,12 +17,19 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+try:
+    from urllib2 import HTTPError
+except ImportError:
+    from urllib.error import HTTPError
 
-import Queue
+try:
+    from Queue import Queue, Empty
+except ImportError:
+    from queue import Queue, Empty
+
 import logging
 import threading
 import time
-import urllib2
 
 import xbmcgui
 
@@ -55,7 +62,7 @@ def login_tv_provider():
                 dialog.ok(get_string(30310), get_string(30370))
                 set_setting('LoggedInToTvProvider', True)
                 return True
-            except urllib2.HTTPError as e:
+            except HTTPError as e:
                 dialog.ok(get_string(30037), get_string(30420) % e)
                 set_setting('LoggedInToTvProvider', False)
                 return False
@@ -84,7 +91,7 @@ def login_espn_plus():
     if not espnplus.have_valid_login_id_token():
         logging.debug('Requesting login id token')
         semaphore = threading.Semaphore(0)
-        result_queue = Queue.Queue()
+        result_queue = Queue()
 
         license_plate, ws = espnplus.perform_license_plate_auth_flow(semaphore, result_queue)
         progress_dialog = xbmcgui.DialogProgress()
@@ -113,7 +120,7 @@ def login_espn_plus():
         token = None
         try:
             token = result_queue.get(block=True, timeout=1)
-        except Queue.Empty as e:
+        except Empty as e:
             logging.error('No result from websocket %s', e)
 
         if token is not None and 'id_token' in token:

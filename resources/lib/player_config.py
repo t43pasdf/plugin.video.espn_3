@@ -20,7 +20,7 @@
 
 import os
 
-import util
+from resources.lib import util
 from resources.lib.kodiutils import addon_profile_path
 import pytz
 import datetime

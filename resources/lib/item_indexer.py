@@ -19,7 +19,11 @@
 
 import time
 import logging
-import urllib
+
+try:
+    from urllib import quote_plus
+except ImportError:
+    from urllib.parse import quote_plus
 
 from xbmcplugin import addDirectoryItem
 from resources.lib.kodiutils import get_setting_as_bool, get_string
@@ -174,7 +178,7 @@ def index_item(args):
     if args['type'] == 'upcoming':
         addDirectoryItem(plugin.handle,
                          plugin.url_for(upcoming_event, event_id=args['eventId'], starttime=etime,
-                                        event_name=urllib.quote_plus(ename.encode('utf-8'))),
+                                        event_name=quote_plus(ename.encode('utf-8'))),
                          make_list_item(ename, icon=fanart, info_labels=info_labels))
     else:
         adobe_rss = args['adobeRSS'] if 'adobeRSS' in args else None
@@ -197,7 +201,7 @@ def index_item(args):
                 addDirectoryItem(plugin.handle,
                                  plugin.url_for(play_tv, event_id=args['eventId'],
                                                 session_url=args['sessionUrl'], network_name=args['networkId'],
-                                                resource=urllib.quote_plus(adobe_rss.encode('utf-8'))),
+                                                resource=quote_plus(adobe_rss.encode('utf-8'))),
                                  make_list_item(ename, icon=fanart, info_labels=info_labels))
             else:
                 logging.debug('Skipping %s' % args['networkId'])

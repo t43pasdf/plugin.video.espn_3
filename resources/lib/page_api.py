@@ -17,17 +17,24 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-import urlparse
-import urllib
+try:
+    from urlparse import urlparse, parse_qs, urlunparse
+except ImportError:
+    from urllib.parse import urlparse, parse_qs, urlunparse
+
+try:
+    from urllib import urlencode, quote_plus
+except ImportError:
+    from urllib.parse import urlencode, quote_plus
+
 import time
 
 import logging
-import util
 
 from xbmcplugin import addDirectoryItem, setContent, endOfDirectory
 from xbmcgui import ListItem
 
-from resources.lib import espnplus, player_config
+from resources.lib import espnplus, player_config, util
 from resources.lib.item_indexer import index_item, get_item_listing_text
 from resources.lib.play_routes import play_vod, upcoming_event, play_event
 from resources.lib.plugin_routing import plugin, arg_as_string
@@ -37,7 +44,7 @@ from resources.lib.constants import NETWORK_ID_SORT_ORDER
 BUCKET = 'BUCKET'
 
 
-def make_channel_id(id, name):
+def make_channel_id(channel_id, name):
     return '%s' % (name)
 
 
@@ -71,11 +78,11 @@ def page_api_buckets(bucket_path):
 
 
 def get_v3_url(url):
-    components = urlparse.urlparse(url)
+    components = urlparse(url)
     current_qs = components.query
     if current_qs is None:
         current_qs = ''
-    qs = urlparse.parse_qs(current_qs)
+    qs = parse_qs(current_qs)
     # TODO: Add features
     entitlements = ','.join(espnplus.get_entitlements())
     logging.debug('QS: %s' % qs)
@@ -85,8 +92,8 @@ def get_v3_url(url):
     qs['zipcode'] = player_config.get_zipcode()
     qs['tz'] = player_config.get_timezone_utc_offest()
     new_components = (components.scheme, components.netloc, components.path, components.params,
-                      urllib.urlencode(qs, doseq=True), components.fragment)
-    return urlparse.urlunparse(new_components)
+                      urlencode(qs, doseq=True), components.fragment)
+    return urlunparse(new_components)
 
 
 def parse_json(url, bucket_path=None, channel_id=None):
@@ -202,11 +209,11 @@ def index_bucket_content(url, bucket, channel_filter):
                     index_content(content)
             else:
                 name = source_data['name']
-                id = source_data['id']
-                if len(name) == 0 and id == 'ESPN_PPV':
+                channel_id = source_data['id']
+                if len(name) == 0 and channel_id == 'ESPN_PPV':
                     name = 'ESPN+ PPV'
                 elif len(name) == 0:
-                    name = id
+                    name = channel_id
                 addDirectoryItem(plugin.handle, plugin.url_for(page_api_channel, channel_id=group_source_id, url=url),
                                  ListItem(name), True)
 
@@ -224,9 +231,9 @@ def parse_duration(duration_str):
         '%M:%S',
         '%S'
     ]
-    for format in formats:
+    for date_format in formats:
         try:
-            duration = time.strptime(duration_str, format)
+            duration = time.strptime(duration_str, date_format)
             return duration
         except ValueError:
             pass
@@ -259,11 +266,11 @@ def get_team_name(event, number):
 
 def index_v3_content(content):
     logging.debug('Indexing %s' % content)
-    type = content['type']
-    if type == 'show'or type == 'film' or type == 'product':
+    content_type = content['type']
+    if content_type == 'show'or content_type == 'film' or content_type == 'product':
         index_v3_show(content)
         return
-    if type == 'vod':
+    if content_type == 'vod':
         index_v3_vod(content)
         return
 
@@ -323,7 +330,7 @@ def index_v3_content(content):
             starttime_text = time.strftime("%m/%d/%Y %I:%M %p", starttime)
             addDirectoryItem(plugin.handle,
                              plugin.url_for(upcoming_event, event_id=event_id,
-                                            event_name=urllib.quote_plus(name.encode('utf-8')),
+                                            event_name=quote_plus(name.encode('utf-8')),
                                             starttime=starttime_text,
                                             packages='|'.join(packages)),
                              make_list_item(ename, info_labels=info_labels))
