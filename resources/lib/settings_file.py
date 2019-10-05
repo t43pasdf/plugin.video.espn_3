@@ -47,7 +47,11 @@ class SettingsFile(object):
             logging.debug('Resetting settings, unable to find file')
             self.reset_settings()
         with open(settings_file, 'r') as fp:
-            return json.load(fp)
+            try:
+                return json.load(fp)
+            except TypeError:
+                self.reset_settings()
+                return dict()
 
 
 def save_settings():
