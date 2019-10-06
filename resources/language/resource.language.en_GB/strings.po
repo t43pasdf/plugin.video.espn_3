@@ -452,6 +452,10 @@ msgctxt "#40270"
 msgid "You will require additional entitlements to view this content: %s"
 msgstr ""
 
+msgctxt "#40280"
+msgid "Your account isn't entitled to view this content"
+msgstr ""
+
 msgctxt "#40500"
 msgid "Search"
 msgstr ""

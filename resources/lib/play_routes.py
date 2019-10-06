@@ -41,7 +41,7 @@ from resources.lib import util, espnplus, auth_routes, adobe_activate_api
 from resources.lib.globals import global_session
 from resources.lib.plugin_routing import plugin, arg_as_string, arg_as_list
 from resources.lib.addon_util import requires_adobe_auth, get_setting_from_channel, check_error, \
-    check_espn_plus_error, get_auth_types_from_network, is_entitled
+    check_espn_plus_error, get_auth_types_from_network, is_entitled, get_missing_packages
 from resources.lib.globals import UA_PC
 from resources.lib.kodiutils import set_setting, get_setting, get_string, get_setting_as_bool
 
@@ -54,8 +54,8 @@ def get_token_type(auth_types):
     return 'DEVICE'
 
 
-def check_auth_status(auth_types, resource, network_name):
-    logging.debug('Checking auth of %s' % (auth_types))
+def check_auth_status(auth_types, packages, resource, network_name):
+    logging.debug('Checking auth of %s and %s' % (auth_types, packages))
 
     if requires_adobe_auth(auth_types):
         # Adobe auth
@@ -113,6 +113,15 @@ def check_auth_status(auth_types, resource, network_name):
             else:
                 return None
         espnplus.ensure_valid_access_token()
+
+        # Check packages
+        entitlements = espnplus.get_entitlements()
+        has_entitlement = is_entitled(packages, entitlements)
+
+        if not has_entitlement:
+            missing_packages = get_missing_packages(packages, entitlements)
+            dialog = xbmcgui.Dialog()
+            dialog.ok(get_string(40000), get_string(40270) % ', '.join(missing_packages))
 
         return espnplus.get_bam_account_access_token()
 
@@ -290,13 +299,14 @@ def play_vod(event_id):
 def play_event(event_id):
     event_url = arg_as_string('event_url')
     auth_types = arg_as_list('auth_types')
+    packages = arg_as_list('packages')
 
     session_json = util.get_url_as_json(event_url)
     resource = session_json['adobeRSS']
     network_name = session_json['tracking']['network']
 
     logging.debug('Checking current auth of %s' % auth_types)
-    media_token = check_auth_status(auth_types, resource, network_name)
+    media_token = check_auth_status(auth_types, packages, resource, network_name)
     token_type = get_token_type(auth_types)
 
     if token_type is None or media_token is None:

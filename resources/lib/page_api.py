@@ -338,7 +338,8 @@ def index_v3_content(content):
             addDirectoryItem(plugin.handle,
                              plugin.url_for(play_event, event_id=event_id,
                                             event_url=stream['links']['play'],
-                                            auth_types='|'.join(stream['authTypes'])),
+                                            auth_types='|'.join(stream['authTypes']),
+                                            packages='|'.join(packages)),
                              make_list_item(ename, info_labels=info_labels, icon=fanart))
 
 

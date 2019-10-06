@@ -46,7 +46,11 @@ def check_espn_plus_error(session_json):
     if 'errors' in session_json:
         error_msg = ''
         for error in session_json['errors']:
-            error_msg = error_msg + error['description'] + ' '
+            if 'description' in error:
+                error_msg = error_msg + error['description'] + ' '
+            elif 'code' in error:
+                if error['code'] == 'not-entitled':
+                    error_msg = error_msg + get_string(40280) + ' '
         dialog = xbmcgui.Dialog()
         dialog.ok(get_string(30037), get_string(30500) % error_msg)
         return True
@@ -59,6 +63,15 @@ def is_entitled(packages, entitlements):
             logging.debug('%s in %s ? %s' % (entitlement, packages, entitlement in packages))
             has_entitlement = has_entitlement or (entitlement in packages)
     return has_entitlement
+
+
+def get_missing_packages(packages, entitlements):
+    missing_packages = []
+    if packages is not None:
+        for package in packages:
+            if package not in entitlements:
+                missing_packages.append(package)
+    return missing_packages
 
 
 def get_auth_types_from_network(network_name):
