@@ -89,9 +89,9 @@ def get_item_listing_text(event_name, starttime, duration, status, network,
 
     requires_auth = check_auth_types(auth_types)
     if requires_auth and not adobe_activate_api.is_authenticated():
-        ename = 'Requires Authentication - ' + ename
+        ename = get_string(40300) + ' - ' + ename
     if requires_package:
-        ename = 'Requires ESPN+ Package - ' + ename
+        ename = get_string(40310) + ' - ' + ename
     return ename, length
 
 
