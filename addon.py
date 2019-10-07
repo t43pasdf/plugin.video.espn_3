@@ -24,7 +24,14 @@ from resources.lib import kodilogging
 # Init logging before our code starts
 kodilogging.config()
 
+from resources.lib.kodiutils import ensure_profile_path_exists  # noqa: E402
+
+
+ensure_profile_path_exists()
+
+
 from resources.lib import plugin  # noqa: E402
+
 
 # Keep this file to a minimum, as Kodi
 # doesn't keep a compiled copy of this

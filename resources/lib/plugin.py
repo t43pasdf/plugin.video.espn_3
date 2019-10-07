@@ -221,6 +221,5 @@ def clear_data():
 #             raise exception
 
 def run():
-    ensure_profile_path_exists()
     plugin.run()
     settings_file.save_settings()
