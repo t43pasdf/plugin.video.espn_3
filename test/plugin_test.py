@@ -22,6 +22,8 @@ def no_requests(monkeypatch):
 @pytest.fixture(autouse=True)
 def change_addon_path(monkeypatch):
     cache_path = os.path.join('test', 'cache')
+    if not os.path.exists(cache_path):
+        os.mkdir(cache_path)
 
     def get_addon_path(path):
         return cache_path
