@@ -1,0 +1,519 @@
+{
+    "page": {
+        "name": "Live",
+        "layout": "bucket",
+        "edition": {
+            "name": "United States",
+            "country": {
+                "name": "United States of America"
+            },
+            "branding": {
+                "name": "ESPN",
+                "logoUrl": "http://a.espncdn.com/redesign/assets/img/logos/logo-espn-blk-90x22@2x.png",
+                "lightLogoUrl": "http://a.espncdn.com/redesign/assets/img/logos/logo-espn-90x22@2x.png"
+            }
+        },
+        "tracking": {
+            "context": {
+                "PageName": "Live",
+                "ContentType": "Index",
+                "AppName": "watchespn:Watchespn WEB",
+                "Platform": "Watchespn WEB",
+                "Language": "English"
+            }
+        },
+        "buckets": [
+            {
+                "id": 5060,
+                "name": "Live",
+                "type": "",
+                "metadata": {
+                    "totalCount": 9,
+                    "displayCount": 9,
+                    "displayMinimum": 0,
+                    "ratio": "16x9",
+                    "imageFormat": "16x9",
+                    "size": "md",
+                    "combinedTile": true,
+                    "scored": true,
+                    "grouped": false,
+                    "curated": true
+                },
+                "links": {
+                    "self": "https://watch.product.api.espn.com/api/product/v3/watchespn/web/bucket?bucketId=5060&tz=America%2FNew_York&lang=en",
+                    "web": "http://www.espn.com/watch/collections/5060/live",
+                    "shareUrl": "http://www.espn.com/watch/collections/5060/live"
+                },
+                "description": "",
+                "contents": [
+                    {
+                        "id": "88261fa3-f583-45a4-b88c-855292f3ed2c",
+                        "status": "live",
+                        "type": "listing",
+                        "imageFormat": "16x9",
+                        "ratio": "16x9",
+                        "size": "md",
+                        "name": "Get Up!",
+                        "subtitle": "ESPN • Get Up!",
+                        "imageHref": "https://artwork.api.espn.com/artwork/collections/airings/88261fa3-f583-45a4-b88c-855292f3ed2c/default?width=640&apikey=1ngjw23osgcis1i1vbj96lmfqs&timestamp=201910040042",
+                        "date": "Friday, October 04",
+                        "shortDate": "Fri, 10/4",
+                        "utc": "2019-10-04T08:00:01.14-04:00",
+                        "time": "8:00 AM",
+                        "score": 2450,
+                        "includeSponsor": false,
+                        "showKey": false,
+                        "isLocked": false,
+                        "isPersonalized": false,
+                        "streams": [
+                            {
+                                "id": "88261fa3-f583-45a4-b88c-855292f3ed2c",
+                                "status": "live",
+                                "tier": "primary",
+                                "name": "Get Up!",
+                                "duration": "1:59:58",
+                                "source": {
+                                    "id": "ESPN1",
+                                    "name": "ESPN",
+                                    "type": "linear"
+                                },
+                                "score": 2450,
+                                "showKey": false,
+                                "isLocked": false,
+                                "authTypes": [
+                                    "mvpd"
+                                ],
+                                "adobeRSS": "<rss version='2.0' xmlns:media='http://search.yahoo.com/mrss/'><channel><title>espn1</title><item><title>Get Up!</title><guid>88261fa3-f583-45a4-b88c-855292f3ed2c</guid><media:rating scheme='urn:v-chip'></media:rating></item></channel></rss>",
+                                "isPersonalized": false,
+                                "links": {
+                                    "play": "https://watch.product.api.espn.com/api/product/v3/watchespn/web/playback/event?network=ESPN1&tz=America%2FNew_York&lang=en",
+                                    "web": "http://www.espn.com/watch?id=88261fa3-f583-45a4-b88c-855292f3ed2c",
+                                    "shareUrl": "http://www.espn.com/watch?id=88261fa3-f583-45a4-b88c-855292f3ed2c"
+                                }
+                            }
+                        ],
+                        "links": {
+                            "play": "https://watch.product.api.espn.com/api/product/v3/watchespn/web/playback/event?id=88261fa3-f583-45a4-b88c-855292f3ed2c&tz=America%2FNew_York&lang=en"
+                        },
+                        "iconHref": "audio02"
+                    },
+                    {
+                        "id": "c1b096b6-cb22-4c6e-ba69-6ef85f73e0af",
+                        "status": "live",
+                        "type": "listing",
+                        "imageFormat": "16x9",
+                        "ratio": "16x9",
+                        "size": "md",
+                        "name": "SportsCenter",
+                        "subtitle": "ESPN2 • SportsCenter",
+                        "imageHref": "https://artwork.api.espn.com/artwork/collections/airings/c1b096b6-cb22-4c6e-ba69-6ef85f73e0af/default?width=640&apikey=1ngjw23osgcis1i1vbj96lmfqs&timestamp=201910040352",
+                        "date": "Friday, October 04",
+                        "shortDate": "Fri, 10/4",
+                        "utc": "2019-10-04T08:00:02.849-04:00",
+                        "time": "8:00 AM",
+                        "score": 2200,
+                        "includeSponsor": false,
+                        "showKey": false,
+                        "isLocked": false,
+                        "isPersonalized": false,
+                        "streams": [
+                            {
+                                "id": "c1b096b6-cb22-4c6e-ba69-6ef85f73e0af",
+                                "status": "live",
+                                "tier": "primary",
+                                "name": "SportsCenter",
+                                "duration": "59:57",
+                                "source": {
+                                    "id": "ESPN2",
+                                    "name": "ESPN2",
+                                    "type": "linear"
+                                },
+                                "score": 2200,
+                                "showKey": false,
+                                "isLocked": false,
+                                "authTypes": [
+                                    "mvpd"
+                                ],
+                                "adobeRSS": "<rss version='2.0' xmlns:media='http://search.yahoo.com/mrss/'><channel><title>espn2</title><item><title>SportsCenter</title><guid>c1b096b6-cb22-4c6e-ba69-6ef85f73e0af</guid><media:rating scheme='urn:v-chip'></media:rating></item></channel></rss>",
+                                "isPersonalized": false,
+                                "links": {
+                                    "play": "https://watch.product.api.espn.com/api/product/v3/watchespn/web/playback/event?network=ESPN2&tz=America%2FNew_York&lang=en",
+                                    "web": "http://www.espn.com/watch?id=c1b096b6-cb22-4c6e-ba69-6ef85f73e0af",
+                                    "shareUrl": "http://www.espn.com/watch?id=c1b096b6-cb22-4c6e-ba69-6ef85f73e0af"
+                                }
+                            }
+                        ],
+                        "links": {
+                            "play": "https://watch.product.api.espn.com/api/product/v3/watchespn/web/playback/event?id=c1b096b6-cb22-4c6e-ba69-6ef85f73e0af&tz=America%2FNew_York&lang=en"
+                        },
+                        "iconHref": "audio02"
+                    },
+                    {
+                        "id": "40913e2b-af11-44fa-b9d3-1305e3dfa35b",
+                        "status": "live",
+                        "type": "listing",
+                        "imageFormat": "16x9",
+                        "ratio": "16x9",
+                        "size": "md",
+                        "name": "Worlds Play-Ins Day 3",
+                        "subtitle": "ESPN+ • League of Legends",
+                        "imageHref": "https://s.secure.espncdn.com/stitcher/artwork/collections/airings/40913e2b-af11-44fa-b9d3-1305e3dfa35b/16x9.jpg?timestamp=201910041207&showBadge=true&cb=12&package=ESPN_PLUS",
+                        "backgroundImageHref": "https://secure.espncdn.com/watchespn/images/espnplus/paywalls/ESPN_PLUS.paywall.png",
+                        "date": "Friday, October 04",
+                        "shortDate": "Fri, 10/4",
+                        "utc": "2019-10-04T05:30:05-04:00",
+                        "time": "5:30 AM",
+                        "score": 1900,
+                        "includeSponsor": false,
+                        "showKey": false,
+                        "isLocked": false,
+                        "isPersonalized": false,
+                        "streams": [
+                            {
+                                "id": "40913e2b-af11-44fa-b9d3-1305e3dfa35b",
+                                "status": "live",
+                                "tier": "primary",
+                                "name": "National Broadcast",
+                                "duration": "6:29:55",
+                                "source": {
+                                    "id": "BAM_DTC",
+                                    "name": "ESPN+",
+                                    "type": "online"
+                                },
+                                "score": 1900,
+                                "showKey": false,
+                                "isLocked": false,
+                                "authTypes": [
+                                    "direct"
+                                ],
+                                "packages": [
+                                    "ESPN_PLUS"
+                                ],
+                                "adobeRSS": "<rss version='2.0' xmlns:media='http://search.yahoo.com/mrss/'><channel><title>bam_dtc</title><item><title>Worlds Play-Ins Day 3</title><guid>40913e2b-af11-44fa-b9d3-1305e3dfa35b</guid><media:rating scheme='urn:v-chip'></media:rating></item></channel></rss>",
+                                "isPersonalized": false,
+                                "links": {
+                                    "play": "https://watch.product.api.espn.com/api/product/v3/watchespn/web/playback/event?id=40913e2b-af11-44fa-b9d3-1305e3dfa35b&tz=America%2FNew_York&lang=en",
+                                    "web": "http://www.espn.com/watch?id=40913e2b-af11-44fa-b9d3-1305e3dfa35b",
+                                    "shareUrl": "http://www.espn.com/watch?id=40913e2b-af11-44fa-b9d3-1305e3dfa35b"
+                                }
+                            }
+                        ],
+                        "links": {
+                            "play": "https://watch.product.api.espn.com/api/product/v3/watchespn/web/playback/event?id=40913e2b-af11-44fa-b9d3-1305e3dfa35b&tz=America%2FNew_York&lang=en"
+                        },
+                        "iconHref": "esports"
+                    },
+                    {
+                        "id": "55f9863d-81cd-417e-a538-d3d7905285bf",
+                        "status": "live",
+                        "type": "listing",
+                        "imageFormat": "16x9",
+                        "ratio": "16x9",
+                        "size": "md",
+                        "name": "Golic and Wingo Presented by Progressive",
+                        "subtitle": "ESPNews • Golic and Wingo",
+                        "imageHref": "https://artwork.api.espn.com/artwork/collections/airings/55f9863d-81cd-417e-a538-d3d7905285bf/default?width=640&apikey=1ngjw23osgcis1i1vbj96lmfqs&timestamp=201910040042",
+                        "date": "Friday, October 04",
+                        "shortDate": "Fri, 10/4",
+                        "utc": "2019-10-04T06:00:01.94-04:00",
+                        "time": "6:00 AM",
+                        "score": 1900,
+                        "includeSponsor": false,
+                        "showKey": false,
+                        "isLocked": false,
+                        "isPersonalized": false,
+                        "streams": [
+                            {
+                                "id": "55f9863d-81cd-417e-a538-d3d7905285bf",
+                                "status": "live",
+                                "tier": "primary",
+                                "name": "Golic and Wingo",
+                                "duration": "3:59:58",
+                                "source": {
+                                    "id": "ESPNEWS",
+                                    "name": "ESPNews",
+                                    "type": "linear"
+                                },
+                                "score": 1900,
+                                "showKey": false,
+                                "isLocked": false,
+                                "authTypes": [
+                                    "mvpd"
+                                ],
+                                "adobeRSS": "<rss version='2.0' xmlns:media='http://search.yahoo.com/mrss/'><channel><title>espnews</title><item><title>Golic and Wingo Presented by Progressive</title><guid>55f9863d-81cd-417e-a538-d3d7905285bf</guid><media:rating scheme='urn:v-chip'></media:rating></item></channel></rss>",
+                                "isPersonalized": false,
+                                "links": {
+                                    "play": "https://watch.product.api.espn.com/api/product/v3/watchespn/web/playback/event?network=ESPNEWS&tz=America%2FNew_York&lang=en",
+                                    "web": "http://www.espn.com/watch?id=55f9863d-81cd-417e-a538-d3d7905285bf",
+                                    "shareUrl": "http://www.espn.com/watch?id=55f9863d-81cd-417e-a538-d3d7905285bf"
+                                }
+                            }
+                        ],
+                        "links": {
+                            "play": "https://watch.product.api.espn.com/api/product/v3/watchespn/web/playback/event?id=55f9863d-81cd-417e-a538-d3d7905285bf&tz=America%2FNew_York&lang=en"
+                        },
+                        "iconHref": "audio02"
+                    },
+                    {
+                        "id": "f9a56c51-578f-4ae0-b17d-54336fba52ee",
+                        "status": "live",
+                        "type": "listing",
+                        "imageFormat": "16x9",
+                        "ratio": "16x9",
+                        "size": "md",
+                        "name": "Packer and Durham",
+                        "subtitle": "ACCN • Packer and Durham",
+                        "imageHref": "https://artwork.api.espn.com/artwork/collections/airings/f9a56c51-578f-4ae0-b17d-54336fba52ee/default?width=640&apikey=1ngjw23osgcis1i1vbj96lmfqs",
+                        "date": "Friday, October 04",
+                        "shortDate": "Fri, 10/4",
+                        "utc": "2019-10-04T07:00:01.644-04:00",
+                        "time": "7:00 AM",
+                        "score": 1600,
+                        "includeSponsor": false,
+                        "showKey": false,
+                        "isLocked": false,
+                        "isPersonalized": false,
+                        "streams": [
+                            {
+                                "id": "f9a56c51-578f-4ae0-b17d-54336fba52ee",
+                                "status": "live",
+                                "tier": "primary",
+                                "name": "Packer and Durham",
+                                "duration": "2:59:58",
+                                "source": {
+                                    "id": "ACC",
+                                    "name": "ACCN",
+                                    "type": "linear"
+                                },
+                                "score": 1600,
+                                "showKey": false,
+                                "isLocked": false,
+                                "authTypes": [
+                                    "mvpd"
+                                ],
+                                "adobeRSS": "<rss version='2.0' xmlns:media='http://search.yahoo.com/mrss/'><channel><title>acc</title><item><title>Packer and Durham</title><guid>f9a56c51-578f-4ae0-b17d-54336fba52ee</guid><media:rating scheme='urn:v-chip'></media:rating></item></channel></rss>",
+                                "isPersonalized": false,
+                                "links": {
+                                    "play": "https://watch.product.api.espn.com/api/product/v3/watchespn/web/playback/event?network=ACC&tz=America%2FNew_York&lang=en",
+                                    "web": "http://www.espn.com/watch?id=f9a56c51-578f-4ae0-b17d-54336fba52ee",
+                                    "shareUrl": "http://www.espn.com/watch?id=f9a56c51-578f-4ae0-b17d-54336fba52ee"
+                                }
+                            }
+                        ],
+                        "links": {
+                            "play": "https://watch.product.api.espn.com/api/product/v3/watchespn/web/playback/event?id=f9a56c51-578f-4ae0-b17d-54336fba52ee&tz=America%2FNew_York&lang=en"
+                        },
+                        "iconHref": "audio02"
+                    },
+                    {
+                        "id": "8ab16a0d-dc98-4a3d-9e08-d91bfa2cd26b",
+                        "eventId": 400368081,
+                        "isEvent": true,
+                        "status": "live",
+                        "type": "listing",
+                        "imageFormat": "16x9",
+                        "ratio": "16x9",
+                        "size": "md",
+                        "name": "Ohio State vs. Michigan State",
+                        "subtitle": "ESPNU • RE-AIR • NCAA Football",
+                        "imageHref": "https://artwork.api.espn.com/artwork/collections/airings/8ab16a0d-dc98-4a3d-9e08-d91bfa2cd26b/default?width=640&apikey=1ngjw23osgcis1i1vbj96lmfqs&timestamp=201909212039",
+                        "date": "Friday, October 04",
+                        "shortDate": "Fri, 10/4",
+                        "utc": "2019-10-04T06:00:02.651-04:00",
+                        "time": "6:00 AM",
+                        "score": 49,
+                        "includeSponsor": false,
+                        "showKey": false,
+                        "isLocked": false,
+                        "isPersonalized": false,
+                        "streams": [
+                            {
+                                "id": "8ab16a0d-dc98-4a3d-9e08-d91bfa2cd26b",
+                                "status": "live",
+                                "tier": "primary",
+                                "name": "Ohio State vs. Mich St",
+                                "duration": "2:59:57",
+                                "source": {
+                                    "id": "ESPNU",
+                                    "name": "ESPNU",
+                                    "type": "linear"
+                                },
+                                "score": 49,
+                                "showKey": false,
+                                "isLocked": false,
+                                "authTypes": [
+                                    "mvpd"
+                                ],
+                                "adobeRSS": "<rss version='2.0' xmlns:media='http://search.yahoo.com/mrss/'><channel><title>espnu</title><item><title>Ohio State vs. Michigan State</title><guid>8ab16a0d-dc98-4a3d-9e08-d91bfa2cd26b</guid><media:rating scheme='urn:v-chip'></media:rating></item></channel></rss>",
+                                "isPersonalized": false,
+                                "links": {
+                                    "play": "https://watch.product.api.espn.com/api/product/v3/watchespn/web/playback/event?network=ESPNU&tz=America%2FNew_York&lang=en",
+                                    "web": "http://www.espn.com/watch?id=8ab16a0d-dc98-4a3d-9e08-d91bfa2cd26b",
+                                    "shareUrl": "http://www.espn.com/watch?id=8ab16a0d-dc98-4a3d-9e08-d91bfa2cd26b"
+                                }
+                            }
+                        ],
+                        "links": {
+                            "appPlay": "sportscenter://x-callback-url/showWatchStream?playGameID=400368081",
+                            "play": "https://watch.product.api.espn.com/api/product/v3/watchespn/web/playback/event?id=8ab16a0d-dc98-4a3d-9e08-d91bfa2cd26b&tz=America%2FNew_York&lang=en"
+                        },
+                        "iconHref": "football-college"
+                    },
+                    {
+                        "id": "ed341b6e-33f9-4c71-b938-07b9179adc5a",
+                        "status": "live",
+                        "type": "listing",
+                        "imageFormat": "16x9",
+                        "ratio": "16x9",
+                        "size": "md",
+                        "name": "SEC Film Room: South Carolina",
+                        "subtitle": "SECN • RE-AIR • SEC Film Room",
+                        "imageHref": "https://artwork.api.espn.com/artwork/collections/airings/ed341b6e-33f9-4c71-b938-07b9179adc5a/default?width=640&apikey=1ngjw23osgcis1i1vbj96lmfqs",
+                        "date": "Friday, October 04",
+                        "shortDate": "Fri, 10/4",
+                        "utc": "2019-10-04T08:29:58.988-04:00",
+                        "time": "8:29 AM",
+                        "score": -801,
+                        "includeSponsor": false,
+                        "showKey": false,
+                        "isLocked": false,
+                        "isPersonalized": false,
+                        "streams": [
+                            {
+                                "id": "ed341b6e-33f9-4c71-b938-07b9179adc5a",
+                                "status": "live",
+                                "tier": "primary",
+                                "name": "SEC Film Room: South Carolina",
+                                "duration": "30:01",
+                                "source": {
+                                    "id": "SEC",
+                                    "name": "SECN",
+                                    "type": "linear"
+                                },
+                                "score": -801,
+                                "showKey": false,
+                                "isLocked": false,
+                                "authTypes": [
+                                    "mvpd"
+                                ],
+                                "adobeRSS": "<rss version='2.0' xmlns:media='http://search.yahoo.com/mrss/'><channel><title>sec</title><item><title>SEC Film Room: South Carolina</title><guid>ed341b6e-33f9-4c71-b938-07b9179adc5a</guid><media:rating scheme='urn:v-chip'></media:rating></item></channel></rss>",
+                                "isPersonalized": false,
+                                "links": {
+                                    "play": "https://watch.product.api.espn.com/api/product/v3/watchespn/web/playback/event?network=SEC&tz=America%2FNew_York&lang=en",
+                                    "web": "http://www.espn.com/watch?id=ed341b6e-33f9-4c71-b938-07b9179adc5a",
+                                    "shareUrl": "http://www.espn.com/watch?id=ed341b6e-33f9-4c71-b938-07b9179adc5a"
+                                }
+                            }
+                        ],
+                        "links": {
+                            "play": "https://watch.product.api.espn.com/api/product/v3/watchespn/web/playback/event?id=ed341b6e-33f9-4c71-b938-07b9179adc5a&tz=America%2FNew_York&lang=en"
+                        },
+                        "iconHref": "audio02"
+                    },
+                    {
+                        "id": "57a450f8-a7dd-4f40-97aa-4b095a84193d",
+                        "status": "live",
+                        "type": "listing",
+                        "imageFormat": "16x9",
+                        "ratio": "16x9",
+                        "size": "md",
+                        "name": "SportsCenter",
+                        "subtitle": "ESPN Deportes • RE-AIR • ES • SportsCenter",
+                        "imageHref": "https://artwork.api.espn.com/artwork/collections/airings/57a450f8-a7dd-4f40-97aa-4b095a84193d/default?width=640&apikey=1ngjw23osgcis1i1vbj96lmfqs",
+                        "date": "Friday, October 04",
+                        "shortDate": "Fri, 10/4",
+                        "utc": "2019-10-04T08:00:01.097-04:00",
+                        "time": "8:00 AM",
+                        "score": -801,
+                        "includeSponsor": false,
+                        "showKey": false,
+                        "isLocked": false,
+                        "isPersonalized": false,
+                        "streams": [
+                            {
+                                "id": "57a450f8-a7dd-4f40-97aa-4b095a84193d",
+                                "status": "live",
+                                "tier": "primary",
+                                "name": "SportsCenter",
+                                "duration": "59:58",
+                                "source": {
+                                    "id": "ESPNDEPORTES",
+                                    "name": "ESPN Deportes",
+                                    "type": "linear"
+                                },
+                                "score": -801,
+                                "showKey": false,
+                                "isLocked": false,
+                                "authTypes": [
+                                    "mvpd"
+                                ],
+                                "adobeRSS": "<rss version='2.0' xmlns:media='http://search.yahoo.com/mrss/'><channel><title>espndeportes</title><item><title>SportsCenter</title><guid>57a450f8-a7dd-4f40-97aa-4b095a84193d</guid><media:rating scheme='urn:v-chip'></media:rating></item></channel></rss>",
+                                "isPersonalized": false,
+                                "links": {
+                                    "play": "https://watch.product.api.espn.com/api/product/v3/watchespn/web/playback/event?network=ESPNDEPORTES&tz=America%2FNew_York&lang=en",
+                                    "web": "http://www.espn.com/watch?id=57a450f8-a7dd-4f40-97aa-4b095a84193d",
+                                    "shareUrl": "http://www.espn.com/watch?id=57a450f8-a7dd-4f40-97aa-4b095a84193d"
+                                }
+                            }
+                        ],
+                        "links": {
+                            "play": "https://watch.product.api.espn.com/api/product/v3/watchespn/web/playback/event?id=57a450f8-a7dd-4f40-97aa-4b095a84193d&tz=America%2FNew_York&lang=en"
+                        },
+                        "iconHref": "audio02"
+                    },
+                    {
+                        "id": "3a1dbcc6-6ed6-41ef-9883-950cd9365ebd",
+                        "status": "live",
+                        "type": "listing",
+                        "imageFormat": "16x9",
+                        "ratio": "16x9",
+                        "size": "md",
+                        "name": "TCU vs. Texas (W Soccer)",
+                        "subtitle": "LHN • RE-AIR • NCAAW Soccer",
+                        "imageHref": "https://artwork.api.espn.com/artwork/collections/airings/3a1dbcc6-6ed6-41ef-9883-950cd9365ebd/default?width=640&apikey=1ngjw23osgcis1i1vbj96lmfqs&timestamp=201909201852",
+                        "date": "Friday, October 04",
+                        "shortDate": "Fri, 10/4",
+                        "utc": "2019-10-04T07:00:03.273-04:00",
+                        "time": "7:00 AM",
+                        "score": -951,
+                        "includeSponsor": false,
+                        "showKey": false,
+                        "isLocked": false,
+                        "isPersonalized": false,
+                        "streams": [
+                            {
+                                "id": "3a1dbcc6-6ed6-41ef-9883-950cd9365ebd",
+                                "status": "live",
+                                "tier": "primary",
+                                "name": "TCU vs. Texas",
+                                "duration": "1:59:56",
+                                "source": {
+                                    "id": "LONGHORN",
+                                    "name": "LHN",
+                                    "type": "linear"
+                                },
+                                "score": -951,
+                                "showKey": false,
+                                "isLocked": false,
+                                "authTypes": [
+                                    "mvpd"
+                                ],
+                                "adobeRSS": "<rss version='2.0' xmlns:media='http://search.yahoo.com/mrss/'><channel><title>longhorn</title><item><title>TCU vs. Texas (W Soccer)</title><guid>3a1dbcc6-6ed6-41ef-9883-950cd9365ebd</guid><media:rating scheme='urn:v-chip'></media:rating></item></channel></rss>",
+                                "isPersonalized": false,
+                                "links": {
+                                    "play": "https://watch.product.api.espn.com/api/product/v3/watchespn/web/playback/event?network=LONGHORN&tz=America%2FNew_York&lang=en",
+                                    "web": "http://www.espn.com/watch?id=3a1dbcc6-6ed6-41ef-9883-950cd9365ebd",
+                                    "shareUrl": "http://www.espn.com/watch?id=3a1dbcc6-6ed6-41ef-9883-950cd9365ebd"
+                                }
+                            }
+                        ],
+                        "links": {
+                            "play": "https://watch.product.api.espn.com/api/product/v3/watchespn/web/playback/event?id=3a1dbcc6-6ed6-41ef-9883-950cd9365ebd&tz=America%2FNew_York&lang=en"
+                        },
+                        "iconHref": "soccer"
+                    }
+                ]
+            }
+        ]
+    }
+}

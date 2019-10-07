@@ -1,7 +1,7 @@
 # Kodi Media Center language file
-# Addon Name: ESPN 3
+# Addon Name: ESPN
 # Addon id: plugin.video.espn_3
-# Addon Provider: awaters1,locomot1f,MetalChris,BlueCop,Romans I XVI
+# Addon Provider: github.com/kodi-addons
 msgid ""
 msgstr ""
 "Project-Id-Version: Kodi Addons\n"
@@ -13,7 +13,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: en\n"
+"Language: en_GB\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 msgctxt "#30021"
@@ -65,15 +65,35 @@ msgid "Upcoming Event"
 msgstr ""
 
 msgctxt "#30036"
-msgid "Event has not started."
+msgid "The event %s will start at %s.\n\n%s"
 msgstr ""
 
 msgctxt "#30037"
 msgid "Error"
 msgstr ""
 
+msgctxt "#30038"
+msgid "Requires Authorization"
+msgstr ""
+
 msgctxt "#30040"
 msgid "Blacked Out"
+msgstr ""
+
+msgctxt "#30050"
+msgid "You must sign into your TV Provider in order to view this content"
+msgstr ""
+
+msgctxt "#30051"
+msgid "Sign In to TV Provider"
+msgstr ""
+
+msgctxt "#30060"
+msgid "You must sign into ESPN+ in order to view this content"
+msgstr ""
+
+msgctxt "#30061"
+msgid "Sign In to ESPN+"
 msgstr ""
 
 msgctxt "#30170"
@@ -116,6 +136,10 @@ msgctxt "#30300"
 msgid "Authenticate with provider to access premium content"
 msgstr ""
 
+msgctxt "#30301"
+msgid "You are already logged into a TV provider"
+msgstr ""
+
 msgctxt "#30310"
 msgid "Authentication Process"
 msgstr ""
@@ -146,6 +170,14 @@ msgstr ""
 
 msgctxt "#30380"
 msgid "Authentication Details"
+msgstr ""
+
+msgctxt "#30381"
+msgid "Sign Out"
+msgstr ""
+
+msgctxt "#30382"
+msgid "Are you sure you want to sign out of your TV Provider?"
 msgstr ""
 
 msgctxt "#30390"
@@ -256,6 +288,10 @@ msgctxt "#30780"
 msgid "AndroidTV"
 msgstr ""
 
+msgctxt "#30790"
+msgid "Old Index"
+msgstr ""
+
 msgctxt "#30800"
 msgid "Show the AppleTV menu"
 msgstr ""
@@ -302,6 +338,7 @@ msgstr ""
 
 msgctxt "#30910"
 msgid "There was an SSL certificate verification failure would you like to disable this verification? (configured in settings)"
+msgstr ""
 
 msgctxt "#30988"
 msgid "Goal Line"
@@ -353,8 +390,108 @@ msgstr ""
 
 msgctxt "#32001"
 msgid "Debug"
-msgstr""
+msgstr ""
 
 msgctxt "#31000"
 msgid "ACC"
+msgstr ""
+
+msgctxt "#40000"
+msgid "ESPN+"
+msgstr ""
+
+msgctxt "#40100"
+msgid "ESPN+ Login"
+msgstr ""
+
+msgctxt "#40101"
+msgid "Your device has been authenticated for ESPN+ content"
+msgstr ""
+
+msgctxt "#40110"
+msgid "In order to login navigate to https://espn.com/activate and enter the code"
+msgstr ""
+
+msgctxt "#40120"
+msgid "%d:%02d until we cancel automatically cancel"
+msgstr ""
+
+msgctxt "#40130"
+msgid "Unable to login to ESPN+"
+msgstr ""
+
+msgctxt "#40200"
+msgid "Sign In to TV Provider"
+msgstr ""
+
+msgctxt "#40210"
+msgid "View TV Provider Details"
+msgstr ""
+
+msgctxt "#40220"
+msgid "Sign Out of TV Provider"
+msgstr ""
+
+msgctxt "#40230"
+msgid "Sign In to ESPN+"
+msgstr ""
+
+msgctxt "#40240"
+msgid "View ESPN+ Details"
+msgstr ""
+
+msgctxt "#40250"
+msgid "Sign Out of ESPN+"
+msgstr ""
+
+msgctxt "#40260"
+msgid "ESPN+ Details"
+msgstr ""
+
+msgctxt "#40270"
+msgid "You will require additional entitlements to view this content: %s"
+msgstr ""
+
+msgctxt "#40280"
+msgid "Your account isn't entitled to view this content"
+msgstr ""
+
+msgctxt "#40290"
+msgid "Your access token expired and wasn't renewed, please report this as a bug to the addon developers"
+msgstr ""
+
+msgctxt "#40300"
+msgid "Requires TV Provider"
+msgstr ""
+
+msgctxt "#40310"
+msgid "Requires ESPN+"
+msgstr ""
+
+msgctxt "#40500"
+msgid "Search"
+msgstr ""
+
+msgctxt "#40501"
+msgid "New Search"
+msgstr ""
+
+msgctxt "#40510"
+msgid "Enter Search Query"
+msgstr ""
+
+msgctxt "#40520"
+msgid "Clear Search History"
+msgstr ""
+
+msgctxt "#40521"
+msgid "Search History Cleared"
+msgstr ""
+
+msgctxt "#40530"
+msgid "Clear Data"
+msgstr ""
+
+msgctxt "#40531"
+msgid "Cached data cleared"
 msgstr ""

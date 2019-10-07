@@ -1,12 +1,21 @@
-OLD_LISTING_MODE = 'OLD_LISTING_MODE'
-LIVE_EVENTS_MODE = 'LIVE_EVENTS'
-PLAY_MODE = 'PLAY'
-PLAY_ITEM_MODE = 'PLAY_ITEM'
-PLAY_TV_MODE = 'PLAY_TV'
-
-UPCOMING_MODE = 'UPCOMING'
-AUTHENTICATE_MODE = 'AUTHENTICATE'
-AUTHENTICATION_DETAILS_MODE = 'AUTHENTICATION_DETAILS'
+# Copyright 2019 https://github.com/kodi-addons
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is furnished
+# to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+# INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+# PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+# HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+# SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
 NETWORK_ID = 'NETWORK_ID'
@@ -65,7 +74,24 @@ NETWORK_ID_TO_NETWORK_NAME = {
     'goalline': 30988,
     'secplus': 30997,
     'acc': 31000,
+    'espn_dtc': 40000,
 }
+
+NETWORK_ID_SORT_ORDER = [
+    'espn1',
+    'espn2',
+    'espnu',
+    'espnews',
+    'espndeportes',
+    'sec',
+    'acc',
+    'longhorn',
+    'goalline',
+    # grouped
+    'espn3',
+    'sec',
+    'bam_dtc',
+]
 
 ID = 'id'
 URL = 'url'
@@ -79,3 +105,17 @@ APPLE_TV_SPORTS = 'http://espn.go.com/watchespn/appletv/sports'
 APPLE_TV_CHANNELS = 'http://espn.go.com/watchespn/appletv/channels'
 
 WATCH_API_V1_TRENDING = 'http://watch.api.espn.com/v1/trending'
+
+WATCH_API_V3_WEB_HOME = 'https://watch.product.api.espn.com/api/product/v3/watchespn/web/home'
+WATCH_API_V3_LIVE = 'https://watch.product.api.espn.com/api/product/v3/watchespn/web/bucket?bucketId=5060'
+
+KEEP_FILES = [
+    # creds for TVE
+    'adobe.json',
+    # creds for espn+
+    'espnplus.json',
+    # adddon settings
+    'settings.xml',
+    # search history
+    'search.json',
+]

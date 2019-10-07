@@ -21,24 +21,26 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install pipenv
-        pipenv install
+        pipenv install --dev --skip-lock
     - name: Lint with flake8
       run: |
-        pip install flake8
         # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        pipenv run flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 . --count --exit-zero --max-complexity=20 --max-line-length=127 --statistics --exclude resources/lib/websocket 
+        pipenv run flake8 . --count --exit-zero --max-complexity=20 --max-line-length=127 --statistics --exclude resources/lib/websocket
     - name: Test with pytest
       run: |
-        pip install pytest
-        pytest
-    - name: Make zip for Kodi
+        pipenv run python -m pytest test
+    - name: Set environment variables
       run: |
         VERSION=`grep "version" < addon.xml | tail -n+2 | head -n1 | sed 's/ *version="//' | sed 's/"//' | tr -d '[[:space:]]'`
+        echo '::set-env name=VERSION::$VERSION'
+    - name: Make zip for Kodi
+      run: |
         echo "Making zip of $VERSION"
-        zip -r plugin.video.espn_3.zip addon.py addon.xml LICENSE.txt resources/
+        mkdir plugin.video.espn_3-$VERSION
+        cp -R addon.py addon.xml LICENSE.txt resources/ plugin.video.espn_3-$VERSION
     - uses: actions/upload-artifact@master
       with:
         name: plugin.video.espn_3
-        path: plugin.video.espn_3.zip
+        path: plugin.video.espn_3-$VERSION

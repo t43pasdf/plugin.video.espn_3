@@ -1,15 +1,35 @@
-import xbmc
+# Copyright 2019 https://github.com/kodi-addons
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is furnished
+# to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+# INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+# PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+# HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+# SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 import os
 import time
 import json
 import xml.etree.ElementTree as ET
 import hashlib
 import re
-import codecs
+import logging
+import io
 
-from globals import ADDON_PATH_PROFILE, global_session
+from resources.lib.globals import global_session
+from resources.lib.kodiutils import addon_profile_path
 
-TAG = 'ESPN3 util: '
+logger = logging.getLogger(__name__)
 
 
 def is_file_valid(cache_file, timeout):
@@ -20,59 +40,55 @@ def is_file_valid(cache_file, timeout):
     return False
 
 
-def fetch_file(url, cache_file, encoding):
+def fetch_file(url, cache_file):
     resp = global_session.get(url)
-    with codecs.open(cache_file, 'w', encoding) as file:
+    with io.open(cache_file, 'w', encoding='utf-8') as file:
         file.write(resp.text)
 
 
 def clear_cache(url):
     cache_file = hashlib.sha224(url).hexdigest()
     try:
-        os.remove(os.path.join(ADDON_PATH_PROFILE, cache_file + '.xml'))
-    except:
+        os.remove(os.path.join(addon_profile_path, cache_file + '.xml'))
+    except OSError:
         pass
 
     try:
-        os.remove(os.path.join(ADDON_PATH_PROFILE, cache_file + '.json'))
-    except:
+        os.remove(os.path.join(addon_profile_path, cache_file + '.json'))
+    except OSError:
         pass
 
 
-def get_url_as_xml_cache(url, cache_file=None, timeout=300, encoding='utf-8'):
+def get_url_as_xml_cache(url, cache_file=None, timeout=180, encoding='utf-8'):
     if cache_file is None:
         cache_file = hashlib.sha224(url).hexdigest()
-        cache_file = os.path.join(ADDON_PATH_PROFILE, cache_file + '.xml')
+        cache_file = os.path.join(addon_profile_path, cache_file + '.xml')
     if not is_file_valid(cache_file, timeout):
-        xbmc.log(TAG + 'Fetching config file %s from %s' % (cache_file, url), xbmc.LOGDEBUG)
-        fetch_file(url, cache_file, encoding)
+        logger.debug('Fetching config file %s from %s' % (cache_file, url))
+        fetch_file(url, cache_file)
     else:
-        xbmc.log(TAG + 'Using cache %s for %s' % (cache_file, url), xbmc.LOGDEBUG)
-    with open(cache_file) as xml_file:
+        logger.debug('Using cache %s for %s' % (cache_file, url))
+    with io.open(cache_file, 'r', encoding='utf-8') as xml_file:
         xml_data = xml_file.read()
         return load_element_tree(xml_data)
 
+
 # ESPN files are in iso-8859-1 and sometimes do not have the xml preamble
 def load_element_tree(data):
+    if '<?xml version' not in data:
+        logger.debug('Fixing up data because of no xml preamble')
+        iso_data = '<?xml version="1.0" encoding="ISO-8859-1" ?>' + data.encode('utf-8')
+    else:
+        iso_data = data.encode('utf-8')
+    iso_data = re.sub('[\\x00-\\x1f]', '', iso_data)
+    iso_data = re.sub('[\\x7f-\\x9f]', '', iso_data)
+    iso_data = re.sub('&(?!amp;)', '&amp;', iso_data)
     try:
         parser = ET.XMLParser(encoding='iso-8859-1')
-        data_tree = ET.fromstring(data, parser)
-    except:
-        if '<?xml version' not in data:
-            xbmc.log(TAG + 'Fixing up data because of no xml preamble', xbmc.LOGDEBUG)
-            try:
-                data_tree = ET.fromstring('<?xml version="1.0" encoding="ISO-8859-1" ?>' + data)
-            except:
-                try:
-                    data_tree = ET.fromstring('<?xml version="1.0" encoding="windows-1252" ?>' + data)
-                except:
-                    # One last chance to fix up the data
-                    xbmc.log(TAG + 'removing invalid xml characters', xbmc.LOGDEBUG)
-                    data = re.sub('[\\x00-\\x1f]', '', data)
-                    data = re.sub('[\\x7f-\\x9f]', '', data)
-                    data_tree = ET.fromstring('<?xml version="1.0" encoding="ISO-8859-1" ?>' + data)
-        else:
-            data_tree = ET.fromstring(data)
+        data_tree = ET.fromstring(iso_data, parser)
+    except ET.ParseError as e:
+        logger.debug('Unable to parse xml %s' % e)
+        data_tree = ET.fromstring(iso_data)
 
     return data_tree
 
@@ -81,17 +97,17 @@ def get_url_as_json(url):
     return global_session.get(url).json()
 
 
-def get_url_as_json_cache(url, cache_file=None, timeout=300):
+def get_url_as_json_cache(url, cache_file=None, timeout=180):
     if cache_file is None:
         cache_file = hashlib.sha224(url).hexdigest()
-        cache_file = os.path.join(ADDON_PATH_PROFILE, cache_file + '.json')
+        cache_file = os.path.join(addon_profile_path, cache_file + '.json')
     if not is_file_valid(cache_file, timeout):
-        xbmc.log(TAG + 'Fetching config file %s from %s' % (cache_file, url), xbmc.LOGDEBUG)
-        fetch_file(url, cache_file, 'utf-8')
+        logger.debug('Fetching config file %s from %s' % (cache_file, url))
+        fetch_file(url, cache_file)
     else:
-        xbmc.log(TAG + 'Using cache %s for %s' % (cache_file, url), xbmc.LOGDEBUG)
+        logger.debug('Using cache %s for %s' % (cache_file, url))
 
-    with open(cache_file) as json_file:
+    with io.open(cache_file, 'r', encoding='utf-8') as json_file:
         json_data = json_file.read()
 
         if json_data.startswith('ud='):
@@ -104,7 +120,6 @@ def get_url_as_json_cache(url, cache_file=None, timeout=300):
             raise e
 
 
-
 # espn.page.loadSportPage('url');
 # -> url
 def parse_url_from_method(method):
@@ -115,5 +130,15 @@ def parse_url_from_method(method):
 
 # espn.page.loadMore('loadMoreLiveAndUpcoming', 'nav-0', 'url')
 def parse_method_call(method):
-    p = re.compile('([\\w\\.:/&\\?=%,-]{2,})')
+    p = re.compile('([\\w.:/&?,-]{2,})')
     return p.findall(method)
+
+
+def get_nested_value(dict_val, keys, defaultvalue=None):
+    local_dict = dict_val
+    for key in keys:
+        try:
+            local_dict = local_dict[key]
+        except KeyError:
+            return defaultvalue
+    return local_dict

@@ -6,6 +6,14 @@
         <setting id="BitrateLimit" type="number" label="30540" default="10000" subsetting="true" visible="eq(-1,0)"/>
         <!-- Only shown when setting is Ask Once -->
         <setting id="StreamQualityIndex" type="number" default="-1" label="30520" subsetting="true" visible="eq(-2,1)"/>
+        <setting id="LoggedInToTvProvider" type="bool" visible="false" />
+        <setting id="LogInToTvProvider" label="40200" type="action" action="RunPlugin(plugin://plugin.video.espn_3/login-tv-provider)" visible="eq(-1,false)" />
+        <setting id="ViewTvProviderDetails" label="40210" type="action" action="RunPlugin(plugin://plugin.video.espn_3/view-tv-provider-details)" visible="eq(-2,true)"/>
+        <setting id="LogOutOfTvProvider" label="40220" type="action" action="RunPlugin(plugin://plugin.video.espn_3/logout-tv-provider)" visible="eq(-3,true)"/>
+        <setting id="LoggedInToEspnPlus" type="bool" visible="false" />
+        <setting id="LogInToEspnPlus" label="40230" type="action" action="RunPlugin(plugin://plugin.video.espn_3/login-espn-plus)" visible="eq(-1,false)"/>
+        <setting id="ViewEspnPlusDetails" label="40240" type="action" action="RunPlugin(plugin://plugin.video.espn_3/view-espn-plus-details)" visible="eq(-2,true)"/>
+        <setting id="LogOutOfEspnPlus" label="40250" type="action" action="RunPlugin(plugin://plugin.video.espn_3/logout-espn-plus)" visible="eq(-3,true)"/>
     </category>
     <category label="30890">
         <setting id="ShowEspn1" type="bool" label="30990" default="true"/>
@@ -20,7 +28,7 @@
         <setting id="ShowBuzzerBeater" type="bool" label="30999" default="true"/>
         <setting id="ShowAccExtra" type="bool" label="30989" default="true"/>
         <setting id="ShowGoalLine" type="bool" label="30988" default="true"/>
-        <setting id="ShowAcc" type="bool" label="30400" default="true"/>
+        <setting id="ShowAcc" type="bool" label="31000" default="true"/>
     </category>
     <category label="30870">
         <setting id="ShowAppleTVMenu" type="bool" label="30800" default="true"/>
@@ -36,8 +44,9 @@
         <setting id="replays4" type="enum" label="30025" values="60|90|120|240" default="0" visible="eq(-6,true)"/>/>
     </category>
     <category label="30880">
+        <setting id="ClearSearchHistory" type="action" label="40520" action="RunPlugin(plugin://plugin.video.espn_3/search/clear-history)"/>
         <setting id="NoColors" type="bool" label="30770" default="false"/>
-        <setting id="ClearData" type="bool" label="30170" default="false"/>
+        <setting id="ClearData" type="action" label="30170" action="RunPlugin(plugin://plugin.video.espn_3/clear-data)"/>
         <setting id="DisableSSL" type="bool" label="30180" default="false"/>
         <setting id="DisableInputStream" type="bool" label="30185" default="true"/>
         <setting id="debug" type="bool" label="32001" default="false"/>

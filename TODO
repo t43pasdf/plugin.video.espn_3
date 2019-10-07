@@ -1,2 +1,13 @@
-1. Add in a search feature
-2. Use the graphql API for live airings
+1. Fix license
+2. Updated the logging statements to use logging.debug instead of xbmc.log
+
+1. May have to renew ESPN+ token before starting content if it may expire
+while playing content
+
+
+Find out if there is a way to cancel a dialog for a resolved URL without causing the error popup
+Is there a way to determine entitlements of TVE?
+
+
+Test
+1. Playback when not logged in
