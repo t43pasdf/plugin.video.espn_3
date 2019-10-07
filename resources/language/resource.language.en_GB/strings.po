@@ -456,6 +456,10 @@ msgctxt "#40280"
 msgid "Your account isn't entitled to view this content"
 msgstr ""
 
+msgctxt "#40290"
+msgid "Your access token expired and wasn't renewed, please report this as a bug to the addon developers"
+msgstr ""
+
 msgctxt "#40500"
 msgid "Search"
 msgstr ""

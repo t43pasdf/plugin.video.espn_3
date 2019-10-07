@@ -1,12 +1,14 @@
 import io
 import pytest
 import polib
+import os
 
 
 from resources.lib.kodiutils import ADDON
-from resources.lib import adobe_activate_api
 from resources.lib.globals import global_session
+from resources.lib import kodiutils
 import xbmcplugin
+import xbmc
 
 po = polib.pofile('resources/language/resource.language.en_GB/strings.po')
 
@@ -15,6 +17,21 @@ po = polib.pofile('resources/language/resource.language.en_GB/strings.po')
 def no_requests(monkeypatch):
     """Remove requests.sessions.Session.request for all tests."""
     monkeypatch.delattr("requests.sessions.Session.request")
+
+
+@pytest.fixture(autouse=True)
+def change_addon_path(monkeypatch):
+    cache_path = os.path.join('test', 'cache')
+
+    def get_addon_path(path):
+        return cache_path
+
+    def translate_path(path):
+        return path
+    monkeypatch.setattr(ADDON, 'getAddonInfo', get_addon_path)
+    monkeypatch.setattr(xbmc, 'translatePath', translate_path)
+    monkeypatch.setattr(kodiutils, 'addon_data_path', cache_path)
+    monkeypatch.setattr(kodiutils, 'addon_profile_path', cache_path)
 
 
 def get_localized_string(string_id):
@@ -52,6 +69,7 @@ def get_data(url):
     if url in url_to_file:
         data = get_file_contents(url_to_file[url])
     else:
+        print('Missing data for %s' % url)
         data = url
     return Resp(data)
 
@@ -61,6 +79,7 @@ def add_directory_item(handle, url, display_text, *args, **kwargs):
 
 
 def test_new_index(monkeypatch):
+    from resources.lib import adobe_activate_api
     monkeypatch.setattr(ADDON, 'getLocalizedString', get_localized_string)
     monkeypatch.setattr(adobe_activate_api, 'clean_up_authorization_tokens', empty_method)
     monkeypatch.setattr(global_session, 'get', get_data)

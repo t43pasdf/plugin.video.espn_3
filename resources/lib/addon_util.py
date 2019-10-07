@@ -49,8 +49,11 @@ def check_espn_plus_error(session_json):
             if 'description' in error:
                 error_msg = error_msg + error['description'] + ' '
             elif 'code' in error:
-                if error['code'] == 'not-entitled':
+                code = error['code']
+                if code == 'not-entitled':
                     error_msg = error_msg + get_string(40280) + ' '
+                elif code == 'access-token.invalid':
+                    error_msg = error_msg + get_string(40290) + ' '
         dialog = xbmcgui.Dialog()
         dialog.ok(get_string(30037), get_string(30500) % error_msg)
         return True

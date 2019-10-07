@@ -9,5 +9,8 @@ class Plugin:
             return func
         return decorator
 
-    def url_for(self, *args, **kwargs):
-        pass
+    def url_for(self, func, *args, **kwargs):
+        return {
+            'func': func.__name__,
+            'args': kwargs
+        }

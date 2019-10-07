@@ -53,11 +53,20 @@ LICENSE_PLATE_URL = DISNEY_ROOT_URL + '/{id-provider}/license-plate'
 REFRESH_AUTH_URL = DISNEY_ROOT_URL + '/{id-provider}/guest/refresh-auth?langPref=en-US'
 BAM_API_KEY = 'ZXNwbiZicm93c2VyJjEuMC4w.ptUt7QxsteaRruuPmGZFaJByOoqKvDP2a5YkInHrc7c'
 BAM_APP_CONFIG = 'https://bam-sdk-configs.bamgrid.com/bam-sdk/v2.0/espn-a9b93989/browser/v3.4/linux/chrome/prod.json'
+GRACE_TIME_SECONDS = 10800  # 3 hour grace time for token expiration
+
+
+logger = logging.getLogger(__name__)
 
 
 def is_token_valid(encoded_token):
     token = jwt.decode(encoded_token, verify=False)
     return time.time() < token['exp']
+
+
+def is_token_within_grace_period(encoded_token):
+    token = jwt.decode(encoded_token, verify=False)
+    return (time.time() + GRACE_TIME_SECONDS) < token['exp']
 
 
 class TokenExchange(object):
@@ -67,6 +76,9 @@ class TokenExchange(object):
 
     def is_access_token_valid(self):
         return is_token_valid(self.access_token)
+
+    def is_access_token_within_grace_period(self):
+        return is_token_within_grace_period(self.access_token)
 
     def is_refresh_token_valid(self):
         return is_token_valid(self.refresh_token)
@@ -180,7 +192,7 @@ def url_for_provider(url, provider):
 
 
 def get_api_key(provider):
-    logging.debug('Getting API Key')
+    logger.debug('Getting API Key')
     resp = global_session.post(url_for_provider(API_KEY_URL, provider))
     return resp.headers.get('api-key')
 
@@ -196,7 +208,7 @@ def handle_license_plate_token(token):
 
 def get_login_id_token(username, password, provider):
     if config.disney_id_token is None or not config.disney_id_token.is_valid():
-        logging.debug('Getting ID Token')
+        logger.debug('Getting ID Token')
         resp = global_session.post(url_for_provider(LOGIN_URL, provider), headers={
             'Authorization': 'APIKEY %s' % get_api_key(provider)
         }, json={
@@ -216,7 +228,7 @@ def has_valid_disney_refresh_token():
 
 
 def get_license_plate(provider):
-    logging.debug('Getting license plate')
+    logger.debug('Getting license plate')
     post_data = {
         'content': {
             'adId': uuid.uuid1().hex,
@@ -238,7 +250,7 @@ def get_license_plate(provider):
 def perform_license_plate_auth_flow(semaphore, result_queue):
     license_post_data, license_resp = get_license_plate(ANDROID_ID)
     pairing_code = license_resp['data']['pairingCode']
-    logging.debug('Pairing code: %s' % pairing_code)
+    logger.debug('Pairing code: %s' % pairing_code)
 
     fastcast_host = license_resp['data']['fastCastHost']
     fastcast_profile_id = license_resp['data']['fastCastProfileId']
@@ -261,7 +273,7 @@ def perform_license_plate_auth_flow(semaphore, result_queue):
 
 
 def refresh_auth(provider):
-    logging.debug('Refreshing auth')
+    logger.debug('Refreshing auth')
     post_data = {
         'refreshToken': config.disney_token.refresh_token
     }
@@ -298,19 +310,19 @@ def create_on_message(fastcast_topic, result_queue):
 
 
 def on_error(ws, error):
-    logging.debug(error)
+    logger.debug(error)
 
 
 def create_on_close(semaphore):
     def on_close(ws):
-        logging.debug('Closed websocket')
+        logger.debug('Closed websocket')
         semaphore.release()
 
     return on_close
 
 
 def on_open(ws):
-    logging.debug('Opened websocket')
+    logger.debug('Opened websocket')
     ws.send(json.dumps({
         'op': 'C'
     }))
@@ -324,7 +336,7 @@ def fill_in_template(template, access_token):
 
 
 def execute_method(endpoint, access_token='', json_body=None, data=None):
-    logging.debug('Executing endpoint %s' % endpoint['href'])
+    logger.debug('Executing endpoint %s' % endpoint['href'])
     http_headers = {}
     for i, (header, value) in enumerate(endpoint['headers'].items()):
         http_headers[header] = fill_in_template(value, access_token)
@@ -380,7 +392,7 @@ def get_account_details(access_token):
 
 def get_device_token_exchange():
     if config.device_token_exchange is None or not config.device_token_exchange.is_refresh_token_valid():
-        logging.debug('Getting Device Token Exchange')
+        logger.debug('Getting Device Token Exchange')
         device_assertion = get_device_assertion()
         token_exchange = exchange_token(data={
             'grant_type': 'urn:ietf:params:oauth:grant-type:token-exchange',
@@ -397,7 +409,7 @@ def get_device_token_exchange():
 
 def get_device_refresh_token():
     if config.device_refresh_token is None or not config.device_refresh_token.is_access_token_valid():
-        logging.debug('Getting Device Refresh Token')
+        logger.debug('Getting Device Refresh Token')
         device_token_exchange_refresh = get_device_token_exchange()
         token_exchange = exchange_token(data={
             'grant_type': 'refresh_token',
@@ -413,7 +425,7 @@ def get_device_refresh_token():
 
 def request_bam_account_access_token():
     if config.id_token_grant is None or not config.id_token_grant.is_valid():
-        logging.debug('Getting Token Grant')
+        logger.debug('Getting Token Grant')
         device_token = get_device_refresh_token()
         grant_resp = create_account_grant(access_token=device_token, json_body={
             'id_token': config.disney_id_token.token
@@ -434,7 +446,7 @@ def request_bam_account_access_token():
 
 
 def has_valid_bam_account_access_token():
-    return config.account_token is not None and config.account_token.is_access_token_valid()
+    return config.account_token is not None and config.account_token.is_access_token_within_grace_period()
 
 
 def get_bam_account_access_token():

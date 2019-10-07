@@ -7,3 +7,4 @@ providers.xml
 .idea/
 .vscode/
 test/*.json
+test/cache
