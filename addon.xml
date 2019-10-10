@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <addon id="plugin.video.espn_3"
        name="ESPN"
-       version="3.0.0"
+       version="3.0.1"
        provider-name="github.com/kodi-addons">
     <requires>
         <import addon="xbmc.python" version="2.20.0"/>
@@ -27,6 +27,8 @@
         <forum>http://forum.kodi.tv/showthread.php?tid=230418</forum>
         <source>https://github.com/kodi-addons/plugin.video.espn_3</source>
         <news>
+            3.0.1
+                - Made a fix for handling channels that are not in your cable subscription
             3.0.0
                 - Added in support for ESPN+ content with a valid subscription
                 - Updated the main index page to correspond to the latest Watch ESPN interface
