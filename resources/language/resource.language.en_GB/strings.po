@@ -312,6 +312,10 @@ msgctxt "#30840"
 msgid "Unable to re-authenticate, this device has been de-authorized."
 msgstr ""
 
+msgctxt "#30841"
+msgid "We were unable to play this channel due to authorization errors."
+msgstr ""
+
 msgctxt "#30850"
 msgid "Refresh Content (Generated at %s)"
 msgstr ""
@@ -333,7 +337,7 @@ msgid "Channels"
 msgstr ""
 
 msgctxt "#30900"
-msgid "This channel may not be supported by your provider would you like to hide this channel? (configured in settings)"
+msgid "This channel may not be supported by your provider would you like to hide this channel? (configured in settings).  Message from provider: %s"
 msgstr ""
 
 msgctxt "#30910"

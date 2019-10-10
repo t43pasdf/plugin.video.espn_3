@@ -61,6 +61,20 @@ CHANNEL_SETTINGS = {
     'ShowGoalLine': 'goalline',
     'ShowAcc': 'acc',
 }
+SOURCE_NAME_TO_CHANNEL_SETTING = {
+    'espn': 'ShowEspn1',
+    'espn2': 'ShowEspn2',
+    'espn3': 'ShowEspn3',
+    'espnu': 'ShowEspnu',
+    'espnews': 'ShowEspnnews',
+    'espn deportes': 'ShowEspnDeportes',
+    'secn': 'ShowSec',
+    'secn+': 'ShowSecPlus',
+    'accn': 'ShowAcc',
+    'accnx': 'ShowAccExtra',
+    'goal line': 'ShowGoalLine',
+    'buzzer beater': 'ShowBuzzerBeater',
+}
 NETWORK_ID_TO_NETWORK_NAME = {
     'espn1': 30990,
     'espn2': 30991,
