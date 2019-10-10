@@ -38,10 +38,12 @@ from resources.lib import espnplus, player_config, util
 from resources.lib.item_indexer import index_item, get_item_listing_text
 from resources.lib.play_routes import play_vod, upcoming_event, play_event
 from resources.lib.plugin_routing import plugin, arg_as_string
-from resources.lib.addon_util import is_entitled, make_list_item, compare
+from resources.lib.addon_util import is_entitled, make_list_item, compare, include_item
 from resources.lib.constants import NETWORK_ID_SORT_ORDER
 
 BUCKET = 'BUCKET'
+
+logger = logging.getLogger(__name__)
 
 
 def make_channel_id(channel_id, name):
@@ -316,7 +318,7 @@ def index_v3_content(content):
                                               stream['source']['name'], 'blackoutText' in content,
                                               stream['authTypes'], requires_package=not has_entitlement)
 
-        source_name = util.get_nested_value(content, ['stream', 0, 'source', 'name'])
+        source_name = util.get_nested_value(stream, ['source', 'name'], '')
 
         fanart = util.get_nested_value(content, ['imageHref'])
 
@@ -326,21 +328,25 @@ def index_v3_content(content):
                        'studio': source_name,
                        'plot': plot}
 
-        if status == 'upcoming':
-            starttime_text = time.strftime("%m/%d/%Y %I:%M %p", starttime)
-            addDirectoryItem(plugin.handle,
-                             plugin.url_for(upcoming_event, event_id=event_id,
-                                            event_name=quote_plus(name.encode('utf-8')),
-                                            starttime=starttime_text,
-                                            packages='|'.join(packages)),
-                             make_list_item(ename, info_labels=info_labels))
+        logging.debug('Checking to include %s' % source_name.lower())
+        if include_item(source_name.lower()):
+            if status == 'upcoming':
+                starttime_text = time.strftime("%m/%d/%Y %I:%M %p", starttime)
+                addDirectoryItem(plugin.handle,
+                                 plugin.url_for(upcoming_event, event_id=event_id,
+                                                event_name=quote_plus(name.encode('utf-8')),
+                                                starttime=starttime_text,
+                                                packages='|'.join(packages)),
+                                 make_list_item(ename, info_labels=info_labels))
+            else:
+                addDirectoryItem(plugin.handle,
+                                 plugin.url_for(play_event, event_id=event_id,
+                                                event_url=stream['links']['play'],
+                                                auth_types='|'.join(stream['authTypes']),
+                                                packages='|'.join(packages)),
+                                 make_list_item(ename, info_labels=info_labels, icon=fanart))
         else:
-            addDirectoryItem(plugin.handle,
-                             plugin.url_for(play_event, event_id=event_id,
-                                            event_url=stream['links']['play'],
-                                            auth_types='|'.join(stream['authTypes']),
-                                            packages='|'.join(packages)),
-                             make_list_item(ename, info_labels=info_labels, icon=fanart))
+            logger.debug('Skipping item because of settings')
 
 
 # {

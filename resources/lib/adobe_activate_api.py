@@ -61,7 +61,8 @@ logger = logging.getLogger(__name__)
 
 
 class AuthorizationException(Exception):
-    pass
+    def __init__(self, resp):
+        self.resp = resp
 
 
 def get_device_id():
@@ -79,6 +80,7 @@ def get_url_response(url, message, body=None, method=None):
 
     if method == 'DELETE':
         resp = requests.delete(url, headers=headers)
+        return dict()
     elif method == 'POST':
         resp = adobe_session.post(url, json=body, headers=headers)
     else:
@@ -202,7 +204,7 @@ def authorize(resource):
         settings['authorize'] = dict()
     logger.debug('resource %s resp %s' % (resource, resp))
     if 'status' in resp and resp['status'] == 403:
-        raise AuthorizationException()
+        raise AuthorizationException(resp)
     settings['authorize'][resource.decode('iso-8859-1').encode('utf-8')] = resp
 
 
@@ -249,7 +251,7 @@ def get_short_media_token(resource):
         authorize(resource)
         resp = get_url_response(url, message)
         if 'status' in resp and resp['status'] == 403:
-            raise AuthorizationException()
+            raise AuthorizationException(resp)
     except HTTPError as exception:
         if exception.code == 401:
             logger.debug('Unauthorized exception, trying again')
@@ -265,7 +267,7 @@ def get_short_media_token(resource):
         authorize(resource)
         resp = get_url_response(url, message)
         if 'status' in resp and resp['status'] == 403:
-            raise AuthorizationException()
+            raise AuthorizationException(resp)
     logger.debug('Resp %s' % resp)
     settings['getShortMediaToken'] = resp
     return resp['serializedToken']

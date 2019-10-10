@@ -84,7 +84,7 @@ def check_auth_status(auth_types, packages, resource, network_name):
             elif http_exception.code == 403:
                 # Check for blackout
                 dialog = xbmcgui.Dialog()
-                ok = dialog.yesno(get_string(30037), get_string(30900))
+                ok = dialog.yesno(get_string(30037), get_string(30900) % http_exception)
                 if ok:
                     setting = get_setting_from_channel(network_name)
                     if setting is not None:
@@ -94,6 +94,18 @@ def check_auth_status(auth_types, packages, resource, network_name):
                 return None
         except adobe_activate_api.AuthorizationException as exception:
             logging.debug('Error authorizating media token %s' % exception)
+            if 'message' in exception.resp and 'details' in exception.resp:
+                message = exception.resp['message']
+                details = exception.resp['details']
+                if 'noAuthz' == message:
+                    # Channel likely not supported
+                    dialog = xbmcgui.Dialog()
+                    ok = dialog.yesno(get_string(30037), get_string(30900) % details)
+                    if ok:
+                        setting = get_setting_from_channel(network_name)
+                        if setting is not None:
+                            set_setting(setting, False)
+                    return None
             dialog = xbmcgui.Dialog()
             dialog.ok(get_string(30037), get_string(30840))
             adobe_activate_api.deauthorize()
@@ -305,7 +317,7 @@ def play_event(event_id):
     resource = session_json['adobeRSS']
     network_name = session_json['tracking']['network']
 
-    logging.debug('Checking current auth of %s' % auth_types)
+    logging.debug('Checking current auth of %s %s %s' % (auth_types, packages, network_name))
     media_token = check_auth_status(auth_types, packages, resource, network_name)
     token_type = get_token_type(auth_types)
 
@@ -327,7 +339,7 @@ def play_tv(event_id):
     network_name = arg_as_string('network_name')
 
     auth_types = get_auth_types_from_network(network_name)
-    media_token = check_auth_status(auth_types, resource, network_name)
+    media_token = check_auth_status(auth_types, [], resource, network_name)
     if media_token is None:
         return
     token_type = get_token_type(auth_types)

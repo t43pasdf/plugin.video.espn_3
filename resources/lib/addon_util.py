@@ -28,7 +28,7 @@ import xbmcgui
 from xbmcgui import ListItem
 
 from resources.lib import player_config, util
-from resources.lib.constants import CHANNEL_SETTINGS
+from resources.lib.constants import CHANNEL_SETTINGS, SOURCE_NAME_TO_CHANNEL_SETTING
 from resources.lib.kodiutils import get_setting_as_bool, get_string
 import logging
 
@@ -127,6 +127,8 @@ def include_item(network_id):
         channel = CHANNEL_SETTINGS[setting]
         if channel == network_id:
             return get_setting_as_bool(setting)
+    if network_id in SOURCE_NAME_TO_CHANNEL_SETTING:
+        return get_setting_as_bool(SOURCE_NAME_TO_CHANNEL_SETTING[network_id])
     return True
 
 
