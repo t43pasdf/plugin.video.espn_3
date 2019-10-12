@@ -74,6 +74,7 @@ SOURCE_NAME_TO_CHANNEL_SETTING = {
     'accnx': 'ShowAccExtra',
     'goal line': 'ShowGoalLine',
     'buzzer beater': 'ShowBuzzerBeater',
+    'lhn': 'ShowLonghorn'
 }
 NETWORK_ID_TO_NETWORK_NAME = {
     'espn1': 30990,

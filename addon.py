@@ -27,6 +27,8 @@ kodilogging.config()
 from resources.lib.kodiutils import ensure_profile_path_exists  # noqa: E402
 
 
+# This has to run before our other code because our other code loads
+# config files from the profile path as they are imported
 ensure_profile_path_exists()
 
 
