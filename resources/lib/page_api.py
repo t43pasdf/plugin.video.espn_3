@@ -30,6 +30,7 @@ except ImportError:
 import time
 
 import logging
+import functools
 
 from xbmcplugin import addDirectoryItem, setContent, endOfDirectory
 from xbmcgui import ListItem
@@ -166,7 +167,7 @@ def process_buckets(url, header_bucket, buckets, selected_buckets, current_bucke
 
 def index_bucket_content(url, bucket, channel_filter):
     if 'contents' in bucket:
-        bucket['contents'].sort(cmp=compare_contents)
+        bucket['contents'].sort(key=functools.cmp_to_key(compare_contents))
         grouped_events = dict()
         source_id_data = dict()
         content_indexed = 0
@@ -201,7 +202,7 @@ def index_bucket_content(url, bucket, channel_filter):
 
         # Handle grouped contents
         group_source_ids = list(grouped_events.keys())
-        group_source_ids.sort(cmp=compare_network_ids)
+        group_source_ids.sort(key=functools.cmp_to_key(compare_network_ids))
         for group_source_id in group_source_ids:
             contents = grouped_events[group_source_id]
             source_data = source_id_data[group_source_id]

@@ -2,10 +2,10 @@
 
 import os
 import xbmc
-import xbmcaddon
 import xbmcgui
 import sys
 import logging
+from kodi_six import xbmcaddon
 if sys.version_info >= (2, 7):
     import json as json
 else:
@@ -16,8 +16,8 @@ ADDON = xbmcaddon.Addon()
 
 logger = logging.getLogger(__name__)
 
-addon_data_path = xbmc.translatePath(ADDON.getAddonInfo('path')).decode('utf-8')
-addon_profile_path = xbmc.translatePath(ADDON.getAddonInfo('profile')).decode('utf-8')
+addon_data_path = xbmc.translatePath(ADDON.getAddonInfo('path'))
+addon_profile_path = xbmc.translatePath(ADDON.getAddonInfo('profile'))
 
 
 def ensure_profile_path_exists():
@@ -34,7 +34,7 @@ def show_settings():
 
 
 def get_setting(setting):
-    return ADDON.getSetting(setting).strip().decode('utf-8')
+    return ADDON.getSetting(setting).strip()
 
 
 def set_setting(setting, value):
@@ -60,7 +60,7 @@ def get_setting_as_int(setting):
 
 
 def get_string(string_id):
-    return ADDON.getLocalizedString(string_id).encode('utf-8', 'ignore')
+    return ADDON.getLocalizedString(string_id)
 
 
 def kodi_json_request(params):

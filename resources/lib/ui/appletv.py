@@ -18,6 +18,7 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import logging
+import functools
 import time
 import re
 import json
@@ -240,7 +241,7 @@ def process_item_list(item_list):
                 stashes.append(stash_json)
 
     logging.debug('sorting %s items' % len(stashes))
-    stashes.sort(cmp=compare_appletv)
+    stashes.sort(key=functools.cmp_to_key(compare_appletv))
     for stash_json in stashes:
         if stash_json['type'] == 'upcoming':
             index_tv_shelf(stash_json, True)

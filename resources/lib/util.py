@@ -99,7 +99,7 @@ def get_url_as_json(url):
 
 def get_url_as_json_cache(url, cache_file=None, timeout=180):
     if cache_file is None:
-        cache_file = hashlib.sha224(url).hexdigest()
+        cache_file = hashlib.sha224(url.encode('utf-8')).hexdigest()
         cache_file = os.path.join(addon_profile_path, cache_file + '.json')
     if not is_file_valid(cache_file, timeout):
         logger.debug('Fetching config file %s from %s' % (cache_file, url))

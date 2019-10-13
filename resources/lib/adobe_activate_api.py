@@ -91,11 +91,11 @@ def get_url_response(url, message, body=None, method=None):
 def generate_message(method, path):
     nonce = str(uuid.uuid4())
     today = str(int(time.time() * 1000))
-    key = 'gB8HYdEPyezeYbR1'
+    key = b'gB8HYdEPyezeYbR1'
     message = method + ' requestor_id=ESPN, nonce=' + nonce + \
         ', signature_method=HMAC-SHA1, request_time=' + today + ', request_uri=' + path
-    signature = hmac.new(key, message, hashlib.sha1)
-    signature = base64.b64encode(signature.digest())
+    signature = hmac.new(key, message.encode('utf-8'), hashlib.sha1)
+    signature = base64.b64encode(signature.digest()).decode('utf-8')
     message = message + ', public_key=yKpsHYd8TOITdTMJHmkJOVmgbb2DykNK, signature=' + signature
     return message
 
@@ -168,7 +168,7 @@ def re_authenticate():
     logger.debug('Attempting to re-authenticate the device')
     resp = get_url_response(url, message)
     if 'status' in resp and resp['status'] == '410':
-        raise AuthorizationException()
+        raise AuthorizationException(resp)
     settings['authenticateRegCode'] = resp
     if 'authorize' in settings:
         del settings['authorize']
@@ -180,6 +180,10 @@ def get_resource(channel, event_name, event_guid, event_parental_rating):
            channel + ']]></title><item><title><![CDATA[' + event_name + "]]></title><guid><![CDATA[" + \
            event_guid + ']]></guid><media:rating scheme="urn:v-chip"><![CDATA[' + event_parental_rating + \
            "]]></media:rating></item></channel></rss> "
+
+
+def get_resource_key(resource):
+    return str(resource.encode('utf-8'))
 
 
 # Sample '{"resource":"resource","mvpd":"","requestor":"ESPN","expires":"1463621239000"}'
@@ -205,7 +209,7 @@ def authorize(resource):
     logger.debug('resource %s resp %s' % (resource, resp))
     if 'status' in resp and resp['status'] == 403:
         raise AuthorizationException(resp)
-    settings['authorize'][resource.decode('iso-8859-1').encode('utf-8')] = resp
+    settings['authorize'][get_resource_key(resource)] = resp
 
 
 def deauthorize():
@@ -284,8 +288,8 @@ def has_to_reauthenticate():
 
 
 def is_authorized(resource):
-    if 'authorize' in settings and resource.decode('iso-8859-1').encode('utf-8') in settings['authorize']:
-        return not is_expired(settings['authorize'][resource.decode('iso-8859-1').encode('utf-8')]['expires'])
+    if 'authorize' in settings and get_resource_key(resource) in settings['authorize']:
+        return not is_expired(settings['authorize'][get_resource_key(resource)]['expires'])
 
 
 def get_expires_time(key):
