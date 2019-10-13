@@ -211,4 +211,7 @@ def make_list_item(label, icon=None, info_labels=None):
     listitem = ListItem(label, iconImage=icon)
     listitem.setInfo('video', infoLabels=info_labels)
     listitem.setProperty('IsPlayable', 'true')
+    listitem.setArt({
+        'icon': icon
+    })
     return listitem
