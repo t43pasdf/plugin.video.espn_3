@@ -121,7 +121,7 @@ def search():
     for search_history in search_settings.search_history:
         addDirectoryItem(plugin.handle, plugin.url_for(search_results, q=search_history),
                          ListItem(search_history), True)
-    endOfDirectory(plugin.handle, succeeded=True)
+    endOfDirectory(plugin.handle, succeeded=True, cacheToDisc=False)
 
 
 @plugin.route('/')

@@ -193,7 +193,7 @@ def authorize(resource):
         return
     params = urlencode({'requestor': 'ESPN',
                         'deviceId': get_device_id(),
-                        'resource': resource})
+                        'resource': resource.encode('utf-8')})
 
     path = '/authorize'
     url = urlunsplit(['https', 'api.auth.adobe.com',
@@ -242,7 +242,7 @@ def get_short_media_token(resource):
 
     params = urlencode({'requestor': 'ESPN',
                         'deviceId': get_device_id(),
-                        'resource': resource})
+                        'resource': resource.encode('utf-8')})
 
     path = '/mediatoken'
     url = urlunsplit(['https', 'api.auth.adobe.com',
