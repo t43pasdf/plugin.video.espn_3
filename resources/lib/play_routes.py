@@ -192,7 +192,7 @@ def process_playback_url(playback_url, auth_string):
                     stream_info = playlist['stream_info']
                     resolution = stream_info['resolution']
                     frame_rate = stream_info['frame_rate'] if 'frame_rate' in stream_info else 30.0
-                    bandwidth = int(stream_info[bandwidth_key]) / 1024
+                    bandwidth = int(int(stream_info[bandwidth_key]) / 1024)
                     if 'average_bandwidth' in stream_info:
                         logging.debug('bandwidth: %s average bandwidth: %s' %
                                       (stream_info['bandwidth'], stream_info['average_bandwidth']))
@@ -228,7 +228,7 @@ def start_adobe_session(media_token, token_type, resource, start_session_url):
                         'platform': 'chromecast_uplynk',
                         'token': media_token,
                         'tokenType': token_type,
-                        'resource': base64.b64encode(resource),
+                        'resource': base64.b64encode(resource.encode('utf-8')),
                         'v': '2.0.0'
                         })
     authed_url = start_session_url + '&' + params

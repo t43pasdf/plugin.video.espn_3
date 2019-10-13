@@ -35,9 +35,6 @@ from resources.lib.ui import tvos, appletv, legacy, roku
 from resources.lib.ui.legacy import legacy_root_menu
 from resources.lib import util, adobe_activate_api, settings_file, events
 
-TAG = 'ESPN3: '
-
-
 class SearchSettings(SettingsFile):
     def __init__(self):
         SettingsFile.__init__(self, 'search.json')
@@ -121,7 +118,7 @@ def search():
     for search_history in search_settings.search_history:
         addDirectoryItem(plugin.handle, plugin.url_for(search_results, q=search_history),
                          ListItem(search_history), True)
-    endOfDirectory(plugin.handle, succeeded=True)
+    endOfDirectory(plugin.handle, succeeded=True, cacheToDisc=False)
 
 
 @plugin.route('/')

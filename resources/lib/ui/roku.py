@@ -20,6 +20,7 @@
 from xbmcplugin import endOfDirectory, setContent, addDirectoryItem
 from xbmcgui import ListItem
 import time
+import functools
 
 from resources.lib import adobe_activate_api, util
 from resources.lib.addon_util import get_url, make_list_item, compare
@@ -79,7 +80,7 @@ def roku_url_mode():
     category_id = arg_as_string(ID)
     json_data = util.get_url_as_json_cache(get_url(url))
     if 'listings' in json_data:
-        json_data['listings'].sort(cmp=compare_roku)
+        json_data['listings'].sort(key=functools.cmp_to_key(compare_roku))
         for listing in json_data['listings']:
             index_listing(listing)
         setContent(plugin.handle, 'episodes')

@@ -49,7 +49,7 @@ class SettingsFile(object):
         with open(settings_file, 'r') as fp:
             try:
                 return json.load(fp)
-            except TypeError:
+            except:
                 self.reset_settings()
                 return dict()
 

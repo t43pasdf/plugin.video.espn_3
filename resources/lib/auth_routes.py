@@ -109,7 +109,8 @@ def login_espn_plus():
             logging.debug('Canceled: %s Acquired: %s' % (canceled, acquired))
             seconds_left = max_time - times * sleep_time
             minutes, seconds = divmod(seconds_left, 60)
-            progress_dialog.update(times / max_times, get_string(40110), license_plate,
+            percent = int(times / max_times)
+            progress_dialog.update(percent, get_string(40110), license_plate,
                                    get_string(40120) % (minutes, seconds))
             if canceled or acquired:
                 break
