@@ -171,7 +171,7 @@ def check_event_blackout(event_id):
     return blackout == 'true'
 
 
-def compare(lstart, lnetwork, lstatus, rstart, rnetwork, rstatus):
+def compare(lstart, lnetwork, lstatus, rstart, rnetwork, rstatus, lscore=0, rscore=0):
     # Prefer live content
     #  sorted by network
     # Prefer upcoming content
@@ -185,6 +185,10 @@ def compare(lstart, lnetwork, lstatus, rstart, rnetwork, rstatus):
             return -1
         if rnetwork < lnetwork:
             return 1
+        # higher score sorts first
+        score_cmp = rscore - lscore
+        if score_cmp != 0:
+            return score_cmp
     if lstart is None and rstart is None:
         return 0
     if lstart is None:

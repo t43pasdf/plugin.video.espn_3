@@ -179,8 +179,11 @@ def index_bucket_content(url, bucket, channel_filter):
                     fanart = content['imageHref']
                 else:
                     fanart = None
-                addDirectoryItem(plugin.handle, plugin.url_for(page_api_url, url=content_url),
-                                 ListItem(content['name'], iconImage=fanart), True)
+                listitem = ListItem(content['name'])
+                listitem.setArt({
+                    'icon': fanart
+                })
+                addDirectoryItem(plugin.handle, plugin.url_for(page_api_url, url=content_url), listitem, True)
             else:
                 setContent(plugin.handle, 'episodes')
                 source_id = util.get_nested_value(content, ['streams', 0, 'source', 'id'])
@@ -368,7 +371,7 @@ def index_v3_show(content):
     name = content['name']
     fanart = content['imageHref']
     addDirectoryItem(plugin.handle, plugin.url_for(page_api_url, url=content_url),
-                     ListItem(name, iconImage=fanart), True)
+                     make_list_item(name, icon=fanart), True)
 
 
 def index_v3_vod(content):
@@ -468,7 +471,9 @@ def compare_contents(l, r):
         rnetwork_sort = 1000
     ltype = l['status'] if 'status' in l else 'clip'
     rtype = r['status'] if 'status' in r else 'clip'
-    return compare(get_time(l), lnetwork_sort, ltype, get_time(r), rnetwork_sort, rtype)
+    lscore = l.get('score', 0)
+    rscore = r.get('score', 0)
+    return compare(get_time(l), lnetwork_sort, ltype, get_time(r), rnetwork_sort, rtype, lscore, rscore)
 
 
 def compare_network_ids(lnetwork, rnetwork):

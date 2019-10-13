@@ -35,9 +35,6 @@ from resources.lib.ui import tvos, appletv, legacy, roku
 from resources.lib.ui.legacy import legacy_root_menu
 from resources.lib import util, adobe_activate_api, settings_file, events
 
-TAG = 'ESPN3: '
-
-
 class SearchSettings(SettingsFile):
     def __init__(self):
         SettingsFile.__init__(self, 'search.json')
