@@ -10,3 +10,6 @@ Credit to Kodi forum members for helping with debugging (http://forum.kodi.tv/sh
 siuside, OTinley, lionsnob, and others)
 
 Watch full live streaming sporting events and replays on ESPN 3 (and premium channels with cable provider), including football, baseball, cricket, soccer, and basketball events.
+
+## Dev Notes
+resources/lib/websocket is from the websocket-client project at https://github.com/websocket-client/websocket-client
