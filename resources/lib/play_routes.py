@@ -46,6 +46,9 @@ from resources.lib.globals import UA_PC
 from resources.lib.kodiutils import set_setting, get_setting, get_string, get_setting_as_bool
 
 
+logger = logging.getLogger(__name__)
+
+
 def get_token_type(auth_types):
     if requires_adobe_auth(auth_types):
         return 'ADOBEPASS'
@@ -233,7 +236,7 @@ def start_adobe_session(media_token, token_type, resource, start_session_url):
                         })
     authed_url = start_session_url + '&' + params
 
-    xbmc.log('ESPN3: start_session_url: ' + authed_url, xbmc.LOGDEBUG)
+    logger.debug('ESPN3: start_session_url: ' + authed_url)
 
     try:
         session_json = util.get_url_as_json(authed_url)
@@ -256,7 +259,7 @@ def start_adobe_session(media_token, token_type, resource, start_session_url):
 def start_espn_plus_session(start_session_url):
     espnplus_url = start_session_url.replace('{scenario}', 'browser~ssai')
 
-    xbmc.log('ESPN+ URL %s' % espnplus_url, xbmc.LOGDEBUG)
+    logger.debug('ESPN+ URL %s' % espnplus_url)
 
     try:
         session_json = global_session.get(espnplus_url, headers={

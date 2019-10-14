@@ -13,3 +13,5 @@ Watch full live streaming sporting events and replays on ESPN 3 (and premium cha
 
 ## Dev Notes
 resources/lib/websocket is from the websocket-client project at https://github.com/websocket-client/websocket-client
+
+Testing UTF-8, make a search for "necaxa" that will load a deportes event that has an accent
