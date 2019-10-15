@@ -20,7 +20,7 @@ if get_setting_as_bool('DisableSSL'):
 
 if not get_setting_as_bool('DisableInputStream'):
     # Check that it is enabled
-    addon_id = 'inputstream.hls'
+    addon_id = 'inputstream.adaptive'
     rpc_request = {"jsonrpc": "2.0",
                    "method": "Addons.GetAddonDetails",
                    "id": 1,

@@ -218,10 +218,10 @@ def process_playback_url(playback_url, auth_string):
             item = xbmcgui.ListItem(path=playback_url)
             setResolvedUrl(plugin.handle, success, item)
     else:
-        logging.debug('Using inputstream.hls addon')
+        logging.debug('Using inputstream.adaptive addon')
         item = xbmcgui.ListItem(path=playback_url)
-        item.setProperty('inputstreamaddon', 'inputstream.hls')
-        item.setProperty('inputstream.hls.manifest_type', 'hls')
+        item.setProperty('inputstreamaddon', 'inputstream.adaptive')
+        item.setProperty('inputstream.adaptive.manifest_type', 'hls')
         setResolvedUrl(plugin.handle, success, item)
 
 
